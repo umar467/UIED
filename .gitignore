@@ -1,0 +1,10 @@
+**/__pycache__/
+__pycache__/
+*.mp4
+*.jpg
+*.jpeg
+*.png
+*.json
+data/model_weights/
+data/output/
+data/input/

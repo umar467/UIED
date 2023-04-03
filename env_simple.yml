@@ -1,0 +1,13 @@
+name: UIED4
+channels:
+  - defaults
+dependencies:
+  - tensorflow==1.10.0
+  - keras=2.2.4
+  - scikit-learn==0.22.1
+  - pandas==0.23.4
+  - opencv
+  - spyder==4.2.0
+  - pycharm
+  - ninja
+prefix: /vol/research/volino_projects/mf00963/anaconda3/envs/UIED4
