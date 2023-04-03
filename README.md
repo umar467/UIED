@@ -1,24 +1,11 @@
-# UIED - UI element detection part of UI2CODE, detecting UI elements from UI screenshots or drawnings
-
->This project is still ongoing and this repo may be updated irregularly, I also implement a web app for this project in http://uied.online
-
-## Related Publications: 
-[1. UIED: a hybrid tool for GUI element detection](https://dl.acm.org/doi/10.1145/3368089.3417940)
-
-[2. Object Detection for Graphical User Interface: Old Fashioned or Deep Learning or a Combination?](https://arxiv.org/abs/2008.05132)
-
-## What is it?
-
-UI Element Detection (UIED) is an old-fashioned computer vision (CV) based element detection approach for graphic user interface. 
-
-The input of UIED could be various UI image, such as mobile app or web page screenshot, UI design drawn by Photoshop or Sketch, and even some hand-drawn UI design. Then the approach detects and classifies text and graphic UI elements, and exports the detection result as JSON file for future application. 
-
-UIED comprises two parts to detect UI text and graphic elements, such as button, image and input bar. 
-* For text, it leverages a state-of-the-art scene text detector [EAST](https://github.com/argman/EAST) to perfrom detection. 
-
-* For graphical elements, it uses old-fashioned CV and image processing algorithms with a set of creative innovations to locate the elements and applies a CNN to achieve classification. 
-   
 ## How to use?
+In the setup folder I have added three .yml files. A first approach would be to attempt to recreate the evnironment from the env_cpu_full.yml and test the code.
+
+To do so, make sure you have installed miniconda using either [with GPU Support](https://gretel.ai/blog/install-tensorflow-with-cuda-cdnn-and-gpu-support-in-4-easy-steps) or [cpu_only](https://educe-ubc.github.io/conda.html).
+
+And then install the conda environment using the env_cpu_full.yml in the setup folder, as described in [this link](https://sachinjose31.medium.com/creating-an-environment-in-anaconda-through-a-yml-file-7e5deeb7676d).
+
+In case this fails, you can try to manually install the dependencies. A single minor version number above or below the following package numbers should work fine.
 
 ### Dependency
 * **Python 3.5**
@@ -29,51 +16,16 @@ UIED comprises two parts to detect UI text and graphic elements, such as button,
 * **Sklearn 0.22.2**
 * **Pandas 0.23.4**
 
-### Installation
-Install the mentioned dependencies, and download two pre-trained models from [this link](https://drive.google.com/drive/folders/1MK0Om7Lx0wRXGDfNcyj21B0FL1T461v5?usp=sharing) for EAST text detection and GUI element classification.
+### Weights and Video files
 
-Change ``CNN_PATH`` and ``EAST_PATH`` in *config/CONFIG.py* to your locations.
+The weights and video files are shared at [this onedrive link](https://surreyac-my.sharepoint.com/:f:/g/personal/mf00963_surrey_ac_uk/EmbsgvakP2RCtANA0f7erQABp9t0AUuYV97Q-uYAdjwpFw?email=andy.woods%40rhul.ac.uk&e=LdrR0O). Let me know if the link doesn't work and we can fix that.
 
-### Usage
-To test your own image(s):
-* For testing single image, change ``input_path_img`` in *run_single.py* to your own input image and the results will be outputted to ``output_root``.
-* For testing mutiple images, change ``input_img_root`` in *run_batch.py* to your own input directory and the results will be outputted to ``output_root``.
+### Creating frames from the videos
 
-> Note: The best set of parameters vary for different types of GUI image (Mobile App, Web, PC). Three of critical ones are ``{'param-grad', 'param-block', 'param-minarea'}`` which can be easily adjusted in *detect_compo\ip_region_proposal.py*.
-   
-## File structure
-*cnn/*
-* Used to train classifier for graphic UI elements
-* Set path of the CNN classification model
+Run ./extract_input_frames.sh to automatically generate the input frames.
 
-*config/*
-* Set data paths 
-* Set parameters for graphic elements detection
+### Test Run
 
-*data/*
-* Input UI images and output detection results
-
-*detect_compo/*
-* Graphic UI elemnts localization
-* Graphic UI elemnts classification by CNN
-
-*detect_text_east/*
-* UI text detection by EAST
-
-*result_processing/*
-* Result evaluation and visualizition
-
-*merge.py*
-* Merge the results from the graphical UI elements detection and text detection 
-
-*run_batch.py*
-* Process a batch of images 
-
-*run_single.py*
-* Process a signle image
+Then try running run_single.py from inside the conda environment created above to test if everythign is working. You should see some images on screen ideally.
 
 
-## Demo
-GUI element detection result for web screenshot
- 
-![UI Components detection result](https://github.com/MulongXie/UIED/blob/master/data/demo/demo.png)
