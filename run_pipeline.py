@@ -35,7 +35,7 @@ if __name__ == '__main__':
                   'max-word-inline-gap':4, 'max-line-gap':4}
     '''
     '''key_params = {'min-grad':4, 'ffl-block':5, 'min-ele-area':50, 'max-word-inline-gap':6, 'max-line-gap':1}'''
-    key_params = {'min-grad':50, 'ffl-block':5, 'min-ele-area':5, 'merge-contained-ele':False,
+    key_params = {'min-grad':20, 'ffl-block':5, 'min-ele-area':5, 'merge-contained-ele':False,
                   'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':500}
     # set input image path
     import os

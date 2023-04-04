@@ -35,12 +35,12 @@ if __name__ == '__main__':
         mobile: {'min-grad':4, 'ffl-block':5, 'min-ele-area':50, 'max-word-inline-gap':6, 'max-line-gap':1}
         web   : {'min-grad':3, 'ffl-block':5, 'min-ele-area':25, 'max-word-inline-gap':4, 'max-line-gap':4}
     '''
-    key_params = {'min-grad':10, 'ffl-block':5, 'min-ele-area':50, 'merge-contained-ele':True,
+    key_params = {'min-grad':20, 'ffl-block':5, 'min-ele-area':5, 'merge-contained-ele':False,
                   'max-word-inline-gap':4, 'max-line-gap':4}
 
     # set input image path
-    input_path_img = 'data/input/30800.jpg'
-    output_root = 'data/output'
+    input_path_img = 'data/input/frames/4/25.jpg'
+    output_root = 'data/output/frames/1/'
 
     resized_height = resize_height_by_longest_edge(input_path_img)
     is_clf = False
@@ -62,10 +62,13 @@ if __name__ == '__main__':
     cv2.namedWindow('parameters')
     if testing_ip:
         cv2.createTrackbar('min-grad', 'parameters', 4, 20, nothing)
-        cv2.createTrackbar('min-ele-area', 'parameters', 20, 200, nothing)
+        cv2.createTrackbar('min-ele-area', 'parameters', 4, 200, nothing)
+        cv2.createTrackbar('ffl-block', 'parameters', 4, 20, nothing)
+        
         while(1):
             key_params['min-grad'] = cv2.getTrackbarPos('min-grad', 'parameters')
             key_params['min-ele-area'] = cv2.getTrackbarPos('min-ele-area', 'parameters')
+            key_params['ffl-block'] = cv2.getTrackbarPos('ffl-block', 'parameters')
             import detect_compo.ip_region_proposal as ip
             os.makedirs(pjoin(output_root, 'ip'), exist_ok=True)
             # switch of the classification func
