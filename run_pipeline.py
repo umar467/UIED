@@ -36,17 +36,22 @@ if __name__ == '__main__':
     '''
     '''key_params = {'min-grad':4, 'ffl-block':5, 'min-ele-area':50, 'max-word-inline-gap':6, 'max-line-gap':1}'''
     key_params = {'min-grad':20, 'ffl-block':5, 'min-ele-area':5, 'merge-contained-ele':False,
-                  'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':500}
+                  'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':10}
     # set input image path
     import os
-    ppp = 'data/input/frames/3/'
-    fno=0
-    for filename in os.listdir(ppp):
+    ppp = 'data/input/frames/1/'
+    old_grey = []
+    old_binary=[]
+    fno=-1
+    lst = os.listdir(ppp)
+    lst.sort()
+    for filename in lst:
+        print(filename)
         f = os.path.join(ppp,filename)
         input_path_img = f
         fno = fno + 1
 
-        output_root = 'data/output/frames/3/'
+        output_root = 'data/output/frames/1/'
 
         resized_height = resize_height_by_longest_edge(input_path_img)
 
@@ -54,6 +59,7 @@ if __name__ == '__main__':
         is_clf = False
         is_ocr = False
         is_merge = False
+        
 
         if is_ocr:
             import detect_text_east.ocr_east as ocr
@@ -74,8 +80,31 @@ if __name__ == '__main__':
                 # classifier['Image'] = CNN('Image')
                 classifier['Elements'] = CNN('Elements')
                 # classifier['Noise'] = CNN('Noise')
-            ip.compo_detection(input_path_img, output_root, key_params,
-                            classifier=classifier, resize_by_height=resized_height, show=True, frame_no=fno,wai_key=700)
+            grey, binary = ip.compo_detection(input_path_img, output_root, key_params,
+                            classifier=classifier, resize_by_height=resized_height, show=False, frame_no=fno,wai_key=10)
+            if fno%10==0:
+                if fno !=0:
+                    summation = old_grey[0].astype(float)
+                    for qij in range(9):
+                        summation = summation + old_grey[qij]
+                    import matplotlib.pyplot as plt
+                    plt.imshow(summation)
+                    import detect_compo.lib_ip.ip_detection as det
+                    import detect_compo.lib_ip.ip_preprocessing as pre
+                    import numpy as np
+                    xx = np.array(summation)
+                    xx /= (xx.max()/255.0)
+                    xx = xx.astype(np.uint8)
+                    org = cv2.cvtColor(xx, cv2.COLOR_GRAY2BGR)
+                    #org =summation
+                    binary = pre.binarization(org, grad_min=20, show=True, wait_key=1000)
+                    uicompos = det.component_detection(binary, min_obj_area=5)
+                    plt.imshow(binary)
+                old_grey = [grey]
+                old_binary = [binary]
+            else:
+                old_grey.append(grey)
+                old_binary.append(binary)
 
         if is_merge:
             import merge

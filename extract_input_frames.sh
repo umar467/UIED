@@ -10,5 +10,5 @@
         slash_and_video_file_name_without_extension="${slash_and_video_file_name%.${ext}}"
         video_frames_folder_path="${frames_folder_path}${slash_and_video_file_name_without_extension}";
         mkdir "${video_frames_folder_path}"
-        ffmpeg -i  "${video_file_path}" -r 2 "${video_frames_folder_path}/%d.jpg" 
+        ffmpeg -i  "${video_file_path}" -r 2 "${video_frames_folder_path}/%04d.jpg" 
     done

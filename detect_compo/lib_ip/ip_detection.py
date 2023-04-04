@@ -334,6 +334,8 @@ def component_detection(binary, min_obj_area,
     compos_rec = []
     compos_nonrec = []
     row, column = binary.shape[0], binary.shape[1]
+    
+    
     for i in range(0, row, step_h):
         for j in range(i % 2, column, step_v):
             if binary[i, j] == 255 and mask[i, j] == 0:
@@ -376,7 +378,7 @@ def component_detection(binary, min_obj_area,
                     print('Area:%d' % (len(region)))
                     draw.draw_boundary(compos_all, binary.shape, show=True)
 
-    # draw.draw_boundary(compos_all, binary.shape, show=True)
+    draw.draw_boundary(compos_all, binary.shape, show=True)
     if rec_detect:
         return compos_rec, compos_nonrec
     else:
