@@ -1,6 +1,8 @@
 ### Source Code
 This code is based on the publicly released UIED github repo from a specific commit from Jan 12, 2021 linked [here (GitHub Repo)](https://github.com/MulongXie/UIED/tree/814a8e70db69947ad5e3a25bbb411d7db8914cbc).
 
+The orignal authors also have a web based version of this whole pipeline at [this link](http://www.uied.online/). It allows changing parameters and can process images and show results visually.
+
 ## Installing Software Dependencies
 An Anaconda/miniconda setup is highly recommended on a linux machine with or withour a GPU/Nvidia-Drivers/Cuda. Although this can be done directly withot any virtual environments as well, or with just pip based virtual environments as well.
 
