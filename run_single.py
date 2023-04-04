@@ -39,14 +39,14 @@ if __name__ == '__main__':
                   'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':500}
     # set input image path
     import os
-    ppp = 'data/input/frames/1/'
+    ppp = 'data/input/frames/3/'
     fno=0
     for filename in os.listdir(ppp):
         f = os.path.join(ppp,filename)
         input_path_img = f
         fno = fno + 1
 
-        output_root = 'data/output/frames/1/'
+        output_root = 'data/output/frames/3/'
 
         resized_height = resize_height_by_longest_edge(input_path_img)
 

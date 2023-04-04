@@ -27,7 +27,7 @@ def draw_bounding_box_class(org, components, color_map=C.COLOR, line=2, show=Fal
         # board = cv2.putText(board, compo.category, (bbox[0]+5, bbox[1]+20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color_map[compo.category], 2)
     if show:
         cv2.imshow(name, board)
-        cv2.waitKey(0)
+        cv2.waitKey(200)
     if write_path is not None:
         cv2.imwrite(write_path, board)
     return board

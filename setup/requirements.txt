@@ -1,7 +1,8 @@
-Python~=3.5
-Numpy~=1.15.2
-Opencv~=3.4.2
-Tensorflow~=1.10.0
-Keras~=2.2.4
-Sklearn~=0.22.2
-Pandas~=0.23.4
+#conda create -n UIED_Spyder python=3.9
+spyder
+opencv
+pandas
+keras
+tensorflow-gpu
+scikit-learn
+shapely
