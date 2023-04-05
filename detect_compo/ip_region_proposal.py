@@ -1,4 +1,4 @@
-#import cv2
+import cv2
 from os.path import join as pjoin
 import time
 import json
@@ -66,7 +66,7 @@ def nesting_inspection(org, grey, compos, ffl_block):
 
 def compo_detection(input_img_path, output_root, uied_params,
                     resize_by_height=600,
-                    classifier=None, show=False, wai_key=0, frame_no=1):
+                    classifier=None, show=True, wai_key=100, frame_no=1):
 
     start = time.time()
     name = input_img_path.split('/')[-1][:-4]
@@ -80,46 +80,47 @@ def compo_detection(input_img_path, output_root, uied_params,
     det.rm_line(binary, show=show, wait_key=wai_key)
     # det.rm_line_v_h(binary, show=show)
     uicompos = det.component_detection(binary, min_obj_area=int(uied_params['min-ele-area']))
+    
+    draw.draw_bounding_box(org, uicompos, show=show, name='components', wait_key=wai_key)
+
+    # *** Step 3 *** results refinement
+    uicompos = det.merge_intersected_corner(uicompos, org, is_merge_contained_ele=uied_params['merge-contained-ele'],
+                                            max_gap=(0, 0), max_ele_height=25)
+    Compo.compos_update(uicompos, org.shape)
+    Compo.compos_containment(uicompos)
+    draw.draw_bounding_box(org, uicompos, show=show, name='merged', wait_key=wai_key)
+
+    # *** Step 4 ** nesting inspection: treat the big compos as block and check if they have nesting element
+    uicompos += nesting_inspection(org, grey, uicompos, ffl_block=uied_params['ffl-block'])
+    uicompos = det.compo_filter(uicompos, min_area=int(uied_params['min-ele-area']))
+    Compo.compos_update(uicompos, org.shape)
+    draw.draw_bounding_box(org, uicompos, show=show, name='merged compo', write_path=pjoin(ip_root, 'result'+str(frame_no)+'.jpg'), wait_key=wai_key)
+    '''
+    # *** Step 5 *** Image Inspection: recognize image -> remove noise in image -> binarize with larger threshold and reverse -> rectangular compo detection
+    if classifier['Image'] is not None:
+        classifier['Image'].predict(seg.clipping(org, uicompos), uicompos)
+        draw.draw_bounding_box_class(org, uicompos, show=show)
+        uicompos = det.rm_noise_in_large_img(uicompos, org)
+        draw.draw_bounding_box_class(org, uicompos, show=show)
+        det.detect_compos_in_img(uicompos, binary_org, org)
+        draw.draw_bounding_box(org, uicompos, show=show)
+    if classifier['Noise'] is not None:
+        classifier['Noise'].predict(seg.clipping(org, uicompos), uicompos)
+        draw.draw_bounding_box_class(org, uicompos, show=show)
+        uicompos = det.rm_noise_compos(uicompos)
+        '''
+    # *** Step 6 *** element classification: all category classification
+    if classifier is not None:
+        classifier['Elements'].predict(seg.clipping(org, uicompos), uicompos)
+        draw.draw_bounding_box_class(org, uicompos, show=show, name='cls', write_path=pjoin(ip_root, 'result.jpg'))
+        draw.draw_bounding_box_class(org, uicompos, write_path=pjoin(output_root, 'result.jpg'))
+
+    Compo.compos_update(uicompos, org.shape)
+    file.save_corners_json(pjoin(ip_root, name + '.json'), uicompos)
+    file.save_corners_json(pjoin(output_root, 'compo.json'), uicompos)
+    # seg.dissemble_clip_img_fill(pjoin(output_root, 'clips'), org, uicompos)
+
+    print("[Compo Detection Completed in %.3f s] %s" % (time.time() - start, input_img_path))
+    if show:
+        cv2.destroyAllWindows()
     return grey, binary
-    # draw.draw_bounding_box(org, uicompos, show=show, name='components', wait_key=wai_key)
-
-    # # *** Step 3 *** results refinement
-    # uicompos = det.merge_intersected_corner(uicompos, org, is_merge_contained_ele=uied_params['merge-contained-ele'],
-    #                                         max_gap=(0, 0), max_ele_height=25)
-    # Compo.compos_update(uicompos, org.shape)
-    # Compo.compos_containment(uicompos)
-    # # draw.draw_bounding_box(org, uicompos, show=show, name='merged', wait_key=wai_key)
-
-    # # *** Step 4 ** nesting inspection: treat the big compos as block and check if they have nesting element
-    # uicompos += nesting_inspection(org, grey, uicompos, ffl_block=uied_params['ffl-block'])
-    # uicompos = det.compo_filter(uicompos, min_area=int(uied_params['min-ele-area']))
-    # Compo.compos_update(uicompos, org.shape)
-    # draw.draw_bounding_box(org, uicompos, show=show, name='merged compo', write_path=pjoin(ip_root, 'result'+str(frame_no)+'.jpg'), wait_key=wai_key)
-    # '''
-    # # *** Step 5 *** Image Inspection: recognize image -> remove noise in image -> binarize with larger threshold and reverse -> rectangular compo detection
-    # if classifier['Image'] is not None:
-    #     classifier['Image'].predict(seg.clipping(org, uicompos), uicompos)
-    #     draw.draw_bounding_box_class(org, uicompos, show=show)
-    #     uicompos = det.rm_noise_in_large_img(uicompos, org)
-    #     draw.draw_bounding_box_class(org, uicompos, show=show)
-    #     det.detect_compos_in_img(uicompos, binary_org, org)
-    #     draw.draw_bounding_box(org, uicompos, show=show)
-    # if classifier['Noise'] is not None:
-    #     classifier['Noise'].predict(seg.clipping(org, uicompos), uicompos)
-    #     draw.draw_bounding_box_class(org, uicompos, show=show)
-    #     uicompos = det.rm_noise_compos(uicompos)
-    #     '''
-    # # *** Step 6 *** element classification: all category classification
-    # if classifier is not None:
-    #     classifier['Elements'].predict(seg.clipping(org, uicompos), uicompos)
-    #     draw.draw_bounding_box_class(org, uicompos, show=show, name='cls', write_path=pjoin(ip_root, 'result.jpg'))
-    #     draw.draw_bounding_box_class(org, uicompos, write_path=pjoin(output_root, 'result.jpg'))
-
-    # Compo.compos_update(uicompos, org.shape)
-    # file.save_corners_json(pjoin(ip_root, name + '.json'), uicompos)
-    # file.save_corners_json(pjoin(output_root, 'compo.json'), uicompos)
-    # # seg.dissemble_clip_img_fill(pjoin(output_root, 'clips'), org, uicompos)
-
-    # print("[Compo Detection Completed in %.3f s] %s" % (time.time() - start, input_img_path))
-    # # if show:
-    # #     cv2.destroyAllWindows()

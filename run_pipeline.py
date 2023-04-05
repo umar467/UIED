@@ -81,7 +81,7 @@ if __name__ == '__main__':
                 classifier['Elements'] = CNN('Elements')
                 # classifier['Noise'] = CNN('Noise')
             grey, binary = ip.compo_detection(input_path_img, output_root, key_params,
-                            classifier=classifier, resize_by_height=resized_height, show=False, frame_no=fno,wai_key=10)
+                            classifier=classifier, resize_by_height=resized_height, show=True, frame_no=fno,wai_key=10)
             if fno%10==0:
                 if fno !=0:
                     summation = old_grey[0].astype(float)
