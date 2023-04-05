@@ -121,6 +121,6 @@ def compo_detection(input_img_path, output_root, uied_params,
     # seg.dissemble_clip_img_fill(pjoin(output_root, 'clips'), org, uicompos)
 
     print("[Compo Detection Completed in %.3f s] %s" % (time.time() - start, input_img_path))
-    if show:
-        cv2.destroyAllWindows()
+    # if show:
+    #     cv2.destroyAllWindows()
     return grey, binary

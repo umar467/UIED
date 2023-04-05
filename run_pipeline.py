@@ -36,7 +36,7 @@ if __name__ == '__main__':
     '''
     '''key_params = {'min-grad':4, 'ffl-block':5, 'min-ele-area':50, 'max-word-inline-gap':6, 'max-line-gap':1}'''
     key_params = {'min-grad':20, 'ffl-block':5, 'min-ele-area':5, 'merge-contained-ele':False,
-                  'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':10}
+                  'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':1}
     # set input image path
     import os
     ppp = 'data/input/frames/1/'
@@ -81,7 +81,7 @@ if __name__ == '__main__':
                 classifier['Elements'] = CNN('Elements')
                 # classifier['Noise'] = CNN('Noise')
             grey, binary = ip.compo_detection(input_path_img, output_root, key_params,
-                            classifier=classifier, resize_by_height=resized_height, show=True, frame_no=fno,wai_key=10)
+                            classifier=classifier, resize_by_height=resized_height, show=True, frame_no=fno,wai_key=1)
             if fno%10==0:
                 if fno !=0:
                     summation = old_grey[0].astype(float)
@@ -97,7 +97,7 @@ if __name__ == '__main__':
                     xx = xx.astype(np.uint8)
                     org = cv2.cvtColor(xx, cv2.COLOR_GRAY2BGR)
                     #org =summation
-                    binary = pre.binarization(org, grad_min=20, show=True, wait_key=1000)
+                    binary = pre.binarization(org, grad_min=20, show=True, wait_key=10)
                     uicompos = det.component_detection(binary, min_obj_area=5)
                     plt.imshow(binary)
                 old_grey = [grey]
