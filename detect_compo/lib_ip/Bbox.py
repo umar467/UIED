@@ -43,7 +43,7 @@ class Bbox:
         else:
             return 2
 
-    def bbox_relation_nms(self, bbox_b, bias=(0, 0)):
+    def bbox_relation_nms(self, bbox_b, bias=(0, 0), easy = False):
         '''
         Calculate the relation between two rectangles by nms
        :return: -1 : a in b
@@ -72,24 +72,32 @@ class Bbox:
         if iou == 0 and ioa == 0 and iob == 0:
             return 0
 
-        # import lib_ip.ip_preprocessing as pre
-        # org_iou, _ = pre.read_img('uied/data/input/7.jpg', 800)
-        # print(iou, ioa, iob)
-        # board = draw.draw_bounding_box(org_iou, [self], color=(255,0,0))
-        # draw.draw_bounding_box(board, [bbox_b], color=(0,255,0), show=True)
+        # import detect_compo.lib_ip.ip_preprocessing as pre
+        # org_iou, _ = pre.read_img('data/input/frames/1/0007.jpg', 800)
+        # #print(iou, ioa, iob)
+        # board = draw.draw_bounding_box(org_iou, [self], color=(255,0,0), show=True, wait_key=10)
+        # draw.draw_bounding_box(board, [bbox_b], color=(0,255,0), show=True, wait_key=10)
 
         # contained by b
-        if ioa >= 1:
-            return -1
-        # contains b
-        if iob >= 1:
-            return 1
+        # if ioa >= 1:
+        #     return 0
+        # # contains b
+        # if iob >= 1:
+        #     return 0
         # not intersected with each other
+        
         # intersected
-        if iou >= 0.02 or iob > 0.2 or ioa > 0.2:
+        if easy:
+            if iou >= 0.2 and iob > 0.2 and ioa > 0.2:
+                # print("Easy")
+                return 2
+        if iou >= 0.5 and iob > 0.5 and ioa > 0.5:
             return 2
+        else:
+            #print('ioa:%.5f; iob:%.5f; iou:%.5f; Aa:%.5f; Ab:%.5f' % (ioa, iob, iou,  area_a, area_b))
+            return 5
         # if iou == 0:
-        # print('ioa:%.5f; iob:%.5f; iou:%.5f' % (ioa, iob, iou))
+        
         return 0
 
     def bbox_cvt_relative_position(self, col_min_base, row_min_base):

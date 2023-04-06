@@ -32,6 +32,38 @@ def draw_bounding_box_class(org, components, color_map=C.COLOR, line=2, show=Fal
         cv2.imwrite(write_path, board)
     return board
 
+def avgboxx(org, components, color=(0, 255, 0), line=-1,
+                      show=False, write_path=None, name='board', is_return=False, wait_key=0):
+    """
+    Draw bounding box of components on the original image
+    :param org: original image
+    :param components: bbox [(column_min, row_min, column_max, row_max)]
+                    -> top_left: (column_min, row_min)
+                    -> bottom_right: (column_max, row_max)
+    :param color: line color
+    :param line: line thickness
+    :param show: show or not
+    :return: labeled image
+    """
+    if not show and write_path is None and not is_return: return
+    board = np.zeros(org.shape[0:2]).astype(np.float)
+    tboard = board.copy()
+    fboard = board.copy()
+    for compo in components:
+        bbox = compo.put_bbox()
+        board = cv2.rectangle(board, (bbox[0], bbox[1]), (bbox[2], bbox[3]), 255, line)
+        fboard = fboard + board
+        board = tboard.copy()
+    #fboard = cv2.cvtColor(fboard, cv2.COLOR_BGR2GRAY)
+    if show:
+        cv2.imshow(name, fboard)
+        if wait_key is not None:
+            cv2.waitKey(wait_key)
+    if write_path is not None:
+        # board = cv2.resize(board, (1080, 1920))
+        # board = board[100:-110]
+        cv2.imwrite(write_path, board)
+    return fboard
 
 def draw_bounding_box(org, components, color=(0, 255, 0), line=2,
                       show=False, write_path=None, name='board', is_return=False, wait_key=0):

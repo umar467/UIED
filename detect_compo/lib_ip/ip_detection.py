@@ -9,7 +9,7 @@ from config.CONFIG_UIED import Config
 C = Config()
 
 
-def merge_intersected_corner(compos, org, is_merge_contained_ele, max_gap=(0, 0), max_ele_height=25):
+def merge_intersected_corner(compos, org, is_merge_contained_ele, max_gap=(0, 0), max_ele_height=25, easy = False):
     '''
     :param is_merge_contained_ele: if true, merge compos nested in others
     :param max_gap: (horizontal_distance, vertical_distance) to be merge into one line/column
@@ -23,7 +23,7 @@ def merge_intersected_corner(compos, org, is_merge_contained_ele, max_gap=(0, 0)
         merged = False
         cur_compo = compos[i]
         for j in range(len(new_compos)):
-            relation = cur_compo.compo_relation(new_compos[j], max_gap)
+            relation = cur_compo.compo_relation(new_compos[j], max_gap, easy=easy)
             #print(relation)
             #draw.draw_bounding_box(org, [cur_compo, new_compos[j]], name='b-merge', show=True)
             # merge compo[i] to compo[j] if
@@ -353,11 +353,13 @@ def component_detection(binary, min_obj_area,
                 component = Component(region, binary.shape)
                 # calculate the boundary of the connected area
                 # ignore small area
-                if component.width <= 3 or component.height <= 3:
+                if component.width <= 10 or component.height <= 10:
+                    continue
+                if component.width > 100 or component.height > 100:
                     continue
                 # check if it is line by checking the length of edges
-                # if component.compo_is_line(line_thickness):
-                #     continue
+                if component.compo_is_line(line_thickness):
+                     continue
 
                 if test:
                     print('Area:%d' % (len(region)))

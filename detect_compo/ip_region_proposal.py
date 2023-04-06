@@ -84,17 +84,17 @@ def compo_detection(input_img_path, output_root, uied_params,
     draw.draw_bounding_box(org, uicompos, show=show, name='components', wait_key=wai_key)
 
     # *** Step 3 *** results refinement
-    uicompos = det.merge_intersected_corner(uicompos, org, is_merge_contained_ele=uied_params['merge-contained-ele'],
-                                            max_gap=(0, 0), max_ele_height=25)
-    Compo.compos_update(uicompos, org.shape)
-    Compo.compos_containment(uicompos)
-    draw.draw_bounding_box(org, uicompos, show=show, name='merged', wait_key=wai_key)
+    #uicompos = det.merge_intersected_corner(uicompos, org, is_merge_contained_ele=uied_params['merge-contained-ele'],
+    #                                        max_gap=(0, 0), max_ele_height=25)
+    #Compo.compos_update(uicompos, org.shape)
+    #Compo.compos_containment(uicompos)
+    #draw.draw_bounding_box(org, uicompos, show=show, name='merged', wait_key=wai_key)
 
     # *** Step 4 ** nesting inspection: treat the big compos as block and check if they have nesting element
-    uicompos += nesting_inspection(org, grey, uicompos, ffl_block=uied_params['ffl-block'])
-    uicompos = det.compo_filter(uicompos, min_area=int(uied_params['min-ele-area']))
-    Compo.compos_update(uicompos, org.shape)
-    draw.draw_bounding_box(org, uicompos, show=show, name='merged compo', write_path=pjoin(ip_root, 'result'+str(frame_no)+'.jpg'), wait_key=wai_key)
+    #uicompos += nesting_inspection(org, grey, uicompos, ffl_block=uied_params['ffl-block'])
+    #uicompos = det.compo_filter(uicompos, min_area=int(uied_params['min-ele-area']))
+    #Compo.compos_update(uicompos, org.shape)
+    #draw.draw_bounding_box(org, uicompos, show=show, name='merged compo', write_path=pjoin(ip_root, 'result'+str(frame_no)+'.jpg'), wait_key=wai_key)
     '''
     # *** Step 5 *** Image Inspection: recognize image -> remove noise in image -> binarize with larger threshold and reverse -> rectangular compo detection
     if classifier['Image'] is not None:
@@ -123,4 +123,4 @@ def compo_detection(input_img_path, output_root, uied_params,
     print("[Compo Detection Completed in %.3f s] %s" % (time.time() - start, input_img_path))
     # if show:
     #     cv2.destroyAllWindows()
-    return grey, binary
+    return grey, binary, uicompos, org
