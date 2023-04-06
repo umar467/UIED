@@ -22,6 +22,8 @@ def optical_change(path):
     background = None
     while (True):
      ret, frame = camera.read()
+     frame = cv2.resize(frame, (900,600))
+
      if background is None:
          background = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
          background = cv2.GaussianBlur(background, (21, 21), 0)
