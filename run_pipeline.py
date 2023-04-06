@@ -1,6 +1,8 @@
 from os.path import join as pjoin
 import cv2
 import os
+import detect_compo.lib_ip.ip_detection as det
+import detect_compo.lib_ip.ip_preprocessing as pre
 
 
 def resize_height_by_longest_edge(img_path, resize_length=800):
@@ -11,7 +13,41 @@ def resize_height_by_longest_edge(img_path, resize_length=800):
     else:
         return int(resize_length * (height / width))
 
-
+def optical_change(path):
+    import cv2
+    import numpy as np
+    camera = cv2.VideoCapture(path)
+    es = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9,4))
+    kernel = np.ones((5,5),np.uint8)
+    background = None
+    while (True):
+     ret, frame = camera.read()
+     if background is None:
+         background = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+         background = cv2.GaussianBlur(background, (21, 21), 0)
+         continue
+    
+     gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+     gray_frame = cv2.GaussianBlur(gray_frame, (21, 21), 0)
+    
+     diff = cv2.absdiff(background, gray_frame)
+     cv2.imshow('grad',diff)
+     diff = cv2.adaptiveThreshold(diff,255,cv2.ADAPTIVE_THRESH_GAUSSIAN_C,cv2.THRESH_BINARY,11,2)#cv2.threshold(diff, 25, 255, cv2.THRESH_BINARY)[1]
+     cv2.imshow('diff',diff)
+     #diff = cv2.dilate(diff, es, iterations = 2)
+     cnts, hierarchy = cv2.findContours(diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+     for c in cnts:
+         if cv2.contourArea(c) < 1500:
+             continue
+         (x, y, w, h) = cv2.boundingRect(c)
+         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    
+     cv2.imshow("contours", frame)
+     cv2.imshow("dif", diff)
+     cv2.waitKey(100)
+    cv2.destroyAllWindows()
+    camera.release()
 if __name__ == '__main__':
 
     '''
@@ -39,7 +75,7 @@ if __name__ == '__main__':
                   'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':1}
     # set input image path
     import os
-    ppp = 'data/input_old/frames/1_60/'
+    ppp = 'data/input_old/frames/11/'
     old_grey = []
     old_binary=[]
     complist = []
@@ -97,6 +133,11 @@ if __name__ == '__main__':
                             classifier=classifier, resize_by_height=resized_height, show=False, frame_no=fno,wai_key=1)
             import detect_compo.lib_ip.ip_preprocessing as pre
             if fno>0:
+                g1=cv2.medianBlur(grey, 25)
+                g2=cv2.medianBlur(old_grey[-1], 25)
+                off = g1 - g2
+                cv2.imshow('of', off)
+                cv2.waitKey(100)
                 #off = pre.gray_to_gradient(grey) - pre.gray_to_gradient(old_grey[-1])
                 #off = pre.gray_to_gradient(off)
 
@@ -149,8 +190,6 @@ if __name__ == '__main__':
                     #cv2.imshow('GRAND_exp',exp)
                     #print(f'\n\n exp max, mean, min  {exp.max()} {exp.mean()} {exp.min()} \n\n')
                     
-                    import detect_compo.lib_ip.ip_detection as det
-                    import detect_compo.lib_ip.ip_preprocessing as pre
                     import numpy as np
                     xx = np.array(exp)
                     xx /= (xx.max()/255.0)
