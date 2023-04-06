@@ -45,7 +45,7 @@ def avgboxx(org, components, color=(0, 255, 0), line=-1,
     :param show: show or not
     :return: labeled image
     """
-    if not show and write_path is None and not is_return: return
+    #if not show and write_path is None and not is_return: return
     board = np.zeros(org.shape[0:2]).astype(np.float)
     tboard = board.copy()
     fboard = board.copy()
@@ -55,10 +55,10 @@ def avgboxx(org, components, color=(0, 255, 0), line=-1,
         fboard = fboard + board
         board = tboard.copy()
     #fboard = cv2.cvtColor(fboard, cv2.COLOR_BGR2GRAY)
-    if show:
-        cv2.imshow(name, fboard)
-        if wait_key is not None:
-            cv2.waitKey(wait_key)
+    #if show:
+        #cv2.imshow(name, fboard)
+       # if wait_key is not None:
+            #cv2.waitKey(wait_key)
     if write_path is not None:
         # board = cv2.resize(board, (1080, 1920))
         # board = board[100:-110]
@@ -78,7 +78,7 @@ def draw_bounding_box(org, components, color=(0, 255, 0), line=2,
     :param show: show or not
     :return: labeled image
     """
-    if not show and write_path is None and not is_return: return
+    #if not show and write_path is None and not is_return: return
     board = org.copy()
     for compo in components:
         bbox = compo.put_bbox()

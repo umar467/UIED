@@ -22,7 +22,7 @@ if __name__ == '__main__':
         text:max-word-inline-gap: words with smaller distance than the gap are counted as a line
         text:max-line-gap: lines with smaller distance than the gap are counted as a paragraph
 
-        Tips:
+        Tips:print
         1. Larger *min-grad* produces fine-grained binary-map while prone to over-segment element to small pieces
         2. Smaller *min-ele-area* leaves tiny elements while prone to produce noises
         3. If not *merge-contained-ele*, the elements inside others will be recognized, while prone to produce noises
@@ -39,22 +39,33 @@ if __name__ == '__main__':
                   'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':1}
     # set input image path
     import os
-    ppp = 'data/input/frames/1/'
+    ppp = 'data/input_old/frames/1_60/'
     old_grey = []
     old_binary=[]
     complist = []
-    grandlist = []
+    skip=9
     fno=-1
     lst = os.listdir(ppp)
     lst.sort()
+    wno=0
     for filename in lst:
-        print(filename)
         f = os.path.join(ppp,filename)
         input_path_img = f
-        fno = fno + 1
+        
+        if skip == 1:
+            skip =9
+            
+        else:
+            skip = skip -1
+            continue
+        
+        
+        #print(filename)
+
+        
 
         output_root = 'data/output/frames/1/'
-
+        demo_out = 'data/output/frames/d/'
         resized_height = resize_height_by_longest_edge(input_path_img)
 
         is_ip = True 
@@ -83,34 +94,61 @@ if __name__ == '__main__':
                 classifier['Elements'] = CNN('Elements')
                 # classifier['Noise'] = CNN('Noise')
             grey, binary, uicompos, org = ip.compo_detection(input_path_img, output_root, key_params,
-                            classifier=classifier, resize_by_height=resized_height, show=True, frame_no=fno,wai_key=1)
-            if fno%10==0:
+                            classifier=classifier, resize_by_height=resized_height, show=False, frame_no=fno,wai_key=1)
+            import detect_compo.lib_ip.ip_preprocessing as pre
+            if fno>0:
+                #off = pre.gray_to_gradient(grey) - pre.gray_to_gradient(old_grey[-1])
+                #off = pre.gray_to_gradient(off)
+
+                import numpy as np
+                hsv = np.zeros_like(org)
+                hsv[...,1] = 255
+                flow = cv2.calcOpticalFlowFarneback(old_grey[-1],grey, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+
+                mag, ang = cv2.cartToPolar(flow[...,0], flow[...,1])
+                hsv[...,0] = ang*180/np.pi/2
+                hsv[...,2] = cv2.normalize(mag,None,0,255,cv2.NORM_MINMAX)
+                rgb = cv2.cvtColor(hsv,cv2.COLOR_HSV2BGR)
+            
+                #cv2.imshow('mag', mag)
+                # cv2.imshow('ang', ang)
+                # cv2.imshow('OF',rgb)
+                # cv2.waitKey(30)
+                of = mag.sum() #off.sum()
+                
+                # cv2.imshow('current', grey)
+                # cv2.imshow('old', old_grey[-1])
+                #cv2.imshow('frame_delta', grey - old_grey[-1])
+                #cv2.waitKey(10)
+                if of < 5:
+                    continue
+                if of < 500000:
+                    continue
+                #if of > 500000:
+                    #print(of)
+            fno = fno + 1
+            if fno%30==0:
+               
                 if fno !=0:
                     summation = old_grey[0].astype(float)
-                    for qij in range(9):
+                    for qij in range(29):
                         summation = summation + old_grey[qij]
                     import matplotlib.pyplot as plt
-                    plt.imshow(summation)
-                    plt.show()
+                    
                     new_list = []
                     for ew in complist:
                         for re in ew:
                             new_list.append(re)
                     import detect_compo.lib_ip.ip_detection as det
-                    #qq = det.merge_intersected_corner(new_list, org, True, max_gap=(0,0), max_ele_height=25)
-                    qq=new_list
-                    for trt in qq:
-                        grandlist.append(trt)
+                    
                     import detect_compo.lib_ip.ip_draw as draw
-                    draw.draw_bounding_box(org, qq, show=True, name='ALL_merged', wait_key=500)
-                    #grandlist = det.merge_intersected_corner(grandlist, org, True, max_gap=(0,0), max_ele_height=25)
-                    draw.draw_bounding_box(org, grandlist, show=True, name='GRAND_merged', wait_key=500)
-                    exp =draw.avgboxx(org, grandlist, show=True, name='GRAND_exp', wait_key=500)
-                    cv2.imshow('GRAND_exp',exp)
-                    print(f'\n\n exp max, mean, min  {exp.max()} {exp.mean()} {exp.min()} \n\n')
-                    for qij in range(1,9,2):
-                        plt.imshow(old_grey[qij]-old_grey[qij+1])
-                        plt.show()
+                    org_copy = org.copy()
+                    gm = draw.draw_bounding_box(org, uicompos, show=False, name='GRAND_merged', wait_key=5)
+                    cv2.imwrite(demo_out+str(wno)+'F.jpg', gm)
+                    exp =draw.avgboxx(org, new_list, show=False, name='GRAND_exp', wait_key=5)
+                    #cv2.imshow('GRAND_exp',exp)
+                    #print(f'\n\n exp max, mean, min  {exp.max()} {exp.mean()} {exp.min()} \n\n')
+                    
                     import detect_compo.lib_ip.ip_detection as det
                     import detect_compo.lib_ip.ip_preprocessing as pre
                     import numpy as np
@@ -119,10 +157,16 @@ if __name__ == '__main__':
                     xx = xx.astype(np.uint8)
                     org = cv2.cvtColor(xx, cv2.COLOR_GRAY2BGR)
                     #org =summation
-                    binary = pre.binarization(org, grad_min=20, show=True, wait_key=10)
+                    binary = pre.binarization(org, grad_min=20, show=False, wait_key=10)
                     uicompos = det.component_detection(binary, min_obj_area=5)
-                    cv2.imshow('testx',binary)
+                    #cv2.imshow('testx',binary)
                     xx=xx
+                    new_list = []
+                    complist = [uicompos]
+                    gm = draw.draw_bounding_box(org_copy, uicompos, show=False, name='Final_MA', wait_key=5, color=(255,0,0))
+                    cv2.imwrite(demo_out+str(wno)+'V.jpg', gm)
+                    print(demo_out+str(wno)+'V.jpg')
+                    wno=wno+1
                 old_grey = [grey]
                 old_binary = [binary]
                 complist = [uicompos]
@@ -131,8 +175,8 @@ if __name__ == '__main__':
                 old_grey.append(grey)
                 old_binary.append(binary)
                 complist.append(uicompos)
-                cv2.imshow('frame_delta', grey - old_grey[fno-1])
-                cv2.waitKey(10)
+                #cv2.imshow('frame_delta', grey - old_grey[fno-1])
+                #cv2.waitKey(10)
         
         
         if is_merge:

@@ -89,7 +89,7 @@ class Bbox:
         # intersected
         if easy:
             if iou >= 0.2 and iob > 0.2 and ioa > 0.2:
-                # print("Easy")
+                print("Easy")
                 return 2
         if iou >= 0.5 and iob > 0.5 and ioa > 0.5:
             return 2
