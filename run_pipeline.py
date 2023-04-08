@@ -77,7 +77,7 @@ if __name__ == '__main__':
                   'max-word-inline-gap':4, 'max-line-gap':4, 'wai_key':1}
     # set input image path
     import os
-    ppp = 'data/input_old/frames/11/'
+    ppp = 'data/input/frames/11/'
     old_grey = []
     old_binary=[]
     complist = []
