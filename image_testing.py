@@ -9,6 +9,7 @@ Created on Thu Apr  6 18:13:48 2023
 from os.path import join as pjoin
 import cv2
 import os
+import random
 import numpy as np
 import detect_compo.lib_ip.ip_detection as det
 import detect_compo.lib_ip.ip_preprocessing as pre
@@ -20,10 +21,14 @@ import detect_compo.lib_ip.ip_draw as draw
 def optical_change(path):
     camera = cv2.VideoCapture(path)
     background = None
-    frame_diff_height=600
-    frame_compute_height=600
-    frame_diff_treshold = 3822450
-
+    frame_diff_height=900
+    frame_compute_height=900
+    frame_diff_treshold = 2822450
+    frame_averaging = False
+    diff_frame =[]
+    frame=[]
+    gray_frame=[]
+    uicompos=[]
 
     def resize_by_height(org, resize_height):
         w_h_ratio = org.shape[1] / org.shape[0]
@@ -51,9 +56,18 @@ def optical_change(path):
         #frame = cv2.medianBlur(frame, 10)
         return frame, gray_frame
     def process_frame(frame):
-        diff_frame = process_diff_frame(frame)
+        
         frame, gray_frame = process_compute_frame(frame)
-        return diff_frame, frame, gray_frame
+        
+        bin_frame = pre.binarization(gray_frame, 20)
+        det.rm_line(bin_frame)
+        
+        uicompos = det.component_detection(bin_frame, min_obj_area=5)
+        if frame_averaging:
+            diff_frame = process_diff_frame(frame)
+            return diff_frame, frame, gray_frame, uicompos
+        else:
+            return frame, gray_frame, uicompos
     def find_contours(diff, frame):
         cnts, hierarchy = cv2.findContours(diff.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
        
@@ -65,37 +79,57 @@ def optical_change(path):
        
         cv2.imshow("contours", frame)
         cv2.waitKey(10)
-        
+    def random_sample_compos(fg_avg):
+        totalFrames = int(camera.get(cv2.CAP_PROP_FRAME_COUNT))
+        randomFrameNumbers = random.sample(range(0, totalFrames), 10)
+        for x in randomFrameNumbers:
+            camera.set(cv2.CAP_PROP_POS_FRAMES,x)
+            _, image = camera.read()
+            diff_frame, frame, gray_frame, uicompos = process_frame(image)
+            fg_avg = fg_avg + draw.avgboxx(frame, uicompos)
+        camera.set(cv2.CAP_PROP_POS_FRAMES,0)
+        return fg_avg
+    def normalize_fg(fg_avg):
+        mean = fg_avg.mean()
+        high = fg_avg.max()
+        p98 = high - ((high-mean)*0.8)
+        fg_avg[fg_avg<p98]=0
+        fg_avg[fg_avg>p98]=255
+        fg_avg[fg_avg==p98]=0
+        fg = fg_avg.copy()
+        fv_avg = 0
+        return fg, fg_avg
     while (True):
      _, frame = camera.read()
-     diff_frame, frame, gray_frame = process_frame(frame)
-
-     bin_frame = pre.binarization(gray_frame, 20)
-     det.rm_line(bin_frame)
-     uicompos = det.component_detection(bin_frame, min_obj_area=5)
+     if frame_averaging:
+         diff_frame, frame, gray_frame, uicompos =process_frame(frame)
+     else:
+         frame, gray_frame, uicompos = process_frame(frame)
+         
           
      if background is None:
          background = diff_frame
-         fg = draw.avgboxx(frame, uicompos)
-         fg_avg = fg.copy()
+         if frame_averaging:
+             fg = draw.avgboxx(frame, uicompos)
+             fg_avg_global = random_sample_compos(fg)
+             fg_avg = fg_avg_global.copy()
+             fg, fg_avg = normalize_fg(fg_avg)
          continue
-     elif frame_diff(diff_frame) > frame_diff_treshold:
-         background = diff_frame
-         mean = fg_avg.mean()
-         high = fg_avg.max()
-         p98 = mean#high - ((high-mean)*0.2)
-         fg_avg[fg_avg<p98]=0
-         fg_avg[fg_avg>p98]=255
-         fg_avg[fg_avg==p98]=0
-         fg = fg_avg.copy()
-         
-         continue
+     if frame_averaging:
+         if frame_diff(diff_frame) > frame_diff_treshold:
+             background = diff_frame
+             #print("Scene Cahngeed !!! -------")
+             fg, fg_avg = normalize_fg(fg_avg)
+             continue
 
-     draw.draw_bounding_box(fg, frame, uicompos, show=True, name='components', wait_key=10)
-     fg_avg = fg_avg + draw.avgboxx(frame, uicompos)
-     cv2.imshow('12',fg)
+     if frame_averaging:
+         draw.draw_bounding_box(frame, uicompos, show=True, name='components', wait_key=1, fg =fg)
+         fg_avg = fg_avg + draw.avgboxx(frame, uicompos)
+     else:
+         draw.draw_bounding_box(frame, uicompos, show=True, name='components', wait_key=10)
+     #cv2.imshow('12',fg)
      
     cv2.destroyAllWindows()
     camera.release()
 if __name__ == '__main__':
-    optical_change("data/input/videos/11.mp4")
+    optical_change("data/input/videos/1.mp4")
