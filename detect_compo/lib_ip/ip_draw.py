@@ -65,7 +65,7 @@ def avgboxx(org, components, color=(0, 255, 0), line=-1,
         cv2.imwrite(write_path, board)
     return fboard
 
-def draw_bounding_box(org, components, color=(0, 255, 0), line=2,
+def draw_bounding_box(fg,org, components, color=(0, 255, 0), line=2,
                       show=False, write_path=None, name='board', is_return=False, wait_key=0):
     """
     Draw bounding box of components on the original image
@@ -82,6 +82,12 @@ def draw_bounding_box(org, components, color=(0, 255, 0), line=2,
     board = org.copy()
     for compo in components:
         bbox = compo.put_bbox()
+        crop = fg[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        #cv2.imshow('crop',crop)
+        #print(crop.mean())
+        if crop.mean()<200:
+            continue
+
         board = cv2.rectangle(board, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, line)
     if show:
         cv2.imshow(name, board)
