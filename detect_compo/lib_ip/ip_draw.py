@@ -34,7 +34,7 @@ def draw_bounding_box_class(org, components, color_map=C.COLOR, line=2, show=Fal
 
 
 def draw_bounding_box(org, components, color=(0, 255, 0), line=2,
-                      show=False, write_path=None, name='board', is_return=False, wait_key=0):
+                      show=False, write_path=None, name='board', is_return=False, wait_key=0, SIFT_average_image = None, SIFT_Skip_Treshold=30):
     """
     Draw bounding box of components on the original image
     :param org: original image
@@ -46,10 +46,14 @@ def draw_bounding_box(org, components, color=(0, 255, 0), line=2,
     :param show: show or not
     :return: labeled image
     """
-    if not show and write_path is None and not is_return: return
     board = org.copy()
     for compo in components:
         bbox = compo.put_bbox()
+        color = (0,255,0)
+        if SIFT_average_image is not None:
+            crop = SIFT_average_image[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+            if crop.mean()<SIFT_Skip_Treshold:
+                color = (0,0,255)
         board = cv2.rectangle(board, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, line)
     if show:
         cv2.imshow(name, board)

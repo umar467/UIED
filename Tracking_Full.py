@@ -40,7 +40,7 @@ def process_frame(frame):
 
 out_path = 'data/output/frames/11_SIFT_merged/'
 Path(out_path).mkdir(parents=True, exist_ok=True)
-frame_size =2160
+frame_size =800
 video = cv2. VideoCapture("data/input/videos/11.mp4")
 ret, video_frame = video.read()
 sift = cv2.SIFT_create()
@@ -106,7 +106,7 @@ while(video.isOpened()):
             outline_historical = normalize_fg(outline_historical)
             cv2.imshow('outline_historical', resize_by_height(outline_historical,800))
             uicompos = process_frame(gray2)
-            drawn = draw.draw_bounding_box_sift(video_frame2, uicompos, show=False, name='components_SIFT', wait_key=1,fg = outline_historical)
+            drawn = draw.draw_bounding_box(video_frame2, uicompos, show=False, name='components_SIFT', wait_key=1,SIFT_average_image = outline_historical)
             fno = str(counter).zfill(5)
             fname = out_path+fno+'.jpg'
             cv2.imshow('Processed', resize_by_height(drawn,800))
@@ -118,7 +118,7 @@ while(video.isOpened()):
             outline_historical = outline_historical + outline
             outline = outline_empty.copy()
             uicompos = process_frame(gray2)
-            drawn = draw.draw_bounding_box_sift(video_frame2, uicompos, show=False, name='components_SIFT', wait_key=1,fg = outline_historical)
+            drawn = draw.draw_bounding_box(video_frame2, uicompos, show=False, name='components_SIFT', wait_key=1,SIFT_average_image = outline_historical)
             fno = str(counter).zfill(5)
             fname = out_path+fno+'.jpg'
             cv2.imshow('Processed', resize_by_height(drawn,800))
