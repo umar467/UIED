@@ -8,6 +8,8 @@ Created on Mon Apr 10 01:16:42 2023
 
 import numpy as np
 import cv2
+from os.path import join as pjoin
+from pathlib import Path
 import datetime
 import detect_compo.lib_ip.ip_detection as det
 import detect_compo.lib_ip.ip_preprocessing as pre
@@ -35,6 +37,9 @@ def process_frame(frame):
     det.rm_line(bin_frame)
     uicompos = det.component_detection(bin_frame, min_obj_area=5)
     return uicompos
+
+out_path = 'data/output/frames/11_SIFT_merged/'
+Path(out_path).mkdir(parents=True, exist_ok=True)
 
 video = cv2. VideoCapture("data/input/videos/11.mp4")
 ret, video_frame = video.read()
@@ -95,14 +100,14 @@ while(video.isOpened()):
         cv2.imshow('Matches', img3)
         cv2.imshow('outline', outline_historical)
         counter = counter + 1
-        if counter%16==0:
+        if counter%6==0:
             outline_historical = outline_historical + outline
             outline = outline_empty.copy()
             outline_historical = normalize_fg(outline_historical)
             cv2.imshow('outline_historical',outline_historical)
             uicompos = process_frame(gray2)
-            draw.draw_bounding_box_sift(video_frame2, uicompos, show=True, name='components_SIFT', wait_key=1,fg = outline_historical)
-            
+            drawn = draw.draw_bounding_box_sift(video_frame2, uicompos, show=True, name='components_SIFT', wait_key=1,fg = outline_historical)
+            #cv2.imwrite(out_path+str(counter)+'.jpg',drawn)
             draw.draw_bounding_box(video_frame2, uicompos, show=True, name='components', wait_key=1)
             
         else:
