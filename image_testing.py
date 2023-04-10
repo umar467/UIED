@@ -18,8 +18,16 @@ import detect_compo.lib_ip.ip_draw as draw
 
 
 
-def optical_change(path):
-    camera = cv2.VideoCapture(path)
+def optical_change():
+    
+    from pathlib import Path
+    out_path = 'data/output/frames/11_frame_averaged/'
+    in_path = "data/input/videos/11.mp4"
+    
+    Path(out_path).mkdir(parents=True, exist_ok=True)
+    camera = cv2.VideoCapture(in_path)
+    fps = camera.get(cv2.CAP_PROP_FPS)
+    
     background = None
     frame_diff_height=900
     frame_compute_height=900
@@ -103,7 +111,7 @@ def optical_change(path):
         return fg, fg_avg
     while (keep_reading):
      ret, frame = camera.read()
-     if ret ==0 or fno>10:
+     if ret ==0:
          keep_reading = False
          continue
      fno= fno+1
@@ -115,12 +123,6 @@ def optical_change(path):
           
      if background is None:
          background = diff_frame
-         #fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-         #fourcc = cv2.VideoWriter_fourcc(*'MP4V')
-         #out=cv2.VideoWriter('out.mp4', fourcc,20.0,frame.shape[0:2])
-         out = cv2.VideoWriter('filename.avi', 
-                         cv2.VideoWriter_fourcc(*'MJPG'),
-                         10, frame.shape[0:2])
          if frame_averaging:
              fg = draw.avgboxx(frame, uicompos)
              fg_avg_global = random_sample_compos(fg)
@@ -135,17 +137,22 @@ def optical_change(path):
              continue
 
      if frame_averaging:
-         drawn = draw.draw_bounding_box(frame, uicompos, show=False, name='components', wait_key=1, fg =fg)
+         drawn = draw.draw_bounding_box(frame, uicompos, show=True, name='components', wait_key=1, fg =fg)
          fg_avg = fg_avg + draw.avgboxx(frame, uicompos)
      else:
-         drawn = draw.draw_bounding_box(frame, uicompos, show=False, name='components', wait_key=10)
-     #cv2.imshow('12',fg)
-     out.write(gray_frame)
+         drawn = draw.draw_bounding_box(frame, uicompos, show=True, name='components', wait_key=1)
+     #cv2.imwrite(out_path+str(fno)+'.jpg',drawn)
+     
      
     
     camera.release()
-    out.release()
-    print("video saved")
+
     cv2.destroyAllWindows()
 if __name__ == '__main__':
-    optical_change("data/input/videos/4.mp4")
+    optical_change()
+    
+    
+    
+    
+    
+    
