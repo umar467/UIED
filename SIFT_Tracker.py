@@ -40,11 +40,11 @@ def process_frame(frame):
 
 out_path = 'data/output/frames/11_SIFT_merged/'
 Path(out_path).mkdir(parents=True, exist_ok=True)
-
+frame_size =800
 video = cv2. VideoCapture("data/input/videos/11.mp4")
 ret, video_frame = video.read()
 sift = cv2.SIFT_create()
-video_frame = resize_by_height(video_frame, 800)
+video_frame = resize_by_height(video_frame, frame_size)
 outline = np.zeros(video_frame.shape[0:2])
 outline_historical = outline.copy()
 outline_empty = outline.copy()
@@ -52,7 +52,7 @@ counter = 0
 
 while(video.isOpened()):
     if ret == True:
-        video_frame = resize_by_height(video_frame, 800)
+        video_frame = resize_by_height(video_frame, frame_size)
         gray = cv2.cvtColor(video_frame, cv2.COLOR_BGR2GRAY)
         kp, des = sift.detectAndCompute(gray, None)
         detected = cv2.drawKeypoints(gray, kp, video_frame)
@@ -61,7 +61,7 @@ while(video.isOpened()):
        
         
         ret, video_frame2 = video.read()
-        video_frame2 = resize_by_height(video_frame2, 800)
+        video_frame2 = resize_by_height(video_frame2, frame_size)
         gray2 = cv2.cvtColor(video_frame2, cv2.COLOR_BGR2GRAY)
         kp2, des2 = sift.detectAndCompute(gray2, None)
         detected2 = cv2.drawKeypoints(gray2, kp2, video_frame2)
@@ -98,7 +98,7 @@ while(video.isOpened()):
         
         img3 = cv2.drawMatchesKnn(video_frame,kp,video_frame2,kp2,matches,None,**draw_params)
         cv2.imshow('Matches', img3)
-        cv2.imshow('outline', outline_historical)
+        cv2.imshow('outline', outline)
         counter = counter + 1
         if counter%6==0:
             outline_historical = outline_historical + outline
@@ -107,13 +107,22 @@ while(video.isOpened()):
             cv2.imshow('outline_historical',outline_historical)
             uicompos = process_frame(gray2)
             drawn = draw.draw_bounding_box_sift(video_frame2, uicompos, show=True, name='components_SIFT', wait_key=1,fg = outline_historical)
+            fno = str(counter).zfill(5)
+            fname = out_path+fno+'.jpg'
+            
+            #cv2.imwrite(fname,drawn)
             #cv2.imwrite(out_path+str(counter)+'.jpg',drawn)
-            draw.draw_bounding_box(video_frame2, uicompos, show=True, name='components', wait_key=1)
+            #draw.draw_bounding_box(video_frame2, uicompos, show=True, name='components', wait_key=1)
             
         else:
             outline_historical = outline_historical + outline
             outline = outline_empty.copy()
-       
+            uicompos = process_frame(gray2)
+            drawn = draw.draw_bounding_box_sift(video_frame2, uicompos, show=True, name='components_SIFT', wait_key=1,fg = outline_historical)
+            fno = str(counter).zfill(5)
+            fname = out_path+fno+'.jpg'
+            
+            #cv2.imwrite(fname,drawn)
 
     ret, video_frame = video.read()
     key = cv2.waitKey(1)
@@ -122,3 +131,4 @@ while(video.isOpened()):
 
 video.release()
 cv2.destroyAllWindows()
+print("Finsihed!!!")

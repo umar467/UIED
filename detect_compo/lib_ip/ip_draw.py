@@ -122,8 +122,8 @@ def draw_bounding_box_sift(org, components, color=(0, 255, 0), line=2, fg =None,
             
             
             if crop.mean()<30:
-                print(crop.mean())
-                cv2.imshow('crop',crop)
+                #print(crop.mean())
+                #cv2.imshow('crop',crop)
                 board = cv2.rectangle(board, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0,0,255), line)
                 continue
 
