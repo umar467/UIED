@@ -46,7 +46,7 @@ if __name__ == '__main__':
         input_path_img = f
         fno = fno + 1
 
-        output_root = 'data/output/frames/3/'
+        output_root = 'data/output/frames/2/'
 
         resized_height = resize_height_by_longest_edge(input_path_img)
 
@@ -61,7 +61,7 @@ if __name__ == '__main__':
             os.makedirs(pjoin(output_root, 'ocr'), exist_ok=True)
             models = eval.load()
             ocr.east(input_path_img, output_root, models, key_params['max-word-inline-gap'],
-                    resize_by_height=resized_height, show=False)
+                    resize_by_height=resized_height, show=True)
 
         if is_ip:
             import detect_compo.ip_region_proposal as ip

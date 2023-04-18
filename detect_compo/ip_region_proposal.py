@@ -83,14 +83,14 @@ def compo_detection(input_img_path, output_root, uied_params,
     det.rm_line(binary, show=show, wait_key=wai_key)
     # det.rm_line_v_h(binary, show=show)
     uicompos = det.component_detection(binary, min_obj_area=int(uied_params['min-ele-area']))
-    # draw.draw_bounding_box(org, uicompos, show=show, name='components', wait_key=wai_key)
+    draw.draw_bounding_box(org, uicompos, show=show, name='components', wait_key=wai_key)
 
     # *** Step 3 *** results refinement
     uicompos = det.merge_intersected_corner(uicompos, org, is_merge_contained_ele=uied_params['merge-contained-ele'],
                                             max_gap=(0, 0), max_ele_height=25)
     Compo.compos_update(uicompos, org.shape)
     Compo.compos_containment(uicompos)
-    # draw.draw_bounding_box(org, uicompos, show=show, name='merged', wait_key=wai_key)
+    draw.draw_bounding_box(org, uicompos, show=show, name='merged', wait_key=wai_key)
 
     # *** Step 4 ** nesting inspection: treat the big compos as block and check if they have nesting element
     uicompos += nesting_inspection(org, grey, uicompos, ffl_block=uied_params['ffl-block'])

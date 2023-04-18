@@ -55,7 +55,7 @@ while(video.isOpened()):
         video_frame = resize_by_height(video_frame, frame_size)
         gray = cv2.cvtColor(video_frame, cv2.COLOR_BGR2GRAY)
         kp, des = sift.detectAndCompute(gray, None)
-        detected = cv2.drawKeypoints(gray, kp, video_frame)
+        #detected = cv2.drawKeypoints(gray, kp, video_frame)
         #cv2.imshow("SIFT1", detected)
         
        
@@ -64,7 +64,7 @@ while(video.isOpened()):
         video_frame2 = resize_by_height(video_frame2, frame_size)
         gray2 = cv2.cvtColor(video_frame2, cv2.COLOR_BGR2GRAY)
         kp2, des2 = sift.detectAndCompute(gray2, None)
-        detected2 = cv2.drawKeypoints(gray2, kp2, video_frame2)
+        #detected2 = cv2.drawKeypoints(gray2, kp2, video_frame2)
         #cv2.imshow("SIFT2", detected2)
         
         # FLANN parameters
@@ -89,6 +89,7 @@ while(video.isOpened()):
                 if dis<0.05:
                     matchesMask[i]=[1,0]    
                     #print(i, pt1,pt2, dis)
+                    # Not for Visualization: Circle for SIFT Tracking
                     cv2.circle(outline, (int(pt1[0]),int(pt1[1])), 5, (255,255,255), thickness=-1, lineType=8, shift=0)
         
         draw_params = dict(matchColor = (0,255,0),
@@ -97,14 +98,16 @@ while(video.isOpened()):
                            flags = 0)
         
         img3 = cv2.drawMatchesKnn(video_frame,kp,video_frame2,kp2,matches,None,**draw_params)
-        cv2.imshow('Matches', resize_by_height(img3,800))
-        cv2.imshow('outline', resize_by_height(outline,800))
+        #cv2.imshow('Matches', resize_by_height(img3,800))
+        #cv2.imshow('outline', resize_by_height(outline,800))
         counter = counter + 1
-        if counter%6==0:
+        if counter%16==0:
             outline_historical = outline_historical + outline
             outline = outline_empty.copy()
             outline_historical = normalize_fg(outline_historical)
+            img = cv2.medianBlur(outline_historical.astype(np.uint8), 7)
             cv2.imshow('outline_historical', resize_by_height(outline_historical,800))
+            #cv2.imshow('outline_historical_blurred', resize_by_height(img,800))
             uicompos = process_frame(gray2)
             drawn = draw.draw_bounding_box(video_frame2, uicompos, show=False, name='components_SIFT', wait_key=1,SIFT_average_image = outline_historical)
             fno = str(counter).zfill(5)
@@ -118,10 +121,10 @@ while(video.isOpened()):
             outline_historical = outline_historical + outline
             outline = outline_empty.copy()
             uicompos = process_frame(gray2)
-            drawn = draw.draw_bounding_box(video_frame2, uicompos, show=False, name='components_SIFT', wait_key=1,SIFT_average_image = outline_historical)
+            #drawn = draw.draw_bounding_box(video_frame2, uicompos, show=False, name='components_SIFT', wait_key=1,SIFT_average_image = outline_historical)
             fno = str(counter).zfill(5)
             fname = out_path+fno+'.jpg'
-            cv2.imshow('Processed', resize_by_height(drawn,800))
+            #cv2.imshow('Processed', resize_by_height(drawn,800))
             #cv2.imwrite(fname,drawn)
 
     ret, video_frame = video.read()
