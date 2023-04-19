@@ -42,6 +42,7 @@ out_path = 'data/output/frames/11_SIFT_merged/'
 Path(out_path).mkdir(parents=True, exist_ok=True)
 frame_size =800
 video = cv2. VideoCapture("data/input/videos/11.mp4")
+video = cv2. VideoCapture("data/input/videos/gmap_AR_mixed.mp4")
 ret, video_frame = video.read()
 sift = cv2.SIFT_create()
 video_frame = resize_by_height(video_frame, frame_size)
