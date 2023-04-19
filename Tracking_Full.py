@@ -40,7 +40,7 @@ def process_frame(frame):
 
 out_path = 'data/output/frames/11_SIFT_merged/'
 Path(out_path).mkdir(parents=True, exist_ok=True)
-frame_size =2160
+frame_size =800
 video = cv2. VideoCapture("data/input/videos/11.mp4")
 ret, video_frame = video.read()
 sift = cv2.SIFT_create()

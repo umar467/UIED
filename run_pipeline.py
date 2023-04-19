@@ -155,18 +155,18 @@ if __name__ == '__main__':
             
                 #cv2.imshow('mag', mag)
                 # cv2.imshow('ang', ang)
-                # cv2.imshow('OF',rgb)
-                # cv2.waitKey(30)
+                cv2.imshow('OF',rgb)
+                cv2.waitKey(30)
                 of = mag.sum() #off.sum()
                 
-                # cv2.imshow('current', grey)
-                # cv2.imshow('old', old_grey[-1])
-                #cv2.imshow('frame_delta', grey - old_grey[-1])
-                #cv2.waitKey(10)
-                if of < 5:
-                    continue
-                if of < 500000:
-                    continue
+                cv2.imshow('current', grey)
+                cv2.imshow('old', old_grey[-1])
+                cv2.imshow('frame_delta', grey - old_grey[-1])
+                cv2.waitKey(10)
+                #if of < 5:
+                 #   continue
+                #if of < 500000:
+                 #   continue
                 #if of > 500000:
                     #print(of)
             fno = fno + 1
@@ -189,8 +189,8 @@ if __name__ == '__main__':
                     gm = draw.draw_bounding_box(org, uicompos, show=False, name='GRAND_merged', wait_key=5)
                     cv2.imwrite(demo_out+str(wno)+'F.jpg', gm)
                     exp =draw.avgboxx(org, new_list, show=False, name='GRAND_exp', wait_key=5)
-                    #cv2.imshow('GRAND_exp',exp)
-                    #print(f'\n\n exp max, mean, min  {exp.max()} {exp.mean()} {exp.min()} \n\n')
+                    cv2.imshow('GRAND_exp',exp)
+                    print(f'\n\n exp max, mean, min  {exp.max()} {exp.mean()} {exp.min()} \n\n')
                     
                     import numpy as np
                     xx = np.array(exp)
@@ -200,7 +200,7 @@ if __name__ == '__main__':
                     #org =summation
                     binary = pre.binarization(org, grad_min=20, show=False, wait_key=10)
                     uicompos = det.component_detection(binary, min_obj_area=5)
-                    #cv2.imshow('testx',binary)
+                    cv2.imshow('testx',binary)
                     xx=xx
                     new_list = []
                     complist = [uicompos]
@@ -216,8 +216,8 @@ if __name__ == '__main__':
                 old_grey.append(grey)
                 old_binary.append(binary)
                 complist.append(uicompos)
-                #cv2.imshow('frame_delta', grey - old_grey[fno-1])
-                #cv2.waitKey(10)
+                cv2.imshow('frame_delta', grey - old_grey[fno-1])
+                cv2.waitKey(10)
         
         
         if is_merge:
