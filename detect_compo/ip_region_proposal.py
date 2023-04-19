@@ -77,9 +77,6 @@ def compo_detection(input_img_path, output_root, uied_params,
     binary = pre.binarization(org, grad_min=int(uied_params['min-grad']), show=show, wait_key=wai_key)
 
     # *** Step 2 *** element detection
-    print(wai_key)
-    print(wai_key)
-    print(wai_key)
     det.rm_line(binary, show=show, wait_key=wai_key)
     # det.rm_line_v_h(binary, show=show)
     uicompos = det.component_detection(binary, min_obj_area=int(uied_params['min-ele-area']))

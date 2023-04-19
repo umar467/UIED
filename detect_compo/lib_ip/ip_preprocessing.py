@@ -3,14 +3,13 @@ import numpy as np
 from config.CONFIG_UIED import Config
 C = Config()
 
+def resize_by_height(org, resize_height):
+    w_h_ratio = org.shape[1] / org.shape[0]
+    resize_w = resize_height * w_h_ratio
+    re = cv2.resize(org, (int(resize_w), int(resize_height)))
+    return re
 
 def read_img(path, resize_height=None, kernel_size=None):
-
-    def resize_by_height(org):
-        w_h_ratio = org.shape[1] / org.shape[0]
-        resize_w = resize_height * w_h_ratio
-        re = cv2.resize(org, (int(resize_w), int(resize_height)))
-        return re
 
     try:
         img = cv2.imread(path)
@@ -20,7 +19,7 @@ def read_img(path, resize_height=None, kernel_size=None):
             print("*** Image does not exist ***")
             return None, None
         if resize_height is not None:
-            img = resize_by_height(img)
+            img = resize_by_height(img, resize_height)
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         return img, gray
 
@@ -71,4 +70,4 @@ def binarization(org, grad_min, show=False, write_path=None, wait_key=0):
         cv2.imshow('binary', morph)
         if wait_key is not None:
             cv2.waitKey(wait_key)
-    return morph
+    return morph, grey
