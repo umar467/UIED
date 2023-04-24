@@ -21,7 +21,7 @@ class component_detector:
         
     def get_components(self, frame):
         self.current_frame = frame
-        components = det.component_detection(frame[2], min_obj_area = self.config.min_object_area)        
+        components = det.component_detection(frame[3], min_obj_area = self.config.min_object_area)        
         self.data.append([self.loaded_frames, components])
         self.loaded_frames+=1
         if self.config.logging > 2:

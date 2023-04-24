@@ -57,7 +57,7 @@ class SIFT_Processor:
                     match_points.append(pt1)
                     if self.config.logging > 4:
                         print(i, pt1,pt2, dis)
-        self.data.append(match_points)
+        self.static_objects.append(match_points)
         
         if self.config.logging > 2:
             print(f'{len(match_points)} static SIFT points discovered from last frame.')

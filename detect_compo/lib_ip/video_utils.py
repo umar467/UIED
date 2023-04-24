@@ -36,7 +36,7 @@ class video_reader:
         if self.config.resize_input_image_height is  not None:
             rgb_frame = image_processing.resize_by_height(rgb_frame, self.config.resize_input_image_height)
         binary_rgb_frame, grey_frame = image_processing.binarization(rgb_frame, self.config.grad_min)
-        return [self.current_rgb_frame_number, rgb_frame, grey_frame]
+        return [self.current_rgb_frame_number, rgb_frame, grey_frame, binary_rgb_frame]
     
     def get_next_frame(self):
         '''

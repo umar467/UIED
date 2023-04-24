@@ -21,18 +21,23 @@ import detect_compo.lib_ip.visualize_util as visualizer
 
 video  = video_reader(config)
 frame = video.get_processed_frame()
-
-sift_processor = SIFT_Processor(config)
-sift_processor.get_static_objects(frame)
-        
-frame2 = video.get_processed_frame()
-sps = sift_processor.get_static_objects(frame2)
-
-
 component_detector = component_detector(config)
-detected_compos = component_detector.get_components(frame)
+sift_processor = SIFT_Processor(config)
 
-visualizer.visualize_points(frame, sps)
+while(frame is not None):
+    
+    sift_processor.get_static_objects(frame)
+
+      
+    frame = video.get_processed_frame()
+    sps = sift_processor.get_static_objects(frame)
+
+
+    detected_compos = component_detector.get_components(frame)
+    
+    visualizer.visualize_points(frame, sps)
+    
+    visualizer.visualize_components(frame, detected_compos)
 
 
 """

@@ -3,13 +3,13 @@ class Configuration:
     def __init__(self):
         
         #NEW
-        self.video_path = "data/input/videos/11.mp4"
-        self.input_frame_blur_kernel_size = 3
+        self.video_path = "data/input/videos/1.mp4"
+        self.input_frame_blur_kernel_size =  None# A number or None not zero.
         self.resize_input_image_height = 800
         self.grad_min = 20
         self.min_object_area= 5
         
-        self.logging = 5
+        self.logging = 3
         self.visualization = 5
         #NEW
         
