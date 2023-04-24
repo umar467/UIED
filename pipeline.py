@@ -17,17 +17,17 @@ config = Configuration()
 from detect_compo.lib_ip.video_utils import video_reader
 from detect_compo.lib_ip.SIFT_utils import SIFT_Processor
 from detect_compo.lib_ip.component_detection_utils import component_detector
+from detect_compo.lib_ip.ocr_utils import text_extractor
 import detect_compo.lib_ip.visualize_util as visualizer
 
 video  = video_reader(config)
 frame = video.get_processed_frame()
 component_detector = component_detector(config)
 sift_processor = SIFT_Processor(config)
+text_extractor = text_extractor(config)
 
+sift_processor.get_static_objects(frame)
 while(frame is not None):
-    
-    sift_processor.get_static_objects(frame)
-
       
     frame = video.get_processed_frame()
     sps = sift_processor.get_static_objects(frame)
