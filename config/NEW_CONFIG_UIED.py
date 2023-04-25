@@ -3,7 +3,7 @@ class Configuration:
     def __init__(self):
         
         #NEW
-        self.video_path = "data/input/videos/1.mp4"
+        self.video_path = "data/input/videos/11.mp4"
         self.input_frame_blur_kernel_size =  None# A number or None not zero.
         self.resize_input_image_height = 800
         self.grad_min = 20
@@ -11,6 +11,7 @@ class Configuration:
         
         self.logging = 3
         self.visualization = 5
+        self.ffl_block = 5
         #NEW
         
         # Adjustable
@@ -57,6 +58,6 @@ class Configuration:
                       'Text':(169, 255, 0), 'Non-Text':(255, 0, 166),
 
                       'Noise':(6,6,255), 'Non-Noise': (6,255,6),
-                      'Compo':(0, 0, 255),
+                      'Compo':(0, 0, 255), 'Block':(0,6,6),
 
                       'Image':(255,6,6), 'Non-Image':(6,6,255)}

@@ -185,7 +185,7 @@ def rm_line_v_h(binary, show=False, max_line_thickness=C.THRESHOLD_LINE_THICKNES
         cv2.waitKey()
 
 
-def rm_line(binary,
+def rm_line(binary_orig,
             max_line_thickness=C.THRESHOLD_LINE_THICKNESS,
             min_line_length_ratio=C.THRESHOLD_LINE_MIN_LENGTH,
             show=False, wait_key=0):
@@ -203,7 +203,7 @@ def rm_line(binary,
         if line_length / width > 0.95:
             return True
         return False
-
+    binary = binary_orig.copy()
     height, width = binary.shape[:2]
     board = np.zeros(binary.shape[:2], dtype=np.uint8)
 
@@ -242,7 +242,7 @@ def rm_line(binary,
         cv2.imshow('no-line', binary)
         if wait_key is not None:
             cv2.waitKey(wait_key)
-
+    return binary
 
 def rm_noise_compos(compos):
     compos_new = []

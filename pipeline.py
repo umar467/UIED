@@ -27,26 +27,27 @@ component_detector = component_detector(config)
 sift_processor = SIFT_Processor(config)
 #text_extractor = text_extractor(config)
 classifier = cnn(config)
-detected_compos = component_detector.get_components(frame)
-visualizer.visualize_components(frame, detected_compos, name ='raw')
-classifier.process(frame, detected_compos)
-visualizer.visualize_components(frame, detected_compos, config = config)
 
-'''
+#detected_compos = component_detector.get_components(frame)
+#visualizer.visualize_components(frame, detected_compos, name ='raw')
+#classifier.process(frame, detected_compos)
+#visualizer.visualize_components(frame, detected_compos, config = config)
+
+
 sift_processor.get_static_objects(frame)
 while(frame is not None):
-      
+    
     frame = video.get_processed_frame()
     sps = sift_processor.get_static_objects(frame)
-
-
+    
     detected_compos = component_detector.get_components(frame)
+    
+    classifier.process(frame, detected_compos)
     
     visualizer.visualize_points(frame, sps)
     
-    visualizer.visualize_components(frame, detected_compos)
-'''
-
+    visualizer.visualize_components(frame, detected_compos, config=config)
+    
 """
 import numpy as np
 import cv2
