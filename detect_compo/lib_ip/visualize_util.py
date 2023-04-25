@@ -14,6 +14,9 @@ def visualize_points(frame, points, rgb=True):
         drawing_frame = frame[1].copy()
     else:
         drawing_frame = np.zeros(frame[2].shape)
+    if points is None:
+        #print("skipping points")
+        return drawing_frame
     for point in points:
         cv2.circle(drawing_frame, (int(point[0]),int(point[1])), 5, (255,0,0), thickness=-1, lineType=8, shift=0)
     cv2.imshow("SIFT Point Visualization", drawing_frame)
