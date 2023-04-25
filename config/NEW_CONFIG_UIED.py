@@ -57,5 +57,6 @@ class Configuration:
                       'Text':(169, 255, 0), 'Non-Text':(255, 0, 166),
 
                       'Noise':(6,6,255), 'Non-Noise': (6,255,6),
+                      'Compo':(0, 0, 255),
 
                       'Image':(255,6,6), 'Non-Image':(6,6,255)}

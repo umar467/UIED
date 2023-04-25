@@ -20,14 +20,19 @@ def visualize_points(frame, points, rgb=True):
     cv2.waitKey(10)
     return drawing_frame
     
-def visualize_components(frame, components, rgb=True):
+def visualize_components(frame, components, rgb=True, name='component_visualization', config=None):
     if rgb:
         drawing_frame = frame[1].copy()
     else:
         drawing_frame = np.zeros(frame[2].shape)
     for compo in components:
         bbox = compo.put_bbox()
-        drawing_frame = cv2.rectangle(drawing_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255,0,0), 2)
-    cv2.imshow('component_visualization', drawing_frame)
+        if config is not None:
+            color_map=config.COLOR
+            color = color_map[compo.category]
+        else:
+            color = (255,0,0)
+        drawing_frame = cv2.rectangle(drawing_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
+    cv2.imshow(name, drawing_frame)
     cv2.waitKey(10)
     return drawing_frame
