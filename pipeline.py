@@ -32,7 +32,9 @@ while(frame is not None):
     
     frame = video.get_processed_frame()
     sps = sift_processor.get_static_objects(frame)
+    sift_processor.get_homography()
     
+    video.skip_frames(60)
     detected_compos = component_detector.get_components(frame)
     
     #classifier.process(frame, detected_compos)

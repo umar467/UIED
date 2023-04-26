@@ -50,16 +50,25 @@ class video_reader:
         else:
             print("Couldn't read rgb_frame !!")
             return None
-    
+        
+    def skip_frames(self, skip_n):
+        new_frame_header = self.current_rgb_frame_number+skip_n
+        if new_frame_header < self.total_number_of_rgb_frames:
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, new_frame_header-1)
+            self.current_rgb_frame_number = new_frame_header
+        else:
+            print(f'rgb_frame Number Exceeds Video Length of {self.total_number_of_rgb_frames} rgb_frames !!')
+            return None
+            
     def get_specific_frame(self, requested_rgb_frame_number):
         '''
         Input: Takes a specific frame number as input
         Output: Returns the proper sized RGB_frame and its greyscale image
         '''
         if requested_rgb_frame_number < self.total_number_of_rgb_frames:
-            self.video.set(cv2.CAP_PROP_POS_rgb_frameS, requested_rgb_frame_number-1)
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, requested_rgb_frame_number-1)
             rgb_frame  = self.get_next_rgb_frame()
-            self.video.set(cv2.CAP_PROP_POS_rgb_frameS, self.current_rgb_frame_number-1)
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_rgb_frame_number-1)
             return self.get_processed_frame(rgb_frame)
         else:
             print(f'rgb_frame Number Exceeds Video Length of {self.total_number_of_rgb_frames} rgb_frames !!')
