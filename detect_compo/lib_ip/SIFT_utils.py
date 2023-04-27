@@ -139,7 +139,7 @@ class SIFT_Processor:
         
         match_points, good_points, good_des = self.match_points(self.data[-1][1], self.data[-1][0],self.data[-2][1],self.data[-2][0])
         
-        print(f'forst match # {len(match_points)}')
+        #print(f'forst match # {len(match_points)}')
         
         for rep in range(2, across_n_frames, 1):
             rep = (rep+1)
@@ -147,7 +147,7 @@ class SIFT_Processor:
                 rep = -1*rep
                 #print(rep)
                 match_points, good_points, good_des = self.match_points(good_points, good_des, self.data[rep][1], self.data[rep][0])
-        print(f'{rep} match # {len(match_points)}')
+        #print(f'{rep} match # {len(match_points)}')
         self.static_objects.append(match_points)
         
         if self.config.logging > 2:

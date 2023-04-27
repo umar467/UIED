@@ -86,7 +86,7 @@ class Bbox:
             return 1
         # not intersected with each other
         # intersected
-        if iou >= 0.02 or iob > 0.2 or ioa > 0.2:
+        if iou >= 0.2 or iob > 0.2 or ioa > 0.2:
             return 2
         # if iou == 0:
         # print('ioa:%.5f; iob:%.5f; iou:%.5f' % (ioa, iob, iou))

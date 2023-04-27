@@ -19,6 +19,8 @@ class cnn:
         
         
     def process(self, frame, compos):
+        if compos == []:
+            return
         img = self.model.preprocess_img(frame[1])
         self.model.predict(img, compos)
         

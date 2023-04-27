@@ -30,9 +30,7 @@ def merge_intersected_corner(compos, org, is_merge_contained_ele, max_gap=(0, 0)
             # 1. compo[j] contains compo[i]
             # 2. compo[j] intersects with compo[i] with certain iou
             # 3. is_merge_contained_ele and compo[j] is contained in compo[i]
-            if relation == 1 or \
-                    relation == 2 or \
-                    (is_merge_contained_ele and relation == -1):
+            if relation == 2:
                 # (relation == 2 and new_compos[j].height < max_ele_height and cur_compo.height < max_ele_height) or\
 
                 new_compos[j].compo_merge(cur_compo)
@@ -352,6 +350,8 @@ def component_detection(binary, min_obj_area,
                 # calculate the boundary of the connected area
                 # ignore small area
                 if component.width <= 3 or component.height <= 3:
+                    continue
+                if component.width > 150 or component.height > 150:
                     continue
                 # check if it is line by checking the length of edges
                 # if component.compo_is_line(line_thickness):

@@ -26,20 +26,20 @@ frame = video.get_processed_frame()
 component_detector = component_detector(config)
 sift_processor = SIFT_Processor(config)
 #text_extractor = text_extractor(config)
-#classifier = cnn(config)
+classifier = cnn(config)
+video.skip_frames(200)
 
 while(frame is not None):
     
     frame = video.get_processed_frame()
-    sps = sift_processor.get_static_objects(frame)
-    #sift_processor.get_homography()
+    sps = sift_processor.get_static_objects(frame, across_n_frames=5)
+    sift_processor.get_homography()
     
-    #video.skip_frames(10)
-    #detected_compos = component_detector.get_components(frame)
+    detected_compos = component_detector.get_components(frame, sps)
     
-    #classifier.process(frame, detected_compos)
-    
+    classifier.process(frame, detected_compos)
+    #video.skip_frames(20)
     visualizer.visualize_points(frame, sps)
     
-    #visualizer.visualize_components(frame, detected_compos, config=config)
+    visualizer.visualize_components(frame, detected_compos, config=config)
     
