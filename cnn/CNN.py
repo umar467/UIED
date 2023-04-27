@@ -1,5 +1,6 @@
 import keras
-from keras.applications.resnet50 import ResNet50
+#from keras.applications.resnet50 import ResNet50
+from tensorflow.keras.applications.resnet50 import ResNet50
 from keras.models import Model,load_model
 from keras.layers import Dense, Activation, Flatten, Dropout
 from sklearn.metrics import confusion_matrix
