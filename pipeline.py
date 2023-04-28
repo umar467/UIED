@@ -23,23 +23,22 @@ from detect_compo.lib_ip.cnn_utils import cnn
 
 video  = video_reader(config)
 frame = video.get_processed_frame()
-component_detector = component_detector(config)
-sift_processor = SIFT_Processor(config)
+#component_detector = component_detector(config)
+static_point_extractor = SIFT_Processor(config)
 #text_extractor = text_extractor(config)
-classifier = cnn(config)
-video.skip_frames(200)
+#classifier = cnn(config)
+#video.skip_frames(200)
 
-while(frame is not None):
+while frame is not None:
     
     frame = video.get_processed_frame()
-    sps = sift_processor.get_static_objects(frame, across_n_frames=5)
-    sift_processor.get_homography()
+    static_points = static_point_extractor.get_static_objects(frame)
+    #sift_processor.get_homography()
     
-    detected_compos = component_detector.get_components(frame, sps)
+    #detected_compos = component_detector.get_components(frame)
     
-    classifier.process(frame, detected_compos)
+    #classifier.process(frame, detected_compos)
     #video.skip_frames(20)
-    visualizer.visualize_points(frame, sps)
+    visualizer.visualize_points(frame, static_points)
     
-    visualizer.visualize_components(frame, detected_compos, config=config)
-    
+    #visualizer.visualize_components(frame, detected_compos, config=config)

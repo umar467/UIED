@@ -10,7 +10,10 @@ import cv2
 import numpy as np
 
 class SIFT_Processor:
-    
+
+    """
+    TODO: - Refractor all the point matching code in terms of hashing based array passing. This would enable simultaneous efficient detection of points that are common across frames and points which don't move.
+    """
     def __init__(self, config):
         self.config = config
         self.data = []  #  [ Frame-1[Keypoints, descriptors] , Frame[keypoints, descriptors]      ]
@@ -30,7 +33,8 @@ class SIFT_Processor:
         kp, des = self.sift.detectAndCompute(frame[1], None)
         self.data.append([kp, des])
         self.loaded_frames+=1
-    
+
+    # Not Used but Functional
     def get_homography(self):
         if self.loaded_frames == 1:
             self.last_frame = self.current_frame
@@ -101,17 +105,20 @@ class SIFT_Processor:
         cv2.imshow('hg', img3)
         cv2.waitKey(30)
     
-    def match_points(self, des1, kp1, des2, kp2):
+    def match_points(self, des1, kp1, des2, kp2, match_points, match_point_locations):
         
         FLANN_INDEX_KDTREE = 0
         index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
         search_params = dict(checks=50)   # or pass empty dictionary
         flann = cv2.FlannBasedMatcher(index_params,search_params)
         matches = flann.knnMatch(des1, des2, k=2)
-        match_points = []
         good_points = []
         good_des = []
-        
+        """
+        Good Points is all common points within the .7 sift match rule
+        Match Points is all the points that are common and don't move 
+        """
+
         for i,(m,n) in enumerate(matches):
             if m.distance < 0.7*n.distance:
                 good_points.append(des1[m.queryIdx])
@@ -120,37 +127,47 @@ class SIFT_Processor:
                 pt2 = kp2[m.trainIdx].pt
                 dis = cv2.norm(pt1,pt2)
                 if dis<0.05:
-                    match_points.append(pt1)
+                    match_points.append(des1[m.queryIdx])
+                    match_point_locations.append(pt1)
                     if self.config.logging > 4:
                         print(i, pt1,pt2, dis)
         
-        return match_points, np.array(good_points), good_des
+        return np.array(good_points), good_des
     
     def get_static_objects(self, frame, across_n_frames=10):
-        '''
+        """
         Input: greyscale Frame
         Output: Appends the sift keypoints stationary across frames to the array static objects
-        '''
+        """
         self.get_SIFT_features(frame)
         
         if self.loaded_frames == 1:
             self.static_objects.append([])
             return
-        
-        match_points, good_points, good_des = self.match_points(self.data[-1][1], self.data[-1][0],self.data[-2][1],self.data[-2][0])
-        
-        #print(f'forst match # {len(match_points)}')
-        
+        match_points = []
+        match_point_locations = []
+        good_points, good_des = self.match_points(self.data[-1][1], self.data[-1][0],self.data[-2][1],self.data[-2][0], match_points, match_point_locations)
+
         for rep in range(2, across_n_frames, 1):
             rep = (rep+1)
             if rep < self.loaded_frames:
                 rep = -1*rep
-                #print(rep)
-                match_points, good_points, good_des = self.match_points(good_points, good_des, self.data[rep][1], self.data[rep][0])
-        #print(f'{rep} match # {len(match_points)}')
-        self.static_objects.append(match_points)
+                good_points, good_des = self.match_points(good_points, good_des, self.data[rep][1], self.data[rep][0], match_points, match_point_locations)
+
+        match_points = np.array(match_points)
+        unique, indices, counts = np.unique(match_points, return_counts=True, axis=0, return_index=True)
+
+        max_indices = np.argwhere(counts==counts.max())
+
+        static_points = np.array(match_point_locations)[max_indices]
+        static_points=static_points.reshape(-1, 2)
+        static_to_dynamic_point_ratio = counts.min() / counts.max()
+        if static_to_dynamic_point_ratio > 0.8:
+            static_points = []
+        print(f'{len(static_points)} static SIFT points discovered from last frame with static to moving ratio of {counts.min() / counts.max()}')
+        self.static_objects.append(static_points)
         
         if self.config.logging > 2:
-            print(f'{len(match_points)} static SIFT points discovered from last frame.')
+            print(f'{len(static_points)} static SIFT points discovered from last frame with static to moving ratio of {counts.min()/counts.max()}')
             
-        return match_points
+        return static_points

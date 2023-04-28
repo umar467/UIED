@@ -37,5 +37,5 @@ def visualize_components(frame, components, rgb=True, name='component_visualizat
             color = (255,0,0)
         drawing_frame = cv2.rectangle(drawing_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 2)
     cv2.imshow(name, drawing_frame)
-    cv2.waitKey(10)
+    cv2.waitKey(1)
     return drawing_frame

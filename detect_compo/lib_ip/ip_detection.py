@@ -349,9 +349,9 @@ def component_detection(binary, min_obj_area,
                 component = Component(region, binary.shape)
                 # calculate the boundary of the connected area
                 # ignore small area
-                if component.width <= 3 or component.height <= 3:
+                if component.width <= 10 or component.height <= 10:
                     continue
-                if component.width > 150 or component.height > 150:
+                if component.width > 100 or component.height > 100:
                     continue
                 # check if it is line by checking the length of edges
                 # if component.compo_is_line(line_thickness):
