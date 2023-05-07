@@ -8,11 +8,17 @@ Created on Tue Apr 18 19:54:24 2023
 
 import cv2
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 class SIFT_Processor:
 
     """
     TODO: - Refractor all the point matching code in terms of hashing based array passing. This would enable simultaneous efficient detection of points that are common across frames and points which don't move.
+          - See if SIFT points are homogenously located on the screen.
+          - If sift point clusters are found, perhaps that is a UI element. Force check each sift point cluster.
+    Possible Edge Cases: UI element visible for x frames, where x < frame_buffer.
+                         Static detection fails with sudden movement in scene - > sudden drop in sift points being matched across the frame buffer.
     """
     def __init__(self, config):
         self.config = config
@@ -22,6 +28,8 @@ class SIFT_Processor:
         self.last_frame = []
         self.loaded_frames = 0  # How many frames has this SIFT Processor Object processed so far.
         self.static_objects = [] # X Y coordinates of the detected sift points which are stationary across consecutive frames
+        self.statistics = [] # [total_pts_detected, static_pts, dynamic_pts]
+        plt.ion()
         
     def get_SIFT_features(self, frame):
         '''
@@ -105,7 +113,7 @@ class SIFT_Processor:
         cv2.imshow('hg', img3)
         cv2.waitKey(30)
     
-    def match_points(self, des1, kp1, des2, kp2, match_points, match_point_locations):
+    def match_points(self, des1, kp1, des2, kp2, static_points):
         
         FLANN_INDEX_KDTREE = 0
         index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
@@ -127,8 +135,13 @@ class SIFT_Processor:
                 pt2 = kp2[m.trainIdx].pt
                 dis = cv2.norm(pt1,pt2)
                 if dis<0.05:
-                    match_points.append(des1[m.queryIdx])
-                    match_point_locations.append(pt1)
+                    if des1[m.queryIdx].tobytes() not in static_points:
+                        static_points[des1[m.queryIdx].tobytes()] = [np.array(pt1), 1]
+                    else:
+                        pt , count = static_points[des1[m.queryIdx].tobytes()]
+                        if cv2.norm(pt1, pt) < 0.05:
+                            count+=1
+                            static_points[des1[m.queryIdx].tobytes()] = [np.array(pt1), count]
                     if self.config.logging > 4:
                         print(i, pt1,pt2, dis)
         
@@ -144,30 +157,44 @@ class SIFT_Processor:
         if self.loaded_frames == 1:
             self.static_objects.append([])
             return
-        match_points = []
-        match_point_locations = []
-        good_points, good_des = self.match_points(self.data[-1][1], self.data[-1][0],self.data[-2][1],self.data[-2][0], match_points, match_point_locations)
+        static_points = {}
+        good_points, good_des = self.match_points(self.data[-1][1], self.data[-1][0],self.data[-2][1],self.data[-2][0], static_points)
 
         for rep in range(2, across_n_frames, 1):
             rep = (rep+1)
             if rep < self.loaded_frames:
                 rep = -1*rep
-                good_points, good_des = self.match_points(good_points, good_des, self.data[rep][1], self.data[rep][0], match_points, match_point_locations)
+                good_points, good_des = self.match_points(good_points, good_des, self.data[rep][1], self.data[rep][0], static_points)
 
-        match_points = np.array(match_points)
-        unique, indices, counts = np.unique(match_points, return_counts=True, axis=0, return_index=True)
-
-        max_indices = np.argwhere(counts==counts.max())
-
-        static_points = np.array(match_point_locations)[max_indices]
-        static_points=static_points.reshape(-1, 2)
-        static_to_dynamic_point_ratio = counts.min() / counts.max()
-        if static_to_dynamic_point_ratio > 0.8:
-            static_points = []
-        print(f'{len(static_points)} static SIFT points discovered from last frame with static to moving ratio of {counts.min() / counts.max()}')
+        static_points = self.process_static_common_points(static_points)
         self.static_objects.append(static_points)
-        
-        if self.config.logging > 2:
-            print(f'{len(static_points)} static SIFT points discovered from last frame with static to moving ratio of {counts.min()/counts.max()}')
-            
+        self.update_stats(good_points, static_points)
         return static_points
+
+    def process_static_common_points(self, static_points):
+        static_points = static_points.values()
+        static_points = list(static_points)
+        counts = []
+        points = []
+        for pt, count in static_points:
+            counts.append(count)
+            points.append(pt)
+        counts = np.array(counts)
+        points = np.array(points)
+        indices = np.argwhere(counts == counts.max())
+        static_points = points[indices]
+        static_points = static_points.squeeze()
+        return static_points
+
+    def update_stats(self, good_points, static_points):
+        current_frame_total_pts = len(self.data[-1][1])
+        total_pts = len(good_points)
+        static_pts = len(static_points)
+        dynamic_pts = total_pts - static_pts
+        self.statistics.append([current_frame_total_pts, total_pts, static_pts, dynamic_pts])
+        if self.loaded_frames % 20 == 0:
+            p = pd.DataFrame(self.statistics, columns=['current_frame', 'total_common', 'static', 'dynamic'])
+            p.plot();
+        if self.config.logging > 2:
+            print(f'{len(static_points)} SIFT points with static ratio {static_pts/total_pts}.')
+        return
