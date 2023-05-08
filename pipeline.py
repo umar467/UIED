@@ -20,7 +20,7 @@ from detect_compo.lib_ip.component_detection_utils import component_detector
 from detect_compo.lib_ip.ocr_utils import text_extractor
 import detect_compo.lib_ip.visualize_util as visualizer
 from detect_compo.lib_ip.cnn_utils import cnn
-
+#hello
 video_reader_object = video_rdfdeader(config)
 frame = video_reader_object.get_processed_frame()
 static_point_extractor = SIFT_Processor(config)
