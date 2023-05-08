@@ -1,12 +1,22 @@
 class Configuration:
 
     def __init__(self):
-        
+
+
+
         #NEW
-        self.video_path = "data/input/videos/123 (3).mp4"
-        self.input_frame_blur_kernel_size =  None# A number or None not zero.
+        self.video_path = "data/input/videos/11.mp4"
+        self.input_frame_blur_kernel_size =  5# A number or None not zero.
         self.resize_input_image_height = 800
+        self.morphology_size = (3, 3)
         self.grad_min = 20
+
+        self.log_warnings = True
+        self.log_errors = True
+        self.log_info = False
+
+        '''
+        
         self.min_object_area= 5
         
         self.logging = 2
@@ -61,3 +71,4 @@ class Configuration:
                       'Compo':(0, 0, 255), 'Block':(0,6,6),
 
                       'Image':(255,6,6), 'Non-Image':(6,6,255)}
+        '''

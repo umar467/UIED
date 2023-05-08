@@ -9,7 +9,13 @@ Created on Wed Apr 19 17:02:00 2023
 import cv2
 import numpy as np
 
-def visualize_points(frame, points, rgb=True, show=True, name="SIFT Point Visualization"):
+def resize_by_height(org, resize_height):
+    w_h_ratio = org.shape[1] / org.shape[0]
+    resize_w = resize_height * w_h_ratio
+    re = cv2.resize(org, (int(resize_w), int(resize_height)))
+    return re
+
+def visualize_points(frame, points, rgb=True, show=True, name="SIFT Point Visualization", scale_down=False):
     if rgb:
         drawing_frame = frame[1].copy()
     else:
@@ -20,6 +26,8 @@ def visualize_points(frame, points, rgb=True, show=True, name="SIFT Point Visual
     for point in points:
         cv2.circle(drawing_frame, (int(point[0]),int(point[1])), 5, (255,0,0), thickness=-1, lineType=8, shift=0)
     if show:
+        if scale_down:
+            drawing_frame = resize_by_height(drawing_frame, 800)
         cv2.imshow(name, drawing_frame)
         cv2.waitKey(10)
     return drawing_frame

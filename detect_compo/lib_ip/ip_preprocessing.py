@@ -59,11 +59,11 @@ def reverse_binary(bin, show=False):
     return bin
 
 
-def binarization(org, grad_min, show=False, write_path=None, wait_key=0):
+def binarization(org, grad_min, morphology_size, show=False, write_path=None, wait_key=0):
     grey = cv2.cvtColor(org, cv2.COLOR_BGR2GRAY)
     grad = gray_to_gradient(grey)        # get RoI with high gradient
     binary = grad_to_binary(grad, grad_min)   # enhance the RoI
-    morph = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, (3, 3))  # remove noises
+    morph = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, morphology_size)  # remove noises
     if write_path is not None:
         cv2.imwrite(write_path, morph)
     if show:

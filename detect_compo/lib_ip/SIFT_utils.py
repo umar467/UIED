@@ -29,8 +29,14 @@ class SIFT_Processor:
         self.loaded_frames = 0  # How many frames has this SIFT Processor Object processed so far.
         self.static_objects = [] # X Y coordinates of the detected sift points which are stationary across consecutive frames
         self.statistics = [] # [total_pts_detected, static_pts, dynamic_pts]
-        plt.ion()
-        
+        #plt.ion()
+
+    def get_SIFT_Points(self, frame):
+        points = []
+        featuers, des = self.get_SIFT_features(frame)
+        for x in featuers:
+            points.append(np.array(x.pt))
+        return points
     def get_SIFT_features(self, frame):
         '''
         Input: greyscale frame
@@ -41,7 +47,7 @@ class SIFT_Processor:
         kp, des = self.sift.detectAndCompute(frame[1], None)
         self.data.append([kp, des])
         self.loaded_frames+=1
-
+        return kp, des
     # Not Used but Functional
     def get_homography(self):
         if self.loaded_frames == 1:
@@ -142,7 +148,7 @@ class SIFT_Processor:
                         if cv2.norm(pt1, pt) < 0.05:
                             count+=1
                             static_points[des1[m.queryIdx].tobytes()] = [np.array(pt1), count]
-                    if self.config.logging > 4:
+                    if self.config.log_info:
                         print(i, pt1,pt2, dis)
         
         return np.array(good_points), good_des
@@ -195,6 +201,6 @@ class SIFT_Processor:
         if self.loaded_frames % 20 == 0:
             p = pd.DataFrame(self.statistics, columns=['current_frame', 'total_common', 'static', 'dynamic'])
             p.plot();
-        if self.config.logging > 2:
+        if self.config.log_info > 2:
             print(f'{len(static_points)} SIFT points with static ratio {static_pts/total_pts}.')
         return
