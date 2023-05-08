@@ -21,7 +21,7 @@ from detect_compo.lib_ip.ocr_utils import text_extractor
 import detect_compo.lib_ip.visualize_util as visualizer
 from detect_compo.lib_ip.cnn_utils import cnn
 
-video_reader_object = video_reader(config)
+video_reader_object = video_rdfdeader(config)
 frame = video_reader_object.get_processed_frame()
 static_point_extractor = SIFT_Processor(config)
 
