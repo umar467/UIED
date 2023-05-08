@@ -14,10 +14,11 @@ class Configuration:
         self.log_warnings = True
         self.log_errors = True
         self.log_info = False
+        self.min_object_area = 5
 
         '''
         
-        self.min_object_area= 5
+        
         
         self.logging = 2
         self.visualization = 5

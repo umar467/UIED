@@ -56,6 +56,7 @@ def visualize_components(frame, components, rgb=True, name='component_visualizat
         drawing_frame = frame[1].copy()
     else:
         drawing_frame = np.zeros(frame[2].shape)
+        drawing_frame = drawing_frame.astype(np.uint8)
     if drawn_frame is not None:
         drawing_frame = drawn_frame
     if components==None:
