@@ -51,14 +51,25 @@ ls = show
 count = 0
 while frame is not None:
     frame = video_reader_object.get_processed_frame()
-    show = ls&frame[2]
-    ls = frame[2]
+
+    query = frame[2]
+    div = 64
+    # query = query // div * div + div // 2
+    # ls = ls  // div * div + div // 2
+    show = ls==query
+    show = frame[2]*show
+    #show = show.astype(np.uint8)
+    #show = show*255
+
+    ls = show #frame[2]
     count+=1
-    if count>10:#show.mean() < 20:
-        show = frame[2]
+    if count>60:# or show.mean() < 20:
+        ls = frame[2]
+        count = 0
         print('new lease on life')
-    pres = show.copy()
-    pres[pres<pres.mean()]=0
+
+    pres0 = show.copy()
+    #pres0[pres0<pres0.mean()]=0
     #pres = pres>pres.mean()
     #pres = frame[2] == pres
 
@@ -66,8 +77,8 @@ while frame is not None:
 
     # pres = pres.astype(np.uint8)
     # pres = pres*255
-
-    pres = pre.gray_to_gradient(pres)
+    #pres0 = cv2.medianBlur(pres0, 5)
+    pres = pre.gray_to_gradient(pres0)
     pres2 = pre.grad_to_binary(pres, min =10)
 
     components = det.component_detection(pres2, min_obj_area=config.min_object_area)
@@ -79,12 +90,29 @@ while frame is not None:
     components = det.component_detection(ogg2, min_obj_area=config.min_object_area)
     ogg3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
 
+    nb = pres & ogg
+    nb2 = pre.grad_to_binary(nb, min=10)
 
+    p2 = np.hstack([pres2, nb2 , ogg2])
 
-    pres = np.hstack([pres,pres2, pres3,ogg3, ogg, ogg2])
+    p3 = np.hstack([pres,nb, ogg])
 
-    cv2.imshow('diff', pres)
-    #cv2.imshow('c', pres3)
+    p4 = np.hstack([pres0, frame[2], pres3])
+
+    div = 64
+    q = frame[2] // div * div + div//2
+    q= np.hstack([q, frame[2]])
+
+    p2 = pre.resize_by_height(p2, 800)
+    p3 = pre.resize_by_height(p3, 800)
+    p4 = pre.resize_by_height(p4, 800)
+    #800,1104
+    #2160, 996
+
+    cv2.imshow('diff', p3)
+    cv2.imshow('c', p2)
+    cv2.imshow('d', p4)
+    cv2.imshow('q', q)
     #cv2.imshow('real', buffer[2])
     cv2.waitKey(10)
 
