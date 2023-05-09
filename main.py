@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-from config.NEW_CONFIG_UIED import Configuration
+from config.CONFIG import Configuration
 config = Configuration()
 from utils.abstraction_layer import process_video
 def parse_args():
