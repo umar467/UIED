@@ -9,10 +9,6 @@ python main.py --input_video 4.mp4 --output_json_path output.json
 
 The conda_env.yml file in teh root should work out of the box, but if there is a problem the packages listed in the dependencies below can be manually installed as well.
 
-* env_full_cpu.yml. Assumes no GPU is present/ or the GPU should not be used and installs everything including tensorflow with CPU support only.
-* env_full_gpu.yml. Install everything as above but Tensorflow has GPU support.
-* env_simple_gpu.yml. This is a basic version of the above, in case any errors are encountered.
-
 Note, tensorflow wihtout gpu/cuda support falls back to the cpu and this is abstracted away from the code. So the code will still run regardless of GPU/CUDA availablity.
 
 ### Dependency
