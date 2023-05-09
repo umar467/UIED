@@ -7,7 +7,7 @@ python main.py --input_video 4.mp4 --output_json_path output.json
 
 ## Installing Software Dependencies
 
-In the setup folder there are three additional .yml files which can be used to create an Anaconda environment with everything ready to go.
+The conda_env.yml file in teh root should work out of the box, but if there is a problem the packages listed in the dependencies below can be manually installed as well.
 
 * env_full_cpu.yml. Assumes no GPU is present/ or the GPU should not be used and installs everything including tensorflow with CPU support only.
 * env_full_gpu.yml. Install everything as above but Tensorflow has GPU support.
