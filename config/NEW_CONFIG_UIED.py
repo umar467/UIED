@@ -2,7 +2,7 @@ class Configuration:
 
     def __init__(self):
 
-        self.video_path = "data/input/videos/2.mp4"
+        self.video_path = "data/input/videos/3.mp4"
         self.output_json_path = "dummy.json"
         self.input_frame_blur_kernel_size =  None# A number or None not zero.
         self.resize_input_image_height = 800
