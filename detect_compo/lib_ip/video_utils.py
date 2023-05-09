@@ -37,6 +37,8 @@ class video_reader:
         '''
         if rgb_frame is None:
             rgb_frame = self.get_next_frame()
+            if rgb_frame is None:
+                return None
         if self.config.input_frame_blur_kernel_size is not None:
             rgb_frame = cv2.medianBlur(rgb_frame, self.config.input_frame_blur_kernel_size)
         if self.config.resize_input_image_height is  not None:
