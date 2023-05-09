@@ -8,7 +8,7 @@ class Configuration:
         self.video_path = "data/input/videos/11.mp4"
         self.input_frame_blur_kernel_size =  None# A number or None not zero.
         self.resize_input_image_height = 800
-        self.morphology_size = (3, 3)
+        self.morphology_size = (7, 7)
         self.grad_min = 20
 
         self.log_warnings = True

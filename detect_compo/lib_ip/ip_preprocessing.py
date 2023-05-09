@@ -63,11 +63,16 @@ def binarization(org, grad_min, morphology_size, show=False, write_path=None, wa
     grey = cv2.cvtColor(org, cv2.COLOR_BGR2GRAY)
     grad = gray_to_gradient(grey)        # get RoI with high gradient
     binary = grad_to_binary(grad, grad_min)   # enhance the RoI
-    morph = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, morphology_size)  # remove noises
+
+    morph = binary
+    #morph = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, morphology_size)  # remove noises
+    #morph = cv2.dilate(morph, None, iterations=7)
+
     if write_path is not None:
         cv2.imwrite(write_path, morph)
     if show:
-        cv2.imshow('binary', morph)
+        full = np.hstack([binary, morph, morph-binary])
+        cv2.imshow('binary', full)
         if wait_key is not None:
             cv2.waitKey(wait_key)
     return morph, grey

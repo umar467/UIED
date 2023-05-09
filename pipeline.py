@@ -51,70 +51,82 @@ ls = show
 count = 0
 while frame is not None:
     frame = video_reader_object.get_processed_frame()
+    video_reader_object.skip_frames(skip_n=10)
 
     query = frame[2]
     div = 64
-    # query = query // div * div + div // 2
-    # ls = ls  // div * div + div // 2
+    query = query // div * div + div // 2
+    ls = ls  // div * div + div // 2
+    #print(np.unique(ls).shape)
     show = ls==query
     show = frame[2]*show
-    #show = show.astype(np.uint8)
-    #show = show*255
+    #show[show<show.mean()] = 0
+    # show = show.astype(np.uint8)
+    # show = show*255
 
     ls = show #frame[2]
     count+=1
-    if count>60:# or show.mean() < 20:
+    if count>5:# or show.mean() < 20:
         ls = frame[2]
         count = 0
         print('new lease on life')
 
-    pres0 = show.copy()
-    #pres0[pres0<pres0.mean()]=0
-    #pres = pres>pres.mean()
-    #pres = frame[2] == pres
+        pres0 = show.copy()
+        #pres0[pres0<pres0.mean()]=0
+        #pres = pres>pres.mean()
+        #pres = frame[2] == pres
 
 
 
-    # pres = pres.astype(np.uint8)
-    # pres = pres*255
-    #pres0 = cv2.medianBlur(pres0, 5)
-    pres = pre.gray_to_gradient(pres0)
-    pres2 = pre.grad_to_binary(pres, min =10)
+        # pres = pres.astype(np.uint8)
+        # pres = pres*255
+        #pres0 = cv2.medianBlur(pres0, 5)
+        pres = pre.gray_to_gradient(pres0)
+        pres2 = pre.grad_to_binary(pres, min =10)
 
-    components = det.component_detection(pres2, min_obj_area=config.min_object_area)
-    pres3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
+        components = det.component_detection(pres2, min_obj_area=config.min_object_area)
+        pres3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
 
-    ogg = pre.gray_to_gradient(frame[2])
-    ogg2 = pre.grad_to_binary(ogg, min = 10)
+        ogg = pre.gray_to_gradient(frame[2])
+        ogg2 = pre.grad_to_binary(ogg, min = 10)
 
-    components = det.component_detection(ogg2, min_obj_area=config.min_object_area)
-    ogg3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
 
-    nb = pres & ogg
-    nb2 = pre.grad_to_binary(nb, min=10)
 
-    p2 = np.hstack([pres2, nb2 , ogg2])
+        nb = pres & ogg
+        nb2 = pre.grad_to_binary(nb, min=10)
 
-    p3 = np.hstack([pres,nb, ogg])
+        components = det.component_detection(nb2, min_obj_area=config.min_object_area)
+        nb3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
 
-    p4 = np.hstack([pres0, frame[2], pres3])
+        components = det.component_detection(ogg2, min_obj_area=config.min_object_area)
+        ogg3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
 
-    div = 64
-    q = frame[2] // div * div + div//2
-    q= np.hstack([q, frame[2]])
+        p2 = np.hstack([pres2, nb2 , ogg2])
 
-    p2 = pre.resize_by_height(p2, 800)
-    p3 = pre.resize_by_height(p3, 800)
-    p4 = pre.resize_by_height(p4, 800)
-    #800,1104
-    #2160, 996
+        p3 = np.hstack([pres,nb, ogg])
 
-    cv2.imshow('diff', p3)
-    cv2.imshow('c', p2)
-    cv2.imshow('d', p4)
-    cv2.imshow('q', q)
-    #cv2.imshow('real', buffer[2])
-    cv2.waitKey(10)
+        p4 = np.hstack([pres0, frame[2], nb3])
+
+        p5 = np.hstack([pres, nb, nb3, ogg, ogg3])
+
+        #div = 64
+        q = frame[2] // div * div + div//2
+        q= np.hstack([q, frame[2]])
+
+        p2 = pre.resize_by_height(p2, 800)
+        p3 = pre.resize_by_height(p3, 800)
+        p4 = pre.resize_by_height(p4, 800)
+        p5 = pre.resize_by_height(p5, 800)
+        #800,1104
+        #2160, 996
+
+        cv2.imshow('diff', p3)
+        cv2.imshow('c', p2)
+        cv2.imshow('d', p4)
+        cv2.imshow('q', q)
+        cv2.imshow('f', p5)
+        #cv2.imshow('real', buffer[2])
+        cv2.waitKey(10)
 
 
 
