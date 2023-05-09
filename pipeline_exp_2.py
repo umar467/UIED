@@ -67,14 +67,15 @@ while frame is not None:
 
         components = det.component_detection(ogg2, min_obj_area=config.min_object_area)
         ogg3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
+        visualizer.save_json(frame, components, 'test.json')
 
         raw2 = pre.grad_to_binary(raw, min=1)
         components = det.component_detection(raw2, min_obj_area=config.min_object_area)
         raw3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
 
         p5 = np.hstack([ogg, ogg2, ogg3, raw, raw2, raw3])
-        cv2.imshow('f', p5)
+        #cv2.imshow('f', p5)
         #cv2.imshow('real', buffer[2])
-        cv2.waitKey(100)
+        #cv2.waitKey(100)
 
 
