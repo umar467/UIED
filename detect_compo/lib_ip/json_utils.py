@@ -26,7 +26,7 @@ class Json_Utils:
         f_out = open(json_output_file_path, 'w')
 
         json.dump(output, f_out, indent=4)
-    def produce_json_for_frame_detections(self, components, frame_number, config):
+    def produce_json_for_frame_detections(self, components, text_components, frame_number, config):
 
         if components is None:
             img_shape = (0,0)
@@ -50,6 +50,16 @@ class Json_Utils:
             (c['column_min'], c['row_min'], c['column_max'], c['row_max']) = compo.put_bbox()
             c['width'] = compo.width
             c['height'] = compo.height
+            c['frame_component_occurs_in'] = compo.detected_in_frames
+            output[name].append(c)
+
+        for compo in text_components:
+            c = {'id': compo.id, 'class': compo.category}
+            c['frequency'] = config.frame_buffer_size
+            (c['column_min'], c['row_min'], c['column_max'], c['row_max']) = compo.put_bbox()
+            c['width'] = compo.width
+            c['height'] = compo.height
+            c['content'] = compo.content
             c['frame_component_occurs_in'] = compo.detected_in_frames
             output[name].append(c)
 

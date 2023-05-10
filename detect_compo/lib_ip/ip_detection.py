@@ -317,7 +317,18 @@ def filter_components_using_static_points(components, binary, static_points):
             filtered_components.append(component)
     return filtered_components
 
-def detect_components_from_binary_image(binary, static_pixels = None):
+
+def remove_text_detections_from_binary_image(binary, text_compos):
+    text_compos_visualization = visualizer.visualize_components(binary, text_compos, rgb=False, show=False, fill=True)
+    text_compos_visualization[text_compos_visualization>0]=1
+    text_compos_visualization = 1 - text_compos_visualization
+    filtered_binary = binary*text_compos_visualization
+    # cv2.imshow('text_filtering', filtered_binary)
+    # cv2.waitKey(100)
+    return filtered_binary
+
+def detect_components_from_binary_image(binary, static_pixels = None, detected_text_components = None):
+    binary = remove_text_detections_from_binary_image(binary, detected_text_components)
     components = component_detection(binary)
     area_filtered_components = compo_filter(components, C.min_object_area)
     overlapping_filtered_components = merge_intersected_corner(area_filtered_components, binary, True)
