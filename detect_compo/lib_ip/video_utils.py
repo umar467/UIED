@@ -20,14 +20,21 @@ class video_reader:
         self.total_number_of_rgb_frames = self.video.get(cv2.CAP_PROP_FRAME_COUNT)
         if self.config.log_info:
             self.print_stats()
-    
+
+    def has_enough_frames(self):
+        if self.current_rgb_frame_number + self.config.frame_buffer_size < self.total_number_of_rgb_frames:
+            return True
+        else:
+            return False
     def print_stats(self):
         print(f'Successfully Loaded Video {self.video_path} containing {self.total_number_of_rgb_frames} rgb_frames with the pointer at rgb_frame no.{self.current_rgb_frame_number}')
 
-    def get_Frames(self, no_of_frames = 10):
+    def get_Frames(self):
+        no_of_frames = self.config.frame_buffer_size
         frames = []
         for _ in range(no_of_frames):
             frames.append(self.get_processed_frame())
+        frames = np.array(frames)
         return frames
 
     def get_processed_frame(self, rgb_frame = None):
@@ -43,8 +50,8 @@ class video_reader:
             rgb_frame = cv2.medianBlur(rgb_frame, self.config.input_frame_blur_kernel_size)
         if self.config.resize_input_image_height is  not None:
             rgb_frame = image_processing.resize_by_height(rgb_frame, self.config.resize_input_image_height)
-        binary_rgb_frame, grey_frame = image_processing.binarization(rgb_frame, self.config.grad_min, self.config.morphology_size)
-        return [self.current_rgb_frame_number, rgb_frame, grey_frame, binary_rgb_frame]
+        #binary_rgb_frame, grey_frame = image_processing.binarization(rgb_frame, self.config.grad_min, self.config.morphology_size)
+        return rgb_frame
     
     def get_next_frame(self):
         '''

@@ -10,6 +10,8 @@ import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from config.CONFIG import Configuration
+config = Configuration()
 
 class SIFT_Processor:
 
@@ -20,7 +22,7 @@ class SIFT_Processor:
     Possible Edge Cases: UI element visible for x frames, where x < frame_buffer.
                          Static detection fails with sudden movement in scene - > sudden drop in sift points being matched across the frame buffer.
     """
-    def __init__(self, config):
+    def __init__(self):
         self.config = config
         self.data = []  #  [ Frame-1[Keypoints, descriptors] , Frame[keypoints, descriptors]      ]
         self.sift = cv2.SIFT_create()
@@ -29,7 +31,7 @@ class SIFT_Processor:
         self.loaded_frames = 0  # How many frames has this SIFT Processor Object processed so far.
         self.static_objects = [] # X Y coordinates of the detected sift points which are stationary across consecutive frames
         self.statistics = [] # [total_pts_detected, static_pts, dynamic_pts]
-        #plt.ion()
+        plt.ion()
 
     def get_SIFT_Points(self, frame):
         points = []
@@ -44,7 +46,12 @@ class SIFT_Processor:
         '''
         self.last_frame = self.current_frame
         self.current_frame = frame
-        kp, des = self.sift.detectAndCompute(frame[1], None)
+        kp, des = self.sift.detectAndCompute(frame, None)
+        if des.shape[0] > config.maximum_SIFT_points_per_frame:
+            if config.log_warnings:
+                print(f'High SIFT featuers {len(kp)} Detected !!')
+            kp = (kp[0], kp[1])
+            des = des[0:2]
         self.data.append([kp, des])
         self.loaded_frames+=1
         return kp, des
@@ -152,13 +159,20 @@ class SIFT_Processor:
                         print(i, pt1,pt2, dis)
         
         return np.array(good_points), good_des
-    
-    def get_static_objects(self, frame, across_n_frames=10):
+
+    def plot_SIFT_detection_plots(self):
+        p = pd.DataFrame(self.statistics, columns=['current_frame', 'total_common', 'static', 'dynamic'])
+        p.plot();
+    def get_static_pixels(self, frames):
+        for frame in frames:
+            self.get_SIFT_features(frame)
+        static_pixels = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
+        return static_pixels
+    def get_static_objects(self, across_n_frames=10):
         """
         Input: greyscale Frame
         Output: Appends the sift keypoints stationary across frames to the array static objects
         """
-        self.get_SIFT_features(frame)
         
         if self.loaded_frames == 1:
             self.static_objects.append([])
@@ -178,18 +192,19 @@ class SIFT_Processor:
         return static_points
 
     def process_static_common_points(self, static_points):
-        static_points = static_points.values()
-        static_points = list(static_points)
-        counts = []
-        points = []
-        for pt, count in static_points:
-            counts.append(count)
-            points.append(pt)
-        counts = np.array(counts)
-        points = np.array(points)
-        indices = np.argwhere(counts == counts.max())
-        static_points = points[indices]
-        static_points = static_points.squeeze()
+        if len(static_points)>1:
+            static_points = static_points.values()
+            static_points = list(static_points)
+            counts = []
+            points = []
+            for pt, count in static_points:
+                counts.append(count)
+                points.append(pt)
+            counts = np.array(counts)
+            points = np.array(points)
+            indices = np.argwhere(counts == counts.max())
+            static_points = points[indices]
+            static_points = static_points.squeeze()
         return static_points
 
     def update_stats(self, good_points, static_points):
@@ -198,9 +213,9 @@ class SIFT_Processor:
         static_pts = len(static_points)
         dynamic_pts = total_pts - static_pts
         self.statistics.append([current_frame_total_pts, total_pts, static_pts, dynamic_pts])
-        if self.loaded_frames % 20 == 0:
-            p = pd.DataFrame(self.statistics, columns=['current_frame', 'total_common', 'static', 'dynamic'])
-            p.plot();
+        # if self.loaded_frames % 20 == 0:
+        #     p = pd.DataFrame(self.statistics, columns=['current_frame', 'total_common', 'static', 'dynamic'])
+        #     p.plot();
         if self.config.log_info > 2:
             print(f'{len(static_points)} SIFT points with static ratio {static_pts/total_pts}.')
         return

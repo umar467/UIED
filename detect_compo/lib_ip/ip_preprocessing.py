@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-from config.CONFIG_UIED import Config
-C = Config()
+from config.CONFIG import Configuration
+config = Configuration()
 
 def resize_by_height(org, resize_height):
     w_h_ratio = org.shape[1] / org.shape[0]
@@ -28,6 +28,13 @@ def read_img(path, resize_height=None, kernel_size=None):
         print("*** Img Reading Failed ***\n")
         return None, None
 
+def conver_frames_to_grey(frames):
+    grey_frames = []
+    for frame in frames:
+        grey_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        grey_frames.append(grey_frame)
+    grey_frames = np.array(grey_frames)
+    return grey_frames
 
 def gray_to_gradient(img):
     if len(img.shape) == 3:
@@ -58,6 +65,24 @@ def reverse_binary(bin, show=False):
         cv2.waitKey()
     return bin
 
+def conver_frames_to_gradient(grey_frames):
+    gradient_frames=[]
+    for frame in  grey_frames:
+        grad_frame = gray_to_gradient(frame)
+        gradient_frames.append(grad_frame)
+    gradient_frames = np.array(gradient_frames)
+    return gradient_frames
+
+def extract_common_gradients(frames):
+    old_grad = frames[0]
+    for frame in frames:
+        current_grad = old_grad & frame
+    return current_grad
+
+def convert_frame_to_binary(frame):
+    binary = grad_to_binary(frame, config.minimum_gradient_difference)
+    morphed_binary = cv2.dilate(binary, None, iterations=config.binary_dilation_iterations)
+    return morphed_binary
 
 def binarization(org, grad_min, morphology_size, show=False, write_path=None, wait_key=0):
     grey = cv2.cvtColor(org, cv2.COLOR_BGR2GRAY)

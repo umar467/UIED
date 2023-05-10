@@ -5,9 +5,9 @@ import detect_compo.lib_ip.ip_draw as draw
 import detect_compo.lib_ip.ip_preprocessing as pre
 from detect_compo.lib_ip.Component import Component
 import detect_compo.lib_ip.Component as Compo
-from config.CONFIG_UIED import Config
+import detect_compo.lib_ip.visualize_util as visualizer
+from config.CONFIG import Configuration as Config
 C = Config()
-
 
 def merge_intersected_corner(compos, org, is_merge_contained_ele, max_gap=(0, 0), max_ele_height=25):
     '''
@@ -30,7 +30,7 @@ def merge_intersected_corner(compos, org, is_merge_contained_ele, max_gap=(0, 0)
             # 1. compo[j] contains compo[i]
             # 2. compo[j] intersects with compo[i] with certain iou
             # 3. is_merge_contained_ele and compo[j] is contained in compo[i]
-            if relation == 2:
+            if relation == 1 or relation == -1 or relation == 2:
                 # (relation == 2 and new_compos[j].height < max_ele_height and cur_compo.height < max_ele_height) or\
 
                 new_compos[j].compo_merge(cur_compo)
@@ -300,17 +300,36 @@ def compo_filter(compos, min_area):
             continue
         ratio_h = compo.width / compo.height
         ratio_w = compo.height / compo.width
-        if ratio_h > 50 or ratio_w > 40 or \
-                (min(compo.height, compo.width) < 8 and max(ratio_h, ratio_w) > 10):
+        if ratio_h > C.maximum_height_ratio or ratio_w > C.maximum_width_ratio or \
+                (min(compo.height, compo.width) < C.minimum_component_height and max(ratio_h, ratio_w) > C.maximum_component_ratio):
             continue
         compos_new.append(compo)
     return compos_new
 
+def filter_components_using_static_points(components, binary, static_points):
+    filtered_components = []
+    static_point_image = visualizer.visualize_points(binary, static_points, rgb=False, show=False)
+    for component in components:
+        bbox = component.put_bbox()
+        col_min, row_min, col_max, row_max = bbox
+        crop = static_point_image[row_min:row_max, col_min:col_max]
+        if crop.mean() > 1:
+            filtered_components.append(component)
+    return filtered_components
+
+def detect_components_from_binary_image(binary, static_pixels = None):
+    components = component_detection(binary)
+    area_filtered_components = compo_filter(components, C.min_object_area)
+    overlapping_filtered_components = merge_intersected_corner(area_filtered_components, binary, True)
+    if static_pixels is not None:
+        static_point_fileterd_components = filter_components_using_static_points(overlapping_filtered_components, binary, static_pixels)
+        return static_point_fileterd_components
+    return overlapping_filtered_components
 
 # take the binary image as input
 # calculate the connected regions -> get the bounding boundaries of them -> check if those regions are rectangles
 # return all boundaries and boundaries of rectangles
-def component_detection(binary, min_obj_area,
+def component_detection(binary, min_obj_area =C.min_object_area,
                         line_thickness=C.THRESHOLD_LINE_THICKNESS,
                         min_rec_evenness=C.THRESHOLD_REC_MIN_EVENNESS,
                         max_dent_ratio=C.THRESHOLD_REC_MAX_DENT_RATIO,
@@ -349,9 +368,9 @@ def component_detection(binary, min_obj_area,
                 component = Component(region, binary.shape)
                 # calculate the boundary of the connected area
                 # ignore small area
-                if component.width <= 10 or component.height <= 10:
+                if component.width <= C.minimum_component_width or component.height <= C.minimum_component_height:
                     continue
-                if component.width > 100 or component.height > 100:
+                if component.width > C.maximum_component_width or component.height > C.maximum_component_height:
                     continue
                 # check if it is line by checking the length of edges
                 # if component.compo_is_line(line_thickness):

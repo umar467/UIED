@@ -46,7 +46,8 @@ class Bbox:
     def bbox_relation_nms(self, bbox_b, bias=(0, 0)):
         '''
         Calculate the relation between two rectangles by nms
-       :return: -1 : a in b
+       :return:
+        -1 : a in b
          0  : a, b are not intersected
          1  : b in a
          2  : a, b are intersected

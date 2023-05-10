@@ -2,55 +2,43 @@ import cv2
 import numpy as np
 import os
 import json
+from time import time
 import detect_compo.lib_ip.ip_preprocessing as pre
 from detect_compo.lib_ip.video_utils import video_reader
 import detect_compo.lib_ip.ip_detection as det
 import detect_compo.lib_ip.visualize_util as visualizer
-
+from detect_compo.lib_ip.SIFT_utils import SIFT_Processor as SIFT_bundle
+from detect_compo.lib_ip.compo_database import Compo_Database as Component_Database
+from detect_compo.lib_ip.json_utils import Json_Utils as json_processor
 
 def process_video(config):
-    outputs = []
     video_reader_object = video_reader(config)
-    frame = video_reader_object.get_processed_frame()
+    video_reader_object.skip_frames(video_reader_object.total_number_of_rgb_frames-140)
+    SIFT_processor = SIFT_bundle()
+    Compo_DB = Component_Database()
+    JSON_Processor = json_processor()
+    while(video_reader_object.has_enough_frames()):
+        start_time = time()
+        current_frame_buffer_rgb  = video_reader_object.get_Frames()
+        current_frame_buffer_grey = pre.conver_frames_to_grey(current_frame_buffer_rgb)
+        current_frame_buffer_gradients = pre.conver_frames_to_gradient(current_frame_buffer_grey)
+        common_gradients = pre.extract_common_gradients(current_frame_buffer_gradients)
+        binary_image = pre.convert_frame_to_binary(common_gradients)
 
-    count = 0
-    logg = pre.gray_to_gradient(frame[2])
-    while frame is not None:
-        frame = video_reader_object.get_processed_frame()
-        if frame is None:
-            break
+        static_pixels = SIFT_processor.get_static_pixels(current_frame_buffer_grey)
+        detected_components = det.detect_components_from_binary_image(binary_image, static_pixels=static_pixels)
+        db_start_time = time()
+        detected_components = Compo_DB.compare_with_previously_detected_components(detected_components, video_reader_object.current_rgb_frame_number)
+        JSON_Processor.produce_json_for_frame_detections(detected_components, video_reader_object.current_rgb_frame_number, config)
 
-        raw = frame[2]
-        raw = pre.gray_to_gradient(raw)
-        ogg = raw
+        print(f'Start time {db_start_time-start_time} DB time {time()-db_start_time}')
 
-        div = 64
-        ans = ogg & logg
-        ogg = ans
+        components_result_image = visualizer.visualize_components(current_frame_buffer_grey[-1], detected_components, show=False, rgb=True)
+        components_with_static_pixels_result_image = visualizer.visualize_points(components_result_image, static_pixels, show=False)
 
-        logg = ogg
-        count +=1
+        final_result_to_show = np.hstack([components_with_static_pixels_result_image, common_gradients, binary_image])
 
-        if count>20:
-            count=0
-            logg = raw
+        cv2.imshow('', final_result_to_show)
+        cv2.waitKey(10)
 
-            ogg2 = pre.grad_to_binary(ogg, min=20)
-            ogg2 = cv2.dilate(ogg2, None, iterations=2)
-
-            components = det.component_detection(ogg2, min_obj_area=config.min_object_area)
-            ogg3 = visualizer.visualize_components(frame, components, show=False, rgb=False)
-            json_current_Frame = visualizer.get_json(frame, components)
-            if json_current_Frame is not None:
-                outputs.append(json_current_Frame)
-
-
-    name = 'Video ' + str(config.video_path)
-    output = {name: outputs}
-    if os.path.exists(config.output_json_path):
-        append_write = 'a'  # append if already exists
-    else:
-        append_write = 'w'  # make a new file if not
-    f_out = open(config.output_json_path, append_write)
-
-    json.dump(output, f_out, indent=4)
+    SIFT_processor.plot_SIFT_detection_plots()

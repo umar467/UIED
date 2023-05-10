@@ -45,6 +45,8 @@ class Component:
         self.rect_ = None
         self.line_ = None
 
+        self.detected_in_frames = []
+
     def compo_update(self, id, org_shape):
         self.id = id
         self.image_shape = org_shape

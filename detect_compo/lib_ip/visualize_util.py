@@ -18,14 +18,15 @@ def resize_by_height(org, resize_height):
 
 def visualize_points(frame, points, rgb=True, show=True, name="SIFT Point Visualization", scale_down=False):
     if rgb:
-        drawing_frame = frame[1].copy()
+        drawing_frame = frame.copy()
     else:
-        drawing_frame = np.zeros(frame[2].shape)
+        drawing_frame = np.zeros(frame.shape)
     if points is None:
         #print("skipping points")
         return drawing_frame
     for point in points:
-        cv2.circle(drawing_frame, (int(point[0]),int(point[1])), 5, (255,0,0), thickness=-1, lineType=8, shift=0)
+        if point.shape == (2,):
+            cv2.circle(drawing_frame, (int(point[0]),int(point[1])), 5, (255,0,0), thickness=-1, lineType=8, shift=0)
     if show:
         if scale_down:
             drawing_frame = resize_by_height(drawing_frame, 800)
@@ -79,9 +80,9 @@ def save_json(frame, compos, file_path):
     json.dump(output, f_out, indent=4)
 def visualize_components(frame, components, rgb=True, name='component_visualization', config=None, fill=False, show=True, drawn_frame=None, last_outline = None):
     if rgb:
-        drawing_frame = frame[1].copy()
+        drawing_frame = frame.copy()
     else:
-        drawing_frame = np.zeros(frame[2].shape)
+        drawing_frame = np.zeros(frame.shape)
         drawing_frame = drawing_frame.astype(np.uint8)
     if drawn_frame is not None:
         drawing_frame = drawn_frame
