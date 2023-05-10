@@ -3,7 +3,9 @@ import time
 import math
 import os
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
+import tensorflow.compat.v1 as tf
+
 import json
 
 import detect_text_east.lib_east.locality_aware_nms as nms_locality
@@ -11,8 +13,8 @@ import detect_text_east.lib_east.lanms as lanms
 import detect_text_east.lib_east.model as model
 from detect_text_east.lib_east.icdar import restore_rectangle
 
-from config.CONFIG import Config
-cfg = Config()
+from config.CONFIG import Configuration
+cfg = Configuration()
 
 
 def resize_label(bboxes, gt_height, d_height, bias=0):

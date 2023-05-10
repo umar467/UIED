@@ -2,6 +2,7 @@ class Configuration:
 
     def __init__(self):
 
+        self.EAST_PATH = "data/model_weights/east_icdar2015_resnet_v1_50_rbox"
         self.maximum_SIFT_points_per_frame = 3000
         self.maximum_component_ratio = 10
         self.maximum_width_ratio = 40
