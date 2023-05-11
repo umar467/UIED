@@ -10,8 +10,9 @@ import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from config.CONFIG import Configuration
-config = Configuration()
+# from config.CONFIG import Configuration
+# config = Configuration()
+import plotly.express as px
 
 class SIFT_Processor:
 
@@ -22,7 +23,7 @@ class SIFT_Processor:
     Possible Edge Cases: UI element visible for x frames, where x < frame_buffer.
                          Static detection fails with sudden movement in scene - > sudden drop in sift points being matched across the frame buffer.
     """
-    def __init__(self):
+    def __init__(self, config):
         self.config = config
         self.data = []  #  [ Frame-1[Keypoints, descriptors] , Frame[keypoints, descriptors]      ]
         self.sift = cv2.SIFT_create()
@@ -47,8 +48,8 @@ class SIFT_Processor:
         self.last_frame = self.current_frame
         self.current_frame = frame
         kp, des = self.sift.detectAndCompute(frame, None)
-        if des.shape[0] > config.maximum_SIFT_points_per_frame:
-            if config.log_warnings:
+        if des.shape[0] > self.config.maximum_SIFT_points_per_frame:
+            if self.config.log_warnings:
                 print(f'High SIFT featuers {len(kp)} Detected !!')
             kp = (kp[0], kp[1])
             des = des[0:2]
@@ -162,11 +163,24 @@ class SIFT_Processor:
 
     def plot_SIFT_detection_plots(self):
         p = pd.DataFrame(self.statistics, columns=['current_frame', 'total_common', 'static', 'dynamic'])
-        p.plot();
+        plot = p.plot();
+        #plot.title('SIFT Features across Frames')
+        plot.set_xlabel("Frames x 10")
+        plot.set_ylabel("Frequency")
+        fig = plot.get_figure()
+        video_name = 'video_' + str(self.config.input_video)
+        video_name = video_name.replace('/', '_')
+        video_name = video_name.replace('.mp4', '/')
+        import os
+        if not os.path.exists(video_name):
+            os.mkdir(video_name)
+        fig.savefig(video_name + "sift.png")
+        plt.close()
     def get_static_pixels(self, frames):
         for frame in frames:
             self.get_SIFT_features(frame)
         static_pixels = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
+        self.plot_SIFT_detection_plots()
         return static_pixels
     def get_static_objects(self, across_n_frames=10):
         """

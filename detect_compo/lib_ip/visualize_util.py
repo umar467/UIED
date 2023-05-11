@@ -78,7 +78,7 @@ def save_json(frame, compos, file_path):
         output[name].append(c)
 
     json.dump(output, f_out, indent=4)
-def visualize_components(frame, components, rgb=True, name='component_visualization', config=None, fill=False, show=True, drawn_frame=None, last_outline = None):
+def visualize_components(frame, components, rgb=True, name='component_visualization', config=None, fill=False, show=True, drawn_frame=None, last_outline = None, offset=0):
     if rgb:
         drawing_frame = frame.copy()
     else:
@@ -101,7 +101,7 @@ def visualize_components(frame, components, rgb=True, name='component_visualizat
             color = (255,0,0)
         if not rgb:
             color = (255,255,255)
-        drawing_frame = cv2.rectangle(drawing_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, fill_param)
+        drawing_frame = cv2.rectangle(drawing_frame, (bbox[0]+offset, bbox[1]+offset), (bbox[2], bbox[3]), color, fill_param)
         '''
         if last_outline is not None:
             expected_match = (drawing_frame==drawing_frame).sum()
@@ -115,3 +115,91 @@ def visualize_components(frame, components, rgb=True, name='component_visualizat
         cv2.imshow(name, drawing_frame)
         cv2.waitKey(1)
     return drawing_frame
+
+def visualize_component_crops(frame, components, rgb=True, name='component_visualization', config=None, fill=False, show=True, drawn_frame=None, last_outline = None):
+    component_crops = []
+    if rgb:
+        drawing_frame = frame.copy()
+    else:
+        drawing_frame = np.zeros(frame.shape)
+        drawing_frame = drawing_frame.astype(np.uint8)
+    if drawn_frame is not None:
+        drawing_frame = drawn_frame
+    if components==None:
+        return
+    if fill:
+        fill_param = -1
+    else:
+        fill_param = 2
+    for compo in components:
+        bbox = compo.put_bbox()
+        if config is not None:
+            color_map=config.COLOR
+            color = color_map[compo.category]
+        else:
+            color = (255,0,0)
+        if not rgb:
+            color = (255,255,255)
+        #drawing_frame = cv2.rectangle(drawing_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, fill_param)
+        crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        drawing_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]] = crop
+        component_crops.append(crop)
+        '''
+        if last_outline is not None:
+            expected_match = (drawing_frame==drawing_frame).sum()
+            got_match = (drawing_frame==last_outline).sum()
+            diff = expected_match - got_match
+            if diff > 10000:
+                cv2.imshow('diff', drawing_frame)
+                cv2.waitKey(10)
+        '''
+    if show:
+        cv2.imshow(name, drawing_frame)
+        cv2.waitKey(1)
+    component_crops = organize_crop_images(component_crops)
+    return drawing_frame, component_crops
+
+def make_histogram(img):
+    import cv2
+    import numpy as np
+    from matplotlib import pyplot as plt
+
+    plt.subplot(1, 2, 1)
+    plt.imshow(img, cmap='gray')
+    plt.title('image')
+    plt.xticks([])
+    plt.yticks([])
+    plt.subplot(1, 2, 2)
+    plt.hist(img.ravel(), 256, [0, 255])
+    plt.title('histogram')
+    plt.show()
+def organize_crop_images(crops):
+    max_height = 800
+    y = 10
+    x = 10
+    W = 800
+    H = 368
+    h = 128
+    w = 128
+    new_image = np.zeros((W, H))
+    for crop in crops:
+        # print(crop.shape)
+        # print(w)
+        # print(h)
+        if crop.shape[0]<1:
+            break
+        if crop.shape[1]<1:
+            break
+        crop = cv2.resize(crop, (w,h))
+        new_image[y:y+h, x:x+w] = crop
+        x+=w + 10
+        if x + h > H:
+            x = 10
+            y += w + 10
+            if y + w > W:
+                break
+    new_image = new_image.astype(np.uint8)
+
+    # cv2.imshow('te', new_image)
+    # cv2.waitKey(100)
+    return new_image

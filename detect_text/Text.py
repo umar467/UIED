@@ -3,12 +3,12 @@ import numpy as np
 
 
 class Text:
-    def __init__(self, id, content, location):
+    def __init__(self, id, content, location, confidence):
         self.id = id
         self.category = 'Text'
         self.content = content
         self.location = location
-
+        self.confidence = confidence
         self.width = self.location['right'] - self.location['left']
         self.height = self.location['top'] - self.location['bottom']
         self.area = self.width * self.height

@@ -14,7 +14,7 @@ class video_reader:
     
     def __init__(self, config):
         self.config = config
-        self.video_path = config.video_path
+        self.video_path = config.input_video
         self.video = cv2. VideoCapture(self.video_path)
         self.current_rgb_frame_number = 0
         self.total_number_of_rgb_frames = self.video.get(cv2.CAP_PROP_FRAME_COUNT)
