@@ -37,11 +37,11 @@ def process_video(config):
         detected_text_components = Compo_DB_Text.compare_with_previously_detected_components(detected_text_components, video_reader_object.current_rgb_frame_number)
         JSON_Processor.produce_json_for_frame_detections(detected_components, detected_text_components, video_reader_object.current_rgb_frame_number, config)
 
-        q =visualizer.visualize_points(current_frame_buffer_grey[-1], static_pixels,rgb=True, show=True)
-        w = visualizer.visualize_components(current_frame_buffer_grey[-1], detected_components, rgb=True, show=True)
-        cv2.imshow('dfd',np.hstack([w, q]))
-        cv2.waitKey(100)
-        # print(f'Start time {db_start_time-start_time} DB time {time()-db_start_time}')
+        # q =visualizer.visualize_points(current_frame_buffer_grey[-1], static_pixels,rgb=True, show=True)
+        # w = visualizer.visualize_components(current_frame_buffer_grey[-1], detected_components, rgb=True, show=True)
+        # cv2.imshow('dfd',np.hstack([w, q]))
+        # cv2.waitKey(100)
+        print(f'Start time {db_start_time-start_time} DB time {time()-db_start_time}')
 
         if Compo_DB_Text.compute_frame_statistics(detected_text_components, video_reader_object.current_rgb_frame_number):# or Compo_DB.compute_frame_statistics(detected_components, video_reader_object.current_rgb_frame_number):
             JSON_Processor.ui_id = JSON_Processor.ui_id + 1
@@ -59,7 +59,7 @@ def process_video(config):
 
             #cv2.imshow('sift_stats', cv2.imread('json/sift.png'))
             final_result_to_show = np.hstack([current_frame_buffer_grey[-1], component_crops, component_crop_images, component_text_crop_images])
-            cv2.imshow('', final_result_to_show)
+            #cv2.imshow('', final_result_to_show)
             video_name = 'video_' + str(config.input_video)
             video_name = video_name.replace('/', '_')
             video_name = video_name.replace('.mp4', '/')
