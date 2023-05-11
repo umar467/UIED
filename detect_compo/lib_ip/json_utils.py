@@ -11,14 +11,18 @@ class Json_Utils:
     def __init__(self):
         self.json = []
         self.processed_frames = 0
+        self.ui_id = 0
 
     def dump_current_json_to_file(self, config):
 
-        video_name = 'video_' + str(config.video_path)
+        video_name = 'video_' + str(config.input_video)
         video_name = video_name.replace('/','_')
-        video_name = video_name.replace('.mp4', '.json')
+        video_name = video_name.replace('.mp4', '/')
+        if not os.path.exists(video_name):
+            os.mkdir(video_name)
+        video_name = video_name.replace('/', '/detections.json')
         output = {video_name: self.json}
-        json_output_file_path = config.output_json_folder + video_name
+        json_output_file_path = video_name
         # if os.path.exists(json_output_file_path):
         #     append_write = 'a'  # append if already exists
         # else:
@@ -46,20 +50,24 @@ class Json_Utils:
 
         for compo in components:
             c = {'id': compo.id, 'class': compo.category}
-            c['frequency'] = config.frame_buffer_size
+            c['frequency'] = (config.frame_buffer_size * len(compo.detected_in_frames))
             (c['column_min'], c['row_min'], c['column_max'], c['row_max']) = compo.put_bbox()
             c['width'] = compo.width
             c['height'] = compo.height
+            c['UI_ID'] = self.ui_id
             c['frame_component_occurs_in'] = compo.detected_in_frames
             output[name].append(c)
 
         for compo in text_components:
             c = {'id': compo.id, 'class': compo.category}
-            c['frequency'] = config.frame_buffer_size
+            c['frequency'] = (config.frame_buffer_size * len(compo.detected_in_frames))
             (c['column_min'], c['row_min'], c['column_max'], c['row_max']) = compo.put_bbox()
             c['width'] = compo.width
             c['height'] = compo.height
+            c['word_width'] = compo.word_width
             c['content'] = compo.content
+            c['confidence'] = compo.confidence
+            c['UI_ID'] = self.ui_id
             c['frame_component_occurs_in'] = compo.detected_in_frames
             output[name].append(c)
 

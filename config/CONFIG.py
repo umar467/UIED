@@ -1,13 +1,13 @@
 class Configuration:
 
     def __init__(self):
-
+        self.new_UI_layout_change_ratio = 0.8
         self.EAST_PATH = "data/model_weights/east_icdar2015_resnet_v1_50_rbox"
         self.maximum_SIFT_points_per_frame = 3000
         self.maximum_component_ratio = 10
         self.maximum_width_ratio = 40
         self.maximum_height_ratio = 50
-        #self.video_path = "data/input/videos/1.mp4"
+        #self.input_video = "data/input/videos/1.mp4"
         #self.output_json_folder = "json/"
         self.input_frame_blur_kernel_size =  None# A number or None not zero.
         self.resize_input_image_height = 800

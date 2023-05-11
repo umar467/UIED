@@ -319,22 +319,46 @@ def filter_components_using_static_points(components, binary, static_points):
 
 
 def remove_text_detections_from_binary_image(binary, text_compos):
-    text_compos_visualization = visualizer.visualize_components(binary, text_compos, rgb=False, show=False, fill=True)
+    text_compos_visualization = visualizer.visualize_components(binary, text_compos, rgb=False, show=False, fill=True, offset=-10)
     text_compos_visualization[text_compos_visualization>0]=1
     text_compos_visualization = 1 - text_compos_visualization
     filtered_binary = binary*text_compos_visualization
     # cv2.imshow('text_filtering', filtered_binary)
     # cv2.waitKey(100)
     return filtered_binary
-
-def detect_components_from_binary_image(binary, static_pixels = None, detected_text_components = None):
+def plot_detection_statistics(statistics, config):
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    plt.ion()
+    p = pd.DataFrame(statistics, columns=['total_detected', 'area_filtered', 'overlap_filtered', 'sift_filtered'])
+    plot = p.plot();
+    #plot.title('SIFT Features across Frames')
+    plot.set_xlabel("Frames x 10")
+    plot.set_ylabel("Frequency")
+    fig = plot.get_figure()
+    video_name = 'video_' + str(config.input_video)
+    video_name = video_name.replace('/', '_')
+    video_name = video_name.replace('.mp4', '/')
+    import os
+    if not os.path.exists(video_name):
+        os.mkdir(video_name)
+    fig.savefig(video_name + "compo.png")
+    plt.close()
+def detect_components_from_binary_image(binary, static_pixels = None, detected_text_components = None, Text_Statistics = None, config = None):
+    current_stats = []
     binary = remove_text_detections_from_binary_image(binary, detected_text_components)
     components = component_detection(binary)
+    current_stats.append(len(components))
     area_filtered_components = compo_filter(components, C.min_object_area)
+    current_stats.append(len(area_filtered_components))
     overlapping_filtered_components = merge_intersected_corner(area_filtered_components, binary, True)
+    current_stats.append(len(overlapping_filtered_components))
     if static_pixels is not None:
         static_point_fileterd_components = filter_components_using_static_points(overlapping_filtered_components, binary, static_pixels)
-        return static_point_fileterd_components
+        overlapping_filtered_components = static_point_fileterd_components
+    current_stats.append(len(overlapping_filtered_components))
+    Text_Statistics.append(current_stats)
+    plot_detection_statistics(Text_Statistics, config)
     return overlapping_filtered_components
 
 # take the binary image as input
