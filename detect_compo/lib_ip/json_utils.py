@@ -23,9 +23,9 @@ class Json_Utils:
         #     append_write = 'a'  # append if already exists
         # else:
         #     append_write = 'w'  # make a new file if not
-        f_out = open(json_output_file_path, 'w')
-
-        json.dump(output, f_out, indent=4)
+        os.makedirs(config.output_json_folder, exist_ok=True)
+        with open(json_output_file_path, 'w+') as f_out:
+            json.dump(output, f_out, indent=4)
     def produce_json_for_frame_detections(self, components, text_components, frame_number, config):
 
         if components is None:
