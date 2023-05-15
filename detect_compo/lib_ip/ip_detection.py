@@ -301,7 +301,7 @@ def compo_filter(compos, min_area):
         ratio_h = compo.width / compo.height
         ratio_w = compo.height / compo.width
         if ratio_h > C.maximum_height_ratio or ratio_w > C.maximum_width_ratio or \
-                (min(compo.height, compo.width) < C.minimum_component_height and max(ratio_h, ratio_w) > C.maximum_component_ratio):
+                (min(compo.height, compo.width) < C.minimum_component_height or max(ratio_h, ratio_w) > C.maximum_component_ratio):
             continue
         compos_new.append(compo)
     return compos_new
@@ -352,13 +352,14 @@ def detect_components_from_binary_image(binary, static_pixels = None, detected_t
     area_filtered_components = compo_filter(components, C.min_object_area)
     current_stats.append(len(area_filtered_components))
     overlapping_filtered_components = merge_intersected_corner(area_filtered_components, binary, True)
+    overlapping_filtered_components = compo_filter(overlapping_filtered_components, C.min_object_area)
     current_stats.append(len(overlapping_filtered_components))
     if static_pixels is not None:
         static_point_fileterd_components = filter_components_using_static_points(overlapping_filtered_components, binary, static_pixels)
         overlapping_filtered_components = static_point_fileterd_components
     current_stats.append(len(overlapping_filtered_components))
     Text_Statistics.append(current_stats)
-    plot_detection_statistics(Text_Statistics, config)
+    #plot_detection_statistics(Text_Statistics, config)
     return overlapping_filtered_components
 
 # take the binary image as input

@@ -30,8 +30,26 @@ class text_extractor:
                 location['top'] = cluster[0][2][1]
                 location['bottom'] = cluster[0][0][1]
                 text_element = text_component_builder.Text(id, content, location, confidence)
-                text_components.append(text_element)
+                if confidence > self.config.min_text_confidence:
+                    text_components.append(text_element)
+        text_components = self.compo_filter(text_components, self.config)
         return text_components
+
+    def compo_filter(self, compos, config):
+        min_area = config.min_object_area
+        C = config
+        compos_new = []
+        for compo in compos:
+            if compo.height * compo.width < min_area:
+                continue
+            ratio_h = compo.width / compo.height
+            ratio_w = compo.height / compo.width
+            if ratio_h > C.maximum_height_ratio or ratio_w > C.maximum_width_ratio or \
+                    (min(compo.height, compo.width) < C.minimum_component_height or max(ratio_h,
+                                                                                         ratio_w) > C.maximum_component_ratio):
+                continue
+            compos_new.append(compo)
+        return compos_new
     def detect_text_from_frame(self, frame):
         result = self.ocr.ocr(frame, cls=True)
         # for idx in range(len(result)):

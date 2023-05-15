@@ -77,6 +77,9 @@ class Text:
         if pos_relation != 0:
             pos_relation = True
         con_relation = self.content == compo_b.content
+        if not con_relation:
+            if self.content in compo_b.content or compo_b.content in self.content:
+                con_relation = True
         if pos_relation and con_relation:
             return 1
         return 0

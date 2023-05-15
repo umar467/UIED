@@ -180,7 +180,7 @@ class SIFT_Processor:
         for frame in frames:
             self.get_SIFT_features(frame)
         static_pixels = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
-        self.plot_SIFT_detection_plots()
+        #self.plot_SIFT_detection_plots()
         return static_pixels
     def get_static_objects(self, across_n_frames=10):
         """

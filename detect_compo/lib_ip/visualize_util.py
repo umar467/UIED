@@ -9,6 +9,8 @@ Created on Wed Apr 19 17:02:00 2023
 import cv2
 import numpy as np
 import os
+import matplotlib.pyplot as plt
+plt.ion()
 
 def resize_by_height(org, resize_height):
     w_h_ratio = org.shape[1] / org.shape[0]
@@ -21,6 +23,7 @@ def visualize_points(frame, points, rgb=True, show=True, name="SIFT Point Visual
         drawing_frame = frame.copy()
     else:
         drawing_frame = np.zeros(frame.shape)
+        drawing_frame = drawing_frame.astype(np.uint8)
     if points is None:
         #print("skipping points")
         return drawing_frame
@@ -159,20 +162,52 @@ def visualize_component_crops(frame, components, rgb=True, name='component_visua
     component_crops = organize_crop_images(component_crops)
     return drawing_frame, component_crops
 
-def make_histogram(img):
-    import cv2
-    import numpy as np
-    from matplotlib import pyplot as plt
+def visualize_component_histograms(frame, components):
+    crops = get_component_crops_from_frame(frame, components)
+    histogram_images = get_histograms_from_comopnent_crops(crops)
+    show_crops_and_histograms(crops, histogram_images)
+def get_component_crops_from_frame(frame, components):
+    component_crops = []
+    for compo in components:
+        bbox = compo.put_bbox()
+        crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        crop = cv2.resize(crop, (128, 128))
+        component_crops.append(crop)
+    return component_crops
 
-    plt.subplot(1, 2, 1)
-    plt.imshow(img, cmap='gray')
-    plt.title('image')
-    plt.xticks([])
-    plt.yticks([])
-    plt.subplot(1, 2, 2)
-    plt.hist(img.ravel(), 256, [0, 255])
-    plt.title('histogram')
-    plt.show()
+
+def get_histograms_from_comopnent_crops(component_crops):
+    histogram_images = []
+    for crop in component_crops:
+        histogram_image = None
+        for channel in cv2.split(crop):
+            histogram_image = histogram_to_image(cv2.calcHist([channel], [0], None, [256], [0, 256]), histogram_image)
+        histogram_images.append(histogram_image)
+    return histogram_images
+
+# Take opencv histogram object and return a opencv image array
+def histogram_to_image(histogram, histImage=None):
+    hist_w = 512
+    hist_h = 400
+    bin_w = int(round( hist_w/256 ))
+    if histImage is None:
+        histImage = np.zeros((hist_h, hist_w, 3), dtype=np.uint8)
+    cv2.normalize(histogram, histogram, alpha=0, beta=hist_h, norm_type=cv2.NORM_MINMAX)
+    for i in range(1, 256):
+        cv2.line(histImage, ( bin_w*(i-1), hist_h - int(np.round(histogram[i-1])) ),
+                ( bin_w*(i), hist_h - int(np.round(histogram[i])) ),
+                ( 255, 255, 255), thickness=2)
+    return histImage
+
+# horizontally stack crop image and histogram image and show on screen using oepncv imshow
+def show_crops_and_histograms(crops, histogram_images):
+    for i in range(len(crops)):
+        crop = crops[i]
+        histogram_image = histogram_images[i]
+        cv2.imshow('crop', crop)
+        cv2.imshow('histogram', histogram_image)
+        cv2.waitKey(0)
+
 def organize_crop_images(crops):
     max_height = 800
     y = 10
@@ -203,3 +238,23 @@ def organize_crop_images(crops):
     # cv2.imshow('te', new_image)
     # cv2.waitKey(100)
     return new_image
+
+
+# compare component bbox crops in frame1 and frame2 to see if they have similar SSID score
+# Use SSIM to comapre component crops from both frames
+# import ssim from skimage.measure
+from skimage.metrics import structural_similarity as ssim
+def compare_component_crops(frame1, frame2, components):
+    component_crops1 = get_component_crops_from_frame(frame1, components)
+    component_crops2 = get_component_crops_from_frame(frame2, components)
+    scores = []
+    for i in range(len(component_crops1)):
+        crop1 = component_crops1[i]
+        crop2 = component_crops2[i]
+        score = ssim(crop1, crop2, multichannel=True)
+        print(f'/n/n \n\n\n\n {score} \n')
+        if score < 0.8:
+            cv2.imshow('cropdiff', np.hstack([crop1, crop2]))
+            cv2.waitKey(500)
+        scores.append(score)
+    return scores
