@@ -57,6 +57,7 @@ def process_video(config):
 
             # final_result_to_show = np.hstack([components_with_static_pixels_result_image, common_gradients, binary_image, component_crops])
 
+            visualizer.make_histogram(current_frame_buffer_grey[-1])
             #cv2.imshow('sift_stats', cv2.imread('json/sift.png'))
             final_result_to_show = np.hstack([current_frame_buffer_grey[-1], component_crops, component_crop_images, component_text_crop_images])
             #cv2.imshow('', final_result_to_show)
