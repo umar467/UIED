@@ -15,7 +15,7 @@ class Configuration:
         self.resize_input_image_height = 800
         self.morphology_size = (7, 7)
         self.minimum_gradient_difference = 20
-        self.frame_buffer_size = 10
+        self.frame_buffer_size = 2
         self.binary_dilation_iterations = 2
         self.minimum_component_height = 10
         self.minimum_component_width = 10

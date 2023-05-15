@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-
+from detect_compo.lib_ip.Bbox import Bbox
 
 class Text:
     def __init__(self, id, content, location, confidence):
@@ -16,9 +16,12 @@ class Text:
         self.detected_in_frames = []
         self.image_shape = (0, 0)
         self.box_area = self.width * self.height
+        self.bbox = self.put_bbox()
 
     def put_bbox(self):
-        return int(self.location['left']), int(self.location['bottom']), int(self.location['right']), int(self.location['top'])
+        #return int(self.location['left']), int(self.location['bottom']), int(self.location['right']), int(self.location['top'])
+        bbox = Bbox(int(self.location['left']), int(self.location['bottom']), int(self.location['right']), int(self.location['top']))
+        return bbox
     '''
     ********************************
     *** Relation with Other text ***
@@ -76,10 +79,14 @@ class Text:
         pos_relation = self.bbox_relation_nms(compo_b, 3)
         if pos_relation != 0:
             pos_relation = True
-        con_relation = self.content == compo_b.content
-        if not con_relation:
-            if self.content in compo_b.content or compo_b.content in self.content:
-                con_relation = True
+        if compo_b.category == 'Text':
+            con_relation = self.content == compo_b.content
+            if not con_relation:
+                if self.content in compo_b.content or compo_b.content in self.content:
+                    con_relation = True
+        else:
+            con_relation = False
+
         if pos_relation and con_relation:
             return 1
         return 0
@@ -106,8 +113,8 @@ class Text:
          1  : b in a
          2  : a, b are intersected
        '''
-        col_min_a, row_min_a, col_max_a, row_max_a = self.put_bbox()
-        col_min_b, row_min_b, col_max_b, row_max_b = compo_b.put_bbox()
+        col_min_a, row_min_a, col_max_a, row_max_a = self.bbox.put_bbox()
+        col_min_b, row_min_b, col_max_b, row_max_b = compo_b.bbox.put_bbox()
 
         bias_col = bias
         bias_row = bias
@@ -123,7 +130,7 @@ class Text:
         area_b = (col_max_b - col_min_b) * (row_max_b - row_min_b)
         iou = inter / (area_a + area_b - inter)
         ioa = inter / self.box_area
-        iob = inter / compo_b.box_area
+        iob = inter / compo_b.bbox.box_area
 
         if iou == 0 and ioa == 0 and iob == 0:
             return 0

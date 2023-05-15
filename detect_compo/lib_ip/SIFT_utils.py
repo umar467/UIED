@@ -176,10 +176,12 @@ class SIFT_Processor:
             os.mkdir(video_name)
         fig.savefig(video_name + "sift.png")
         plt.close()
-    def get_static_pixels(self, frames):
+    def get_static_pixels(self, frames, JSON_Processor):
+        self.statistics = []
         for frame in frames:
             self.get_SIFT_features(frame)
         static_pixels = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
+        JSON_Processor.add_sift_statistics_to_current_frame(self.statistics)
         #self.plot_SIFT_detection_plots()
         return static_pixels
     def get_static_objects(self, across_n_frames=10):

@@ -26,11 +26,11 @@ class Compo_Database:
                 return False
         return False
 
-    def compute_frame_statistics(self, components, frame_number):
+    def compute_frame_statistics(self, components):
         if len(self.ids_in_last_frame)==0:
             for compo in components:
                 self.ids_in_last_frame.append(compo.id)
-            return False
+            return [0, 0, []]
         total_matched = 0
         total_new = 0
         ids_in_current_frame = []
@@ -52,10 +52,11 @@ class Compo_Database:
             new_ui = True
             self.compo_change_cumulative = 0
 
-        return new_ui
-    def compare_with_previously_detected_components(self, components, frame_number, frame, force_check_previous_componenets=False):
+        return [total_matched, total_new, ids_in_current_frame]
+    def compare_with_previously_detected_components(self, components, frame_number, frame, JSON_Processor, force_check_previous_componenets=True):
         if self.loaded_compos == 0:
             self.initialize_database(components, frame_number, frame)
+            JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(components))
             return components
         updated_compos = []
         for component in components:
@@ -77,14 +78,15 @@ class Compo_Database:
                     if self.component_present_in_frame(previous_component, frame):
                         previous_component.detected_in_frames.append(frame_number)
                         updated_compos.append(previous_component)
-                        print('Addded extra 111')
+                        #print('Addded extra 111')
         self.last_frame = frame
+        JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(updated_compos))
         return updated_compos
 
     def component_present_in_frame(self, component, frame):
         # check if component crop is present in frame and last frame
         image_size = (128,128)
-        bbox = component.put_bbox()
+        bbox = component.bbox.put_bbox()
         crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         crop_last_frame = self.last_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         # resize crop and crop last frame to iamges_size
@@ -93,11 +95,11 @@ class Compo_Database:
         from skimage.metrics import structural_similarity as ssim
         ssim = ssim(crop, crop_last_frame)
         # write a string to an image array of the same shape as crop
-        value = np.zeros_like(crop).astype(np.uint8)
-        value = cv2.putText(value, str(ssim), (10,10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-        image_to_show = np.hstack([crop, crop_last_frame, value])
-        cv2.imshow('crop', image_to_show)
-        cv2.waitKey(1000)
+        # value = np.zeros_like(crop).astype(np.uint8)
+        # value = cv2.putText(value, str(ssim), (10,10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        # image_to_show = np.hstack([crop, crop_last_frame, value])
+        # cv2.imshow('crop', image_to_show)
+        # cv2.waitKey(1000)
 
         if ssim > config.ssim_threshold:
             return True
