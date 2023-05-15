@@ -13,19 +13,20 @@ class Json_Utils:
         self.processed_frames = 0
 
     def dump_current_json_to_file(self, config):
-
         video_name = 'video_' + str(config.video_path)
-        video_name = video_name.replace('/','_')
+        video_name = video_name.replace('/', '_')
         video_name = video_name.replace('.mp4', '.json')
         output = {video_name: self.json}
-        json_output_file_path = config.output_json_folder + video_name
-        # if os.path.exists(json_output_file_path):
-        #     append_write = 'a'  # append if already exists
-        # else:
-        #     append_write = 'w'  # make a new file if not
-        os.makedirs(config.output_json_folder, exist_ok=True)
-        with open(json_output_file_path, 'w+') as f_out:
-            json.dump(output, f_out, indent=4)
+
+        if config.server:
+            os.makedirs(config.json_explicit_path_filename.parent, exist_ok=True)
+            with open(config.json_explicit_path_filename, 'w+') as f_out:
+                json.dump(output, f_out, indent=4)
+        else:
+            json_output_file_path = config.output_json_folder + video_name
+            os.makedirs(config.output_json_folder, exist_ok=True)
+            with open(json_output_file_path, 'w+') as f_out:
+                json.dump(output, f_out, indent=4)
     def produce_json_for_frame_detections(self, components, text_components, frame_number, config):
 
         if components is None:
