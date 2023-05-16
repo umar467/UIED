@@ -7,10 +7,13 @@ class Configuration:
         self.maximum_component_ratio = 10
         self.maximum_width_ratio = 40
         self.maximum_height_ratio = 50
-        #self.video_path = "data/input/videos/1.mp4"
+
+        self.video_path = "data/input/videos/1.mp4"
+        self.progress_callback = None
         #self.output_json_folder = "json/"
         self.server = False
         self.json_explicit_path_filename = ''
+
         self.input_frame_blur_kernel_size =  None# A number or None not zero.
         self.resize_input_image_height = 800
         self.morphology_size = (7, 7)

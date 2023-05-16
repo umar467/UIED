@@ -38,14 +38,16 @@ def process_video(config):
 
         print(f'Start time {db_start_time-start_time} DB time {time()-db_start_time}')
 
-        components_result_image = visualizer.visualize_components(current_frame_buffer_grey[-1], detected_components, show=False, rgb=False)
-        all_components_result_image = visualizer.visualize_components(components_result_image, detected_text_components,
-                                                                  show=False, rgb=True)
-        components_with_static_pixels_result_image = visualizer.visualize_points(all_components_result_image, static_pixels, show=False)
+        if not config.server:
+            components_result_image = visualizer.visualize_components(current_frame_buffer_grey[-1], detected_components, show=False, rgb=False)
+            all_components_result_image = visualizer.visualize_components(components_result_image, detected_text_components,
+                                                                      show=False, rgb=True)
+            components_with_static_pixels_result_image = visualizer.visualize_points(all_components_result_image, static_pixels, show=False)
 
-        final_result_to_show = np.hstack([components_with_static_pixels_result_image, common_gradients, binary_image])
+            final_result_to_show = np.hstack([components_with_static_pixels_result_image, common_gradients, binary_image])
 
-        cv2.imshow('', final_result_to_show)
+            cv2.imshow('', final_result_to_show)
         cv2.waitKey(10)
 
-    SIFT_processor.plot_SIFT_detection_plots()
+    if not config.server:
+        SIFT_processor.plot_SIFT_detection_plots()
