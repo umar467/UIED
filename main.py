@@ -17,7 +17,7 @@ def main():
     config.input_video=inputs.input_video
     config.output_json_folder=inputs.output_json_folder
     process_video(config)
-    print(f'Done processing video at "{inputs.input_video}" and outputs have been stored to "{inputs.output_json_path}"')
+    print(f'Done processing video at "{inputs.input_video}" and outputs have been stored to "{inputs.output_json_folder}"')
 
 if __name__ == '__main__':
     main()

@@ -2,7 +2,7 @@ class Configuration:
 
     def __init__(self):
         self.min_text_confidence = 0.7
-        self.ssim_threshold = 0.8
+        self.ssim_threshold = 0.5
         self.new_UI_layout_change_ratio = 0.8
         self.EAST_PATH = "data/model_weights/east_icdar2015_resnet_v1_50_rbox"
         self.maximum_SIFT_points_per_frame = 3000
@@ -15,19 +15,19 @@ class Configuration:
         self.resize_input_image_height = 800
         self.morphology_size = (7, 7)
         self.minimum_gradient_difference = 20
-        self.frame_buffer_size = 2
+        self.frame_buffer_size = 10
         self.binary_dilation_iterations = 2
         self.minimum_component_height = 10
         self.minimum_component_width = 10
-        self.maximum_component_height = 100
-        self.maximum_component_width = 100
+        self.maximum_component_height = 80
+        self.maximum_component_width = 80
         self.minimum_component_area = 15
         self.log_warnings = True
         self.log_errors = True
         self.log_info = False
         self.min_object_area = 5
 
-        self.COLOR = {'Button': (0, 255, 0), 'CheckBox': (0, 0, 255), 'Chronometer': (255, 166, 166),
+        self.COLOR = {'Button': (0, 255, 0), 'Compo': (0, 255, 0), 'CheckBox': (0, 0, 255), 'Chronometer': (255, 166, 166),
                       'EditText': (255, 166, 0),
                       'ImageButton': (77, 77, 255), 'ImageView': (255, 0, 166), 'ProgressBar': (166, 0, 255),
                       'RadioButton': (166, 166, 166),

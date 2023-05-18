@@ -303,6 +303,8 @@ def compo_filter(compos, min_area):
         if ratio_h > C.maximum_height_ratio or ratio_w > C.maximum_width_ratio or \
                 (min(compo.height, compo.width) < C.minimum_component_height or max(ratio_h, ratio_w) > C.maximum_component_ratio):
             continue
+        if compo.height > C.maximum_component_height or compo.width > C.maximum_component_width:
+            continue
         compos_new.append(compo)
     return compos_new
 

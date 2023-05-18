@@ -4,6 +4,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from config.CONFIG import Configuration
 config = Configuration()
+import detect_compo.lib_ip.ip_preprocessing as pre
+
 
 class Compo_Database:
     def __init__(self):
@@ -16,10 +18,11 @@ class Compo_Database:
         self.compo_change_cumulative = 0
         self.last_frame = None
 
+
     def compare_components(self, comp1, comp2, frame):
         relation = comp1.compo_relation(comp2)
         if relation != 0:
-            component_present_in_frame = self.component_present_in_frame(comp2, frame)
+            component_present_in_frame = self.component_present_in_frame(comp2, frame, comp2.bbox.put_bbox())
             if component_present_in_frame:
                 return True
             if not component_present_in_frame:
@@ -64,6 +67,7 @@ class Compo_Database:
                 match = self.compare_components(component, previous_component, frame)
                 if match:
                     previous_component.detected_in_frames.append(frame_number)
+                    previous_component.bbox_historical.append(component.bbox.put_bbox())
                     updated_compos.append(previous_component)
                     break
             if not match:
@@ -75,38 +79,72 @@ class Compo_Database:
         if force_check_previous_componenets:
             for previous_component in self.compos:
                 if previous_component not in updated_compos:
-                    if self.component_present_in_frame(previous_component, frame):
+                    if self.component_present_in_frame_historic(previous_component, frame):
                         previous_component.detected_in_frames.append(frame_number)
+                        previous_component.bbox_historical.append(previous_component.bbox.put_bbox())
                         updated_compos.append(previous_component)
                         #print('Addded extra 111')
         self.last_frame = frame
         JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(updated_compos))
         return updated_compos
 
-    def component_present_in_frame(self, component, frame):
+    def component_present_in_frame_historic(self, component, frame):
+        if len(component.detected_in_frames) > 5:
+            look_up_bboxes = component.bbox_historical[-5:]
+        else:
+            look_up_bboxes = component.bbox_historical
+        for bbox in look_up_bboxes:
+            if self.component_present_in_frame(component, frame, bbox):
+                return True
+        return False
+    def component_present_in_frame(self, component, frame, bbox):
         # check if component crop is present in frame and last frame
         image_size = (128,128)
-        bbox = component.bbox.put_bbox()
+        # bbox = component.bbox.put_bbox()
         crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         crop_last_frame = self.last_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         # resize crop and crop last frame to iamges_size
         crop = cv2.resize(crop, image_size)
         crop_last_frame = cv2.resize(crop_last_frame, image_size)
-        from skimage.metrics import structural_similarity as ssim
-        ssim = ssim(crop, crop_last_frame)
+
+        crop = pre.gray_to_gradient(crop)
+        crop_last_frame = pre.gray_to_gradient(crop_last_frame)
+
+        from skimage.metrics import structural_similarity as ssimer
+        ssim = ssimer(crop, crop_last_frame)
         # write a string to an image array of the same shape as crop
-        # value = np.zeros_like(crop).astype(np.uint8)
-        # value = cv2.putText(value, str(ssim), (10,10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-        # image_to_show = np.hstack([crop, crop_last_frame, value])
+
+        value = np.zeros_like(crop).astype(np.uint8)
+        value = cv2.putText(value, str(ssim), (10,10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        image_to_show = np.hstack([crop, crop_last_frame, value])
+
+        def contrast_stretch(image):
+            # Calculate the minimum and maximum pixel values
+            min_val = np.min(image)
+            max_val = np.max(image)
+
+            # Perform contrast stretching
+            stretched_image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX)
+
+            return stretched_image
+        crop = contrast_stretch(crop)
+        crop_last_frame = contrast_stretch(crop_last_frame)
+        ssim_n = ssimer(crop, crop_last_frame)
+
+        value = np.zeros_like(crop).astype(np.uint8)
+        value = cv2.putText(value, str(ssim_n), (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        image_to_show = np.hstack([ image_to_show, crop, crop_last_frame, value])
         # cv2.imshow('crop', image_to_show)
         # cv2.waitKey(1000)
 
+        ssim = ssim_n
         if ssim > config.ssim_threshold:
             return True
         return False
     def initialize_database(self, components, frame_number, frame):
         for component in components:
             component.detected_in_frames.append(frame_number)
+            component.bbox_historical.append(component.bbox.put_bbox())
             component.id = self.counter_id
             if component.category == 'Text':
                 component.id = 'T_' + str(self.counter_id)
@@ -114,3 +152,6 @@ class Compo_Database:
         self.compos = components
         self.loaded_compos = len(self.compos)
         self.last_frame = frame
+
+    def get_all_components(self):
+        return self.compos

@@ -90,13 +90,13 @@ def visualize_components(frame, components, rgb=True, name='component_visualizat
     if drawn_frame is not None:
         drawing_frame = drawn_frame
     if components==None:
-        return
+        return None
     if fill:
         fill_param = -1
     else:
         fill_param = 2
     for compo in components:
-        bbox = compo.put_bbox()
+        bbox = compo.bbox.put_bbox()
         if config is not None:
             color_map=config.COLOR
             color = color_map[compo.category]
@@ -258,3 +258,4 @@ def compare_component_crops(frame1, frame2, components):
             cv2.waitKey(500)
         scores.append(score)
     return scores
+

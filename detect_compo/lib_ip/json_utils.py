@@ -70,7 +70,9 @@ class Json_Utils:
             c['width'] = compo.width
             c['height'] = compo.height
             c['UI_ID'] = self.ui_id
+            c['bbox_historical'] = compo.bbox_historical
             c['frame_component_occurs_in'] = compo.detected_in_frames
+            assert len(compo.detected_in_frames) == len(compo.bbox_historical)
             if compo.category == 'Text':
                 c['word_width'] = compo.word_width
                 c['content'] = compo.content
@@ -84,3 +86,37 @@ class Json_Utils:
         self.all_frames.append(output)
         self.processed_frames += 1
         self.dump_current_json_to_file(config)
+
+    def produce_json_for_component(self, component):
+        c = {'id': component.id, 'class': component.category}
+        c['frequency'] = 1
+        (c['column_min'], c['row_min'], c['column_max'], c['row_max']) = component.bbox.put_bbox()
+        c['width'] = component.width
+        c['height'] = component.height
+        c['UI_ID'] = self.ui_id
+        c['bbox_historical'] = component.bbox_historical
+        c['frame_component_occurs_in'] = component.detected_in_frames
+        assert len(component.detected_in_frames) == len(component.bbox_historical)
+        if component.category == 'Text':
+            c['word_width'] = component.word_width
+            c['content'] = component.content
+            c['confidence'] = component.confidence
+        else:
+            c['image_crop'] = [1,2,2]
+        return c
+
+    def produce_json_from_database_components(self, database):
+        components = database.get_all_components()
+        json_output = {}
+        json_output['json_format_version'] = 0.3
+        component_json = {}
+        for component in components:
+            component_json = self.produce_json_for_component(component)
+            json_output[component.id] = component_json
+        return json_output
+
+    def write_json_to_file(self, database):
+        json_output = self.produce_json_from_database_components(database)
+        json_output_file_path = "test.json"
+        with open(json_output_file_path, 'w+') as f_out:
+            json.dump(json_output, f_out, indent=4)

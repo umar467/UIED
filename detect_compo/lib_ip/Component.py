@@ -46,6 +46,7 @@ class Component:
         self.line_ = None
 
         self.detected_in_frames = []
+        self.bbox_historical = []
 
     def compo_update(self, id, org_shape):
         self.id = id

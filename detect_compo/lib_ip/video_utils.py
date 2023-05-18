@@ -22,7 +22,7 @@ class video_reader:
             self.print_stats()
 
     def has_enough_frames(self):
-        if self.current_rgb_frame_number + self.config.frame_buffer_size < self.total_number_of_rgb_frames:
+        if self.current_rgb_frame_number + self.config.frame_buffer_size < self.total_number_of_rgb_frames + 1:
             return True
         else:
             return False
@@ -33,7 +33,9 @@ class video_reader:
         no_of_frames = self.config.frame_buffer_size
         frames = []
         for _ in range(no_of_frames):
-            frames.append(self.get_processed_frame())
+            frame = self.get_processed_frame()
+            if frame is not None:
+                frames.append(frame)
         frames = np.array(frames)
         return frames
 
@@ -74,7 +76,14 @@ class video_reader:
         else:
             print(f'rgb_frame Number Exceeds Video Length of {self.total_number_of_rgb_frames} rgb_frames !!')
             return None
-            
+
+    def set_reader_head_to_frame_number(self, frame_number):
+        if frame_number < self.total_number_of_rgb_frames:
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, frame_number-1)
+            self.current_rgb_frame_number = frame_number
+        else:
+            print(f'rgb_frame Number Exceeds Video Length of {self.total_number_of_rgb_frames} rgb_frames !!')
+            return None
     def get_specific_frame(self, requested_rgb_frame_number):
         '''
         Input: Takes a specific frame number as input

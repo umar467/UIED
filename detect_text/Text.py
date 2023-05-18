@@ -14,9 +14,11 @@ class Text:
         self.area = self.width * self.height
         self.word_width = self.width / len(self.content)
         self.detected_in_frames = []
+        self.bbox_historical = []
         self.image_shape = (0, 0)
         self.box_area = self.width * self.height
         self.bbox = self.put_bbox()
+
 
     def put_bbox(self):
         #return int(self.location['left']), int(self.location['bottom']), int(self.location['right']), int(self.location['top'])
