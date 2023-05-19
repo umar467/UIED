@@ -43,12 +43,14 @@ class Json_Utils:
             s.append(frame['SIFT_Statistics'])
 
         return [f, d, s]
+
     def visualize_sift(self):
         sift_stats = []
         for frame in self.all_frames:
             if 'SIFT_Statistics' in frame:
                 sift_stats.append(frame['SIFT_Statistics'])
         self.save_plots(sift_stats)
+
     def save_plots(self, data):
         p = pd.DataFrame(data, columns=['current_frame', 'total_common', 'static', 'dynamic'])
         plot = p.plot();
@@ -58,6 +60,7 @@ class Json_Utils:
         fig = plot.get_figure()
         fig.savefig("sift.png")
         plt.close()
+
     def dump_current_json_to_file(self, config):
 
         video_name = 'video_' + str(config.input_video)
@@ -109,7 +112,6 @@ class Json_Utils:
                 c['content'] = compo.content
                 c['confidence'] = compo.confidence
 
-
         c['sift_statistics'] = self.current_frame['SIFT_Statistics']
         c['component_filtration_statistics'] = self.current_frame['Component_Filtration_Statistics']
         c['database_statistics'] = self.current_frame['Database_Statistics']
@@ -133,22 +135,21 @@ class Json_Utils:
             c['content'] = component.content
             c['confidence'] = component.confidence
         else:
-            c['image_crop'] = [1,2,2]
+            c['image_crop'] = [1, 2, 2]
         return c
 
     def produce_json_from_database_components(self, database):
         components = database.get_all_components()
-        json_output = {}
-        json_output['json_format_version'] = 0.3
-        component_json = {}
+        json_format_version = .3
+        json_output = {'json_format_version': json_format_version, 'elements': []}
         for component in components:
             component_json = self.produce_json_for_component(component)
-            json_output[component.id] = component_json
+            json_output['elements'].append(component_json)
         return json_output
 
     def write_json_to_file(self, database):
         json_output = self.produce_json_from_database_components(database)
-        #json_output_file_path = "test.json"
+        # json_output_file_path = "test.json"
         json_output_file_path = self.config.output_json_folder + "/detections.json"
         with open(json_output_file_path, 'w+') as f_out:
             json.dump(json_output, f_out, indent=4)
