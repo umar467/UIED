@@ -168,21 +168,21 @@ class SIFT_Processor:
         plot.set_xlabel("Frames x 10")
         plot.set_ylabel("Frequency")
         fig = plot.get_figure()
-        video_name = 'video_' + str(self.config.input_video)
-        video_name = video_name.replace('/', '_')
-        video_name = video_name.replace('.mp4', '/')
+        # video_name = 'video_' + str(self.config.input_video)
+        # video_name = video_name.replace('/', '_')
+        # video_name = video_name.replace('.mp4', '/')
         import os
-        if not os.path.exists(video_name):
-            os.mkdir(video_name)
-        fig.savefig(video_name + "sift.png")
+        if not os.path.exists(self.config.output_json_folder):
+            os.mkdir(self.config.output_json_folder)
+        output_path = self.config.output_json_folder + 'sift.png'
+        fig.savefig(output_path)
         plt.close()
     def get_static_pixels(self, frames, JSON_Processor):
-        self.statistics = []
         for frame in frames:
             self.get_SIFT_features(frame)
         static_pixels = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
         JSON_Processor.add_sift_statistics_to_current_frame(self.statistics)
-        #self.plot_SIFT_detection_plots()
+        self.plot_SIFT_detection_plots()
         return static_pixels
     def get_static_objects(self, across_n_frames=10):
         """

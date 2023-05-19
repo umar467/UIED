@@ -10,12 +10,13 @@ import json
 # config = Configuration()
 
 class Json_Utils:
-    def __init__(self):
+    def __init__(self, config):
         self.all_frames = []
         self.current_frame = {}
         self.processed_frames = 0
         self.ui_id = 0
         self.components_in_current_frame = []
+        self.config = config
 
     def add_sift_statistics_to_current_frame(self, sift_statistics):
         self.current_frame['SIFT_Statistics'] = sift_statistics
@@ -27,6 +28,36 @@ class Json_Utils:
         self.current_frame['Database_Statistics'] = database_statistics[0:2]
         self.components_in_current_frame = database_statistics[2]
 
+    def process_frame(self):
+        self.all_frames.append(self.current_frame)
+        self.processed_frames += 1
+        self.current_frame = {}
+
+    def get_stats(self):
+        f = []
+        d = []
+        s = []
+        for frame in self.all_frames:
+            f.append(frame['Component_Filtration_Statistics'])
+            d.append(frame['Database_Statistics'])
+            s.append(frame['SIFT_Statistics'])
+
+        return [f, d, s]
+    def visualize_sift(self):
+        sift_stats = []
+        for frame in self.all_frames:
+            if 'SIFT_Statistics' in frame:
+                sift_stats.append(frame['SIFT_Statistics'])
+        self.save_plots(sift_stats)
+    def save_plots(self, data):
+        p = pd.DataFrame(data, columns=['current_frame', 'total_common', 'static', 'dynamic'])
+        plot = p.plot();
+        # plot.title('SIFT Features across Frames')
+        plot.set_xlabel("Frames x 10")
+        plot.set_ylabel("Frequency")
+        fig = plot.get_figure()
+        fig.savefig("sift.png")
+        plt.close()
     def dump_current_json_to_file(self, config):
 
         video_name = 'video_' + str(config.input_video)
@@ -117,6 +148,7 @@ class Json_Utils:
 
     def write_json_to_file(self, database):
         json_output = self.produce_json_from_database_components(database)
-        json_output_file_path = "test.json"
+        #json_output_file_path = "test.json"
+        json_output_file_path = self.config.output_json_folder + "/detections.json"
         with open(json_output_file_path, 'w+') as f_out:
             json.dump(json_output, f_out, indent=4)

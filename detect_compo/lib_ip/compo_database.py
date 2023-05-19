@@ -89,6 +89,7 @@ class Compo_Database:
         return updated_compos
 
     def component_present_in_frame_historic(self, component, frame):
+        return self.component_present_in_frame(component, frame, component.bbox.put_bbox())
         if len(component.detected_in_frames) > 5:
             look_up_bboxes = component.bbox_historical[-5:]
         else:
