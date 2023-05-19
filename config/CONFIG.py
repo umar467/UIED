@@ -9,9 +9,15 @@ class Configuration:
         self.maximum_component_ratio = 10
         self.maximum_width_ratio = 40
         self.maximum_height_ratio = 50
-        #self.input_video = "data/input/videos/1.mp4"
-        #self.output_json_folder = "json/"
-        self.input_frame_blur_kernel_size =  None# A number or None not zero.
+
+        self.input_video = "data/input/videos/1.mp4"
+        # self.output_json_folder = "json/"
+
+        self.progress_callback = None
+        self.server = False
+        self.json_explicit_path = ''
+
+        self.input_frame_blur_kernel_size = None  # A number or None not zero.
         self.resize_input_image_height = 800
         self.morphology_size = (7, 7)
         self.minimum_gradient_difference = 20
@@ -27,7 +33,8 @@ class Configuration:
         self.log_info = False
         self.min_object_area = 5
 
-        self.COLOR = {'Button': (0, 255, 0), 'Compo': (0, 255, 0), 'CheckBox': (0, 0, 255), 'Chronometer': (255, 166, 166),
+        self.COLOR = {'Button': (0, 255, 0), 'Compo': (0, 255, 0), 'CheckBox': (0, 0, 255),
+                      'Chronometer': (255, 166, 166),
                       'EditText': (255, 166, 0),
                       'ImageButton': (77, 77, 255), 'ImageView': (255, 0, 166), 'ProgressBar': (166, 0, 255),
                       'RadioButton': (166, 166, 166),
@@ -45,7 +52,8 @@ class Configuration:
         self.THRESHOLD_REC_MAX_DENT_RATIO = 0.25
         self.THRESHOLD_LINE_THICKNESS = 8
         self.THRESHOLD_LINE_MIN_LENGTH = 0.95
-        self.THRESHOLD_COMPO_MAX_SCALE = ( 0.25, 0.98)  # (120/800, 422.5/450) maximum height and width ratio for a atomic compo (button)
+        self.THRESHOLD_COMPO_MAX_SCALE = (
+        0.25, 0.98)  # (120/800, 422.5/450) maximum height and width ratio for a atomic compo (button)
         self.THRESHOLD_TEXT_MAX_WORD_GAP = 10
         self.THRESHOLD_TEXT_MAX_HEIGHT = 0.04  # 40/800 maximum height of text
         self.THRESHOLD_TOP_BOTTOM_BAR = (0.045, 0.94)  # (36/800, 752/800) height ratio of top and bottom bar
