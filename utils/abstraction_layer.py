@@ -54,6 +54,13 @@ def display_intensity_maps(stack,config):
 
 
 def process_video(config):
+    if not os.path.exists(config.output_json_folder):
+        os.makedirs(config.output_json_folder)
+    config.output_json_folder = config.output_json_folder + config.input_video.split('/')[-1].split('.')[0] + '/'
+    if not os.path.exists(config.output_json_folder):
+        os.makedirs(config.output_json_folder)
+    else:
+        print("WARNING: The output folder already exists. This means that the video has already been processed.")
     video_reader_object = video_reader(config)
     start_head_location = 0
     video_reader_object.skip_frames(start_head_location)
