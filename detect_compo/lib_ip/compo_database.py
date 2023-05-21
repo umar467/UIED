@@ -151,10 +151,10 @@ class Compo_Database:
             if component.category == 'Text':
                 component.id = 'T_' + str(self.counter_id)
             self.counter_id += 1
+            self.save_component_as_png(component, frame, config)
         self.compos = components
         self.loaded_compos = len(self.compos)
         self.last_frame = frame
-        self.save_component_as_png(component, frame, config)
     def get_all_components(self):
         return self.compos
 
