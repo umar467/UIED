@@ -1,6 +1,9 @@
 import cv2
 import numpy as np
 from time import time
+
+from tqdm import tqdm
+
 import detect_compo.lib_ip.ip_preprocessing as pre
 from detect_compo.lib_ip.video_utils import video_reader
 import detect_compo.lib_ip.ip_detection as det
@@ -70,8 +73,14 @@ def process_video(config):
     JSON_Processor = json_processor(config)
     Text_Extractor = Text_Processor(config)
     component_fill_accumulator = None
+
+    def progress(info: str):
+        if config.progress_callback:
+            config.progress_callback(info)
+
+    pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='First pass')
     while(video_reader_object.has_enough_frames()):
-        print(video_reader_object.current_rgb_frame_number)
+        # print(video_reader_object.current_rgb_frame_number)
         current_frame_buffer_rgb = video_reader_object.get_Frames()
         current_frame_buffer_grey = pre.conver_frames_to_grey(current_frame_buffer_rgb)
         current_frame_buffer_gradients = pre.conver_frames_to_gradient(current_frame_buffer_grey)
@@ -89,7 +98,12 @@ def process_video(config):
         # visualizer.visualize_components(current_frame_grey, detected_components, rgb=True, show=True, fill=False)
 
         # JSON_Processor.process_frame()
+        pbar.update(10)  # as every 10th frame processed
     video_reader_object.set_reader_head_to_frame_number(start_head_location)
+    pbar.close()
+
+    progress('second pass')
+    pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='Second pass')
     while (video_reader_object.has_enough_frames()):
         current_frame_buffer_rgb = video_reader_object.get_Frames()
         current_frame_buffer_grey = pre.conver_frames_to_grey(current_frame_buffer_rgb)
@@ -121,6 +135,9 @@ def process_video(config):
         JSON_Processor.write_json_to_file(Compo_DB)
 
         Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config)
+        pbar.update(10)
+
+    pbar.close()
 
 
 def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
