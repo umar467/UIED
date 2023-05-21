@@ -105,7 +105,7 @@ def process_video(config):
         detected_components = Compo_DB.compare_with_previously_detected_components(detected_components,
                                                                                    frame_number,
                                                                                    current_frame_grey,
-                                                                                   JSON_Processor)
+                                                                                   JSON_Processor, config)
 
         component_image = visualizer.visualize_components(current_frame_grey, detected_components, rgb=False, show=False, fill=True)
         # visualizer.visualize_components(current_frame_grey, detected_components, rgb=True, show=True, fill=False)
