@@ -137,7 +137,7 @@ def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
     import pandas as pd
     fd = JSON_Processor.get_stats()
     p = pd.DataFrame(fd[0], columns=['total_detected', 'area_filtered', 'overlap_filtered', 'sift_filtered'])
-    plot = p.plot(title='compo detection stats');
+    plot = p.plot(title='compo detection stats')
     plot.set_xlabel("Frames x 10")
     plot.set_ylabel("Frequency")
     fig = plot.get_figure()

@@ -162,5 +162,5 @@ class Compo_Database:
         bbox = component.bbox.put_bbox()
         crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         # reshape crop to 128x128
-        crop = cv2.resize(crop, config.component_png_size)
+        # crop = cv2.resize(crop, config.component_png_size)
         cv2.imwrite(config.output_folder + '/' + str(component.id)+'.png', crop)
