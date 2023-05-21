@@ -172,9 +172,9 @@ class SIFT_Processor:
         # video_name = video_name.replace('/', '_')
         # video_name = video_name.replace('.mp4', '/')
         import os
-        if not os.path.exists(self.config.output_json_folder):
-            os.mkdir(self.config.output_json_folder)
-        output_path = self.config.output_json_folder + 'sift.png'
+        if not os.path.exists(self.config.output_folder):
+            os.mkdir(self.config.output_folder)
+        output_path = self.config.output_folder + 'sift.png'
         fig.savefig(output_path)
         plt.close()
     def get_static_pixels(self, frames, JSON_Processor):

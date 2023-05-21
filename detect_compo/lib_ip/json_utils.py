@@ -75,9 +75,10 @@ class Json_Utils:
         #     append_write = 'a'  # append if already exists
         # else:
         #     append_write = 'w'  # make a new file if not
-        os.makedirs(config.output_json_folder, exist_ok=True)
+        os.makedirs(config.output_folder, exist_ok=True)
         with open(json_output_file_path, 'w+') as f_out:
             json.dump(output, f_out, indent=4)
+
 
     def produce_json_for_frame_detections(self, components, frame_number, config):
 
@@ -150,6 +151,6 @@ class Json_Utils:
     def write_json_to_file(self, database):
         json_output = self.produce_json_from_database_components(database)
         # json_output_file_path = "test.json"
-        json_output_file_path = self.config.output_json_folder + "/detections.json"
+        json_output_file_path = self.config.output_folder + "/detections.json"
         with open(json_output_file_path, 'w+') as f_out:
             json.dump(json_output, f_out, indent=4)

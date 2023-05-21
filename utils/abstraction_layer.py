@@ -32,7 +32,7 @@ def display_intensity_maps(stack,config):
     mean_image = np.mean(stack, axis=2)  # Calculate the mean image
 
     mean_image = cv2.GaussianBlur(mean_image, (25, 25), 0)
-    cv2.imwrite(config.output_json_folder+'componenet_location_heatmap.png', assign_red_to_top_percentile(mean_image))
+    cv2.imwrite(config.output_folder + 'component_location_heatmap.png', assign_red_to_top_percentile(mean_image))
     # cv2.imshow('test', assign_red_to_top_percentile(mean_image))
     # cv2.waitKey(100)
     # Create heatmap using seaborn
@@ -54,11 +54,11 @@ def display_intensity_maps(stack,config):
 
 
 def process_video(config):
-    if not os.path.exists(config.output_json_folder):
-        os.makedirs(config.output_json_folder)
-    config.output_json_folder = config.output_json_folder + config.input_video.split('/')[-1].split('.')[0] + '/'
-    if not os.path.exists(config.output_json_folder):
-        os.makedirs(config.output_json_folder)
+    if not os.path.exists(config.output_folder):
+        os.makedirs(config.output_folder)
+    config.output_folder = config.output_folder + '/' + config.input_video.split('/')[-1].split('.')[0] + '/'
+    if not os.path.exists(config.output_folder):
+        os.makedirs(config.output_folder)
     else:
         print("WARNING: The output folder already exists. This means that the video has already been processed.")
     video_reader_object = video_reader(config)
@@ -115,8 +115,8 @@ def process_video(config):
             component_fill_accumulator = np.dstack((component_fill_accumulator, component_image))
 
 
-        if not os.path.exists(config.output_json_folder):
-            os.makedirs(config.output_json_folder)
+        if not os.path.exists(config.output_folder):
+            os.makedirs(config.output_folder)
 
         JSON_Processor.write_json_to_file(Compo_DB)
 
@@ -126,7 +126,7 @@ def process_video(config):
 def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
     image_np = display_intensity_maps(np.array(component_fill_accumulator),config)
     # Visualize using cv2.imshow
-    cv2.imwrite(config.output_json_folder + "intensity_map.jpg", image_np)
+    cv2.imwrite(config.output_folder + "intensity_map.jpg", image_np)
     # cv2.imshow("Intensity Maps", image_np)
     # cv2.waitKey(100)
     # sift = cv2.imread('sift.png')
@@ -141,7 +141,7 @@ def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
     plot.set_xlabel("Frames x 10")
     plot.set_ylabel("Frequency")
     fig = plot.get_figure()
-    fig.savefig(config.output_json_folder + "component_stats.png")
+    fig.savefig(config.output_folder + "component_stats.png")
     plt.close()
     # sift = cv2.imread('s.png')
     # cv2.imshow('s', sift)
@@ -153,7 +153,7 @@ def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
     plot.set_xlabel("Frames x 10")
     plot.set_ylabel("Frequency")
     fig = plot.get_figure()
-    fig.savefig(config.output_json_folder + "database_stats.png")
+    fig.savefig(config.output_folder + "database_stats.png")
     plt.close()
     # sift = cv2.imread('d.png')
     # cv2.imshow('d', sift)

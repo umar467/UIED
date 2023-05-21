@@ -33,12 +33,17 @@ class Configuration:
         self.log_info = False
         self.min_object_area = 5
 
-        self.COLOR = {'Button': (0, 255, 0), 'Compo': (0, 255, 0), 'CheckBox': (0, 0, 255),
+        self.COLOR = {'Button': (0, 255, 0),
+                      'Compo': (0, 255, 0),
+                      'CheckBox': (0, 0, 255),
                       'Chronometer': (255, 166, 166),
                       'EditText': (255, 166, 0),
-                      'ImageButton': (77, 77, 255), 'ImageView': (255, 0, 166), 'ProgressBar': (166, 0, 255),
+                      'ImageButton': (77, 77, 255),
+                      'ImageView': (255, 0, 166),
+                      'ProgressBar': (166, 0, 255),
                       'RadioButton': (166, 166, 166),
-                      'RatingBar': (0, 166, 255), 'SeekBar': (0, 166, 10), 'Spinner': (50, 21, 255),
+                      'RatingBar': (0, 166, 255),
+                      'SeekBar': (0, 166, 10), 'Spinner': (50, 21, 255),
                       'Switch': (80, 166, 66), 'ToggleButton': (0, 66, 80), 'VideoView': (88, 66, 0),
                       'TextView': (169, 255, 0),
 
