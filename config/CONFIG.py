@@ -12,6 +12,7 @@ class Configuration:
 
         self.input_video = "data/input/videos/1.mp4"
         # self.output_json_folder = "json/"
+        self.component_png_size = (128, 128)
 
         self.progress_callback = None
         self.server = False

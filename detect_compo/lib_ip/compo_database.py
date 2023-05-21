@@ -56,9 +56,9 @@ class Compo_Database:
             self.compo_change_cumulative = 0
 
         return [total_matched, total_new, ids_in_current_frame]
-    def compare_with_previously_detected_components(self, components, frame_number, frame, JSON_Processor, force_check_previous_componenets=True):
+    def compare_with_previously_detected_components(self, components, frame_number, frame, JSON_Processor, config,  force_check_previous_componenets=True):
         if self.loaded_compos == 0:
-            self.initialize_database(components, frame_number, frame)
+            self.initialize_database(components, frame_number, frame, config)
             JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(components))
             return components
         updated_compos = []
@@ -76,6 +76,7 @@ class Compo_Database:
                 self.compos.append(component)
                 self.loaded_compos+=1
                 updated_compos.append(component)
+                self.save_component_as_png(component, frame, config)
         if force_check_previous_componenets:
             for previous_component in self.compos:
                 if previous_component not in updated_compos:
@@ -142,7 +143,7 @@ class Compo_Database:
         if ssim > config.ssim_threshold:
             return True
         return False
-    def initialize_database(self, components, frame_number, frame):
+    def initialize_database(self, components, frame_number, frame, config):
         for component in components:
             component.detected_in_frames.append(frame_number)
             component.bbox_historical.append(component.bbox.put_bbox())
@@ -153,6 +154,13 @@ class Compo_Database:
         self.compos = components
         self.loaded_compos = len(self.compos)
         self.last_frame = frame
-
+        self.save_component_as_png(component, frame, config)
     def get_all_components(self):
         return self.compos
+
+    def save_component_as_png(self, component, frame, config):
+        bbox = component.bbox.put_bbox()
+        crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        # reshape crop to 128x128
+        crop = cv2.resize(crop, config.component_png_size)
+        cv2.imwrite(config.output_folder + '/' + str(component.id)+'.png', crop)

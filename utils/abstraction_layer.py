@@ -84,7 +84,7 @@ def process_video(config):
         detected_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor)
         detected_components += Text_Extractor.detect_text_from_frame(current_frame_rgb)
         detected_components = Compo_DB.compare_with_previously_detected_components(detected_components, frame_number,
-                                                                                   current_frame_grey, JSON_Processor)
+                                                                                   current_frame_grey, JSON_Processor, config)
         JSON_Processor.process_frame()
         # visualizer.visualize_components(current_frame_grey, detected_components, rgb=True, show=True, fill=False)
 
