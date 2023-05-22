@@ -161,6 +161,7 @@ class Compo_Database:
     def save_component_as_png(self, component, frame, config):
         bbox = component.bbox.put_bbox()
         crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-        # reshape crop to 128x128
+        # reshape crop to 128x128 while preserving the aspect ratio
+        crop = pre.resize_by_height(crop, config.component_png_size[0])
         # crop = cv2.resize(crop, config.component_png_size)
         cv2.imwrite(config.output_folder + '/' + str(component.id)+'.png', crop)
