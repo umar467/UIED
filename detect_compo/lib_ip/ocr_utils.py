@@ -32,7 +32,7 @@ class text_extractor:
                 text_element = text_component_builder.Text(id, content, location, confidence)
                 if confidence > self.config.min_text_confidence:
                     text_components.append(text_element)
-        text_components = self.compo_filter(text_components, self.config)
+        # text_components = self.compo_filter(text_components, self.config)
         return text_components
 
     def compo_filter(self, compos, config):

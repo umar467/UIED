@@ -116,7 +116,7 @@ def visualize_components(frame, components, rgb=True, name='component_visualizat
         '''
     if show:
         cv2.imshow(name, drawing_frame)
-        cv2.waitKey(1)
+        cv2.waitKey(500)
     return drawing_frame
 
 def visualize_component_crops(frame, components, rgb=True, name='component_visualization', config=None, fill=False, show=True, drawn_frame=None, last_outline = None):
@@ -258,4 +258,84 @@ def compare_component_crops(frame1, frame2, components):
             cv2.waitKey(500)
         scores.append(score)
     return scores
+
+
+def assign_red_to_top_percentile(image):
+    # Calculate the threshold value for the top 20% percentile
+    percentile_threshold = np.percentile(image, 95)
+
+    # Convert grayscale image to color image
+    color_image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2BGR)
+
+    # Assign red color (0, 0, 255) to the pixels above the threshold
+    color_image[np.where(image > percentile_threshold)] = [0, 0, 255]
+    
+    # assign green , red and blue color to pixels in three equal treshold ranges
+    color_image[np.where(image > percentile_threshold/3)] = [0, 255, 0]
+    color_image[np.where(image > percentile_threshold/3*2)] = [255, 0, 0]
+    color_image[np.where(image > percentile_threshold)] = [0, 0, 255]
+
+    return color_image
+def display_intensity_maps(stack,config):
+    mean_image = np.mean(stack, axis=2)  # Calculate the mean image
+
+    mean_image = cv2.GaussianBlur(mean_image, (25, 25), 0)
+    cv2.imwrite(config.output_folder + 'component_location_heatmap.png', assign_red_to_top_percentile(mean_image))
+    # cv2.imshow('test', assign_red_to_top_percentile(mean_image))
+    # cv2.waitKey(100)
+    # Create heatmap using seaborn
+    import seaborn as sns
+    sns.set()
+    fig, ax = plt.subplots(figsize=(8, 8))
+    heatmap = sns.heatmap(mean_image, cmap='hot', ax=ax)
+    heatmap.set_title('Pixel Heatmap')
+    heatmap.set_xlabel('Columns')
+    heatmap.set_ylabel('Rows')
+
+    # Save the figure as a NumPy array
+    fig.canvas.draw()
+    img_np = np.array(fig.canvas.renderer.buffer_rgba())
+
+    plt.close()
+
+    return img_np
+
+
+
+
+def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
+    image_np = display_intensity_maps(np.array(component_fill_accumulator),config)
+    # Visualize using cv2.imshow
+    cv2.imwrite(config.output_folder + "intensity_map.jpg", image_np)
+    # cv2.imshow("Intensity Maps", image_np)
+    # cv2.waitKey(100)
+    # sift = cv2.imread('sift.png')
+    # cv2.imshow('sift', sift)
+    # cv2.waitKey(100)
+    # cv2.destroyAllWindows()
+
+    import pandas as pd
+    fd = JSON_Processor.get_stats()
+    p = pd.DataFrame(fd[0], columns=['total_detected', 'area_filtered', 'overlap_filtered', 'sift_filtered'])
+    plot = p.plot(title='compo detection stats')
+    plot.set_xlabel("Frames x 10")
+    plot.set_ylabel("Frequency")
+    fig = plot.get_figure()
+    fig.savefig(config.output_folder + "component_stats.png")
+    plt.close()
+    # sift = cv2.imread('s.png')
+    # cv2.imshow('s', sift)
+    # cv2.waitKey(100)
+
+    p = pd.DataFrame(fd[1], columns=['total_detected', 'filtered'])
+    plot = p.plot(title='database filter stats');
+    # plot.title('SIFT Features across Frames')
+    plot.set_xlabel("Frames x 10")
+    plot.set_ylabel("Frequency")
+    fig = plot.get_figure()
+    fig.savefig(config.output_folder + "database_stats.png")
+    plt.close()
+    # sift = cv2.imread('d.png')
+    # cv2.imshow('d', sift)
+    # cv2.waitKey(100)
 

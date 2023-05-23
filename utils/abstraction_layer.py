@@ -14,47 +14,11 @@ from detect_compo.lib_ip.json_utils import Json_Utils as json_processor
 from detect_compo.lib_ip.ocr_utils import text_extractor as Text_Processor
 import os
 
-
+import analyzer as analyzer
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 plt.ion()
-
-def assign_red_to_top_percentile(image):
-    # Calculate the threshold value for the top 20% percentile
-    percentile_threshold = np.percentile(image, 95)
-
-    # Convert grayscale image to color image
-    color_image = cv2.cvtColor(image.astype(np.uint8), cv2.COLOR_GRAY2BGR)
-
-    # Assign red color (0, 0, 255) to the pixels above the threshold
-    color_image[np.where(image > percentile_threshold)] = [0, 0, 255]
-
-    return color_image
-def display_intensity_maps(stack,config):
-    mean_image = np.mean(stack, axis=2)  # Calculate the mean image
-
-    mean_image = cv2.GaussianBlur(mean_image, (25, 25), 0)
-    cv2.imwrite(config.output_folder + 'component_location_heatmap.png', assign_red_to_top_percentile(mean_image))
-    # cv2.imshow('test', assign_red_to_top_percentile(mean_image))
-    # cv2.waitKey(100)
-    # Create heatmap using seaborn
-    sns.set()
-    fig, ax = plt.subplots(figsize=(8, 8))
-    heatmap = sns.heatmap(mean_image, cmap='hot', ax=ax)
-    heatmap.set_title('Pixel Heatmap')
-    heatmap.set_xlabel('Columns')
-    heatmap.set_ylabel('Rows')
-
-    # Save the figure as a NumPy array
-    fig.canvas.draw()
-    img_np = np.array(fig.canvas.renderer.buffer_rgba())
-
-    plt.close()
-
-    return img_np
-
-
 
 def process_video(config):
     if not os.path.exists(config.output_folder):
@@ -65,9 +29,9 @@ def process_video(config):
     else:
         print("WARNING: The output folder already exists. This means that the video has already been processed.")
     video_reader_object = video_reader(config)
-    start_head_location = 0
+    start_head_location = 800
     video_reader_object.skip_frames(start_head_location)
-    # video_reader_object.total_number_of_rgb_frames = 530
+    video_reader_object.total_number_of_rgb_frames = 1100 
     SIFT_processor = SIFT_bundle(config)
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
@@ -95,8 +59,10 @@ def process_video(config):
         detected_components = Compo_DB.compare_with_previously_detected_components(detected_components, frame_number,
                                                                                    current_frame_grey, JSON_Processor, config)
         JSON_Processor.process_frame()
-        # visualizer.visualize_components(current_frame_grey, detected_components, rgb=True, show=True, fill=False)
-
+        # visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False)
+        
+        analyzer.analyze(detected_components, current_frame_rgb)
+         
         # JSON_Processor.process_frame()
         pbar.update(10)  # as every 10th frame processed
     video_reader_object.set_reader_head_to_frame_number(start_head_location)
@@ -122,7 +88,7 @@ def process_video(config):
                                                                                    JSON_Processor, config)
 
         component_image = visualizer.visualize_components(current_frame_grey, detected_components, rgb=False, show=False, fill=True)
-        # visualizer.visualize_components(current_frame_grey, detected_components, rgb=True, show=True, fill=False)
+        visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False)
         if component_fill_accumulator is None:
             component_fill_accumulator = np.array(component_image)
         if component_image is not None:
@@ -134,45 +100,8 @@ def process_video(config):
 
         JSON_Processor.write_json_to_file(Compo_DB)
 
-        Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config)
+
+        visualizer.Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config)
         pbar.update(10)
 
     pbar.close()
-
-
-def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
-    image_np = display_intensity_maps(np.array(component_fill_accumulator),config)
-    # Visualize using cv2.imshow
-    cv2.imwrite(config.output_folder + "intensity_map.jpg", image_np)
-    # cv2.imshow("Intensity Maps", image_np)
-    # cv2.waitKey(100)
-    # sift = cv2.imread('sift.png')
-    # cv2.imshow('sift', sift)
-    # cv2.waitKey(100)
-    # cv2.destroyAllWindows()
-
-    import pandas as pd
-    fd = JSON_Processor.get_stats()
-    p = pd.DataFrame(fd[0], columns=['total_detected', 'area_filtered', 'overlap_filtered', 'sift_filtered'])
-    plot = p.plot(title='compo detection stats')
-    plot.set_xlabel("Frames x 10")
-    plot.set_ylabel("Frequency")
-    fig = plot.get_figure()
-    fig.savefig(config.output_folder + "component_stats.png")
-    plt.close()
-    # sift = cv2.imread('s.png')
-    # cv2.imshow('s', sift)
-    # cv2.waitKey(100)
-
-    p = pd.DataFrame(fd[1], columns=['total_detected', 'filtered'])
-    plot = p.plot(title='database filter stats');
-    # plot.title('SIFT Features across Frames')
-    plot.set_xlabel("Frames x 10")
-    plot.set_ylabel("Frequency")
-    fig = plot.get_figure()
-    fig.savefig(config.output_folder + "database_stats.png")
-    plt.close()
-    # sift = cv2.imread('d.png')
-    # cv2.imshow('d', sift)
-    # cv2.waitKey(100)
-
