@@ -14,7 +14,7 @@ from detect_compo.lib_ip.json_utils import Json_Utils as json_processor
 from detect_compo.lib_ip.ocr_utils import text_extractor as Text_Processor
 import os
 
-import analyzer as analyzer
+from analyzer import Analyzer as analyzer_class
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -41,7 +41,7 @@ def process_video(config):
     def progress(info: str):
         if config.progress_callback:
             config.progress_callback(info)
-
+    analyzer = analyzer_class()
     pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='First pass')
     while(video_reader_object.has_enough_frames()):
         # print(video_reader_object.current_rgb_frame_number)
