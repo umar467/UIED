@@ -29,9 +29,9 @@ def process_video(config):
     else:
         print("WARNING: The output folder already exists. This means that the video has already been processed.")
     video_reader_object = video_reader(config)
-    start_head_location = 800
+    start_head_location = 500
     video_reader_object.skip_frames(start_head_location)
-    video_reader_object.total_number_of_rgb_frames = 820
+    # video_reader_object.total_number_of_rgb_frames = 820
     SIFT_processor = SIFT_bundle(config)
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
@@ -102,7 +102,7 @@ def process_video(config):
         visualizer.Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config)
         visualizer.visualize_component_histograms(current_frame_rgb, detected_components, config)
         detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False, fill=False)
-        analyzer.analyze_show(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config, detection_frame)
+        # analyzer.analyze_show(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config, detection_frame)
         pbar.update(10)
 
     pbar.close()
