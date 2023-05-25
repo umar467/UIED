@@ -10,7 +10,8 @@ class Analyzer:
         self.compo_type_per_frame = []
         self.compo_size_per_frame = []
         self.compo_type_area_per_frame = []
-        self.grand_frame = np.zeros((1000, 1500, 3), np.uint8)
+        self.grand_frame = np.zeros((1000, 1920, 3), np.uint8)
+        self.counter_png = 0
 
     def plot_category(self, array):
         import pandas as pd
@@ -392,7 +393,7 @@ class Analyzer:
         cv2.imshow('grand_frame', self.grand_frame)
         cv2.waitKey(1000)
 
-    def visualize_results(self, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame):
+    def visualize_results(self, frame_rgb, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame):
         heatmap = cv2.imread(self.config.output_folder + 'component_location_heatmap.png')
         comp_stats = cv2.imread(self.config.output_folder + 'component_stats.png')
         database_stats = cv2.imread(self.config.output_folder + 'database_stats.png')
@@ -409,20 +410,40 @@ class Analyzer:
 
         compo_pallet_plot = pre.resize_by_height(compo_pallet_plot, 50)
         frame_pallet_plot = pre.resize_by_height(frame_pallet_plot, 50)
-        color_plots = np.vstack([compo_pallet_plot, np.zeros(compo_pallet_plot.shape), frame_pallet_plot])
+        text = np.zeros(compo_pallet_plot.shape)
+        text = cv2.putText(text, 'Top Frame // Bottom All Compo } Pallete', (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.3,
+                           (255, 255, 255), 1, cv2.LINE_AA)
+        color_plots = np.vstack([compo_pallet_plot, text , frame_pallet_plot])
 
-        frame_plots = np.hstack([detection_frame, heatmap, nearby_components, text_small])
+        frame_sep = np.zeros((heatmap.shape[0], 20, 3))
+        frame_plots = np.hstack([frame_rgb, detection_frame, frame_sep, heatmap,frame_sep, nearby_components, frame_sep, text_small])
         frame_plots = pre.resize_by_height(frame_plots, 400)
 
-        x = 0;     y = 1000;   self.grand_frame[x:x+info_plots.shape[0], y:y+info_plots.shape[1]] = info_plots
-        x = 800;     y = 10;     self.grand_frame[x:x+color_plots.shape[0], y:y+color_plots.shape[1]] = color_plots
-        x = 10;    y = 10;   self.grand_frame[x:x + frame_plots.shape[0], y:y + frame_plots.shape[1]] = frame_plots
-        x = 10;    y = 600;   self.grand_frame[x:x + histogram.shape[0], y:y + histogram.shape[1]] = histogram
+        top_edge, bottom_edge = self.compute_edge_stats(edge_result)
+        text = np.zeros(top_edge.shape)
+        text = cv2.putText(text, 'Top Good // Bottom Bad } Contrast', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
+        edges = np.vstack([top_edge, text , bottom_edge])
+        edges = pre.resize_by_height(edges, 200)
+
+        text = np.zeros(freq[0].shape)
+        text = cv2.putText(text, 'Top Frequent // Bottom Sparse } Occurence', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 2, cv2.LINE_AA)
+        freq = np.vstack([freq[0], text, freq[1]])
+        freq = pre.resize_by_height(freq, 400)
+
+        x = 500;  y = 10;        self.grand_frame[x:x + color_plots.shape[0], y:y + color_plots.shape[1]] = color_plots
+        x = 500; y = 500;        self.grand_frame[x:x + freq.shape[0], y:y + freq.shape[1]] = freq
+        x = 700;  y = 10;        self.grand_frame[x:x + edges.shape[0], y:y + edges.shape[1]] = edges
+
+        x = 0;     y = 1600;   self.grand_frame[x:x+info_plots.shape[0], y:y+info_plots.shape[1]] = info_plots
+        x = 10;    y = 10;     self.grand_frame[x:x + frame_plots.shape[0], y:y + frame_plots.shape[1]] = frame_plots
+        x = 10;    y = 1200;    self.grand_frame[x:x + histogram.shape[0], y:y + histogram.shape[1]] = histogram
 
 
 
-        cv2.imshow('grand_frame', self.grand_frame)
-        cv2.waitKey(1000)
+        cv2.imwrite(self.config.output_folder + 'grand_frame'+str(self.counter_png)+'.png', self.grand_frame)
+        self.counter_png += 1
+        # cv2.imshow('grand_frame', self.grand_frame)
+        # cv2.waitKey(100)
 
     def compute_edge_stats(self, edge_result):
         crops = []
@@ -612,9 +633,12 @@ class Analyzer:
         }
         cbconv = ColorBlindConverter()
         shape = frame.shape
-
-        cbconv.convert(frame, 3)
-
+        frame = frame.reshape((-1, 3))
+        new_frame = frame.copy()
+        for i in range(len(frame.shape[0])):
+            new_frame[i] = cbconv.convert(frame[i], 3)
+        frame = new_frame.reshape(shape)
+        return frame
     def analyze_show(self, compos, frame_rgb, frame_count, DB_Compos, config, detection_frame):
         self.config = config
         #frame_rgb = self.convert(frame_rgb)
@@ -645,7 +669,7 @@ class Analyzer:
         text_small = self.check_small_text(compos, frame_rgb)
         freq = self.check_compo_frequency(compos, frame_rgb, frame_count)
         # UI_Sets = self.show_UI_Sets(DB_Compos, frame_count)
-        self.visualize_results(area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame)
+        self.visualize_results(frame_rgb, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame)
 
     def analyze(self, compos, frame_rgb, frame_count, DB_Compos, config):
         self.config = config
@@ -655,51 +679,74 @@ class Analyzer:
         size_plot = self.count_compo_by_size(compos)
 
 
-    def show_UI_Sets(self, DB_Compos, frame_count):
+    def show_UI_Sets(self, DB_Compos, video_reader):
+        frame_count = video_reader.total_number_of_rgb_frames
         uis = self.compute_UI_Sets(DB_Compos, frame_count)
-        #print('unique UIs: ', len(uis))
+        print('unique UIs: ', len(uis))
+        show = video_reader.get_processed_frame()
+        for ui in uis:
+            show = np.hstack([show, video_reader.get_specific_frame(ui-1)])
+        cv2.imwrite(self.config.output_folder+'UI_Sets'+str(self.counter_png)+'.png', show)
+        # cv2.imshow('UI Sets', show)
+        # cv2.waitKey(100)
+
     def compute_UI_Sets(self, DB_Compos, frame_count):
         all_frames = []
         for compo in DB_Compos:
             if compo.category == "Text":
                 continue
             arr = compo.detected_in_frames.copy()
-            frames = np.zeros((frame_count,))
+            frames = np.zeros((frame_count+2,))
             frames[arr] = compo.id
             all_frames.append(frames)
 
         # test this whole bit
-        all_frames = np.unique(all_frames, axis =0)
-
-        all_UIs = []
-        current_UI = 0
-        for i in range(len(all_frames)):
-            if self.UI_Delta(current_UI, i, all_frames) < 0.8:
-                current_UI = i
-                all_UIs.append(current_UI)
-
-    def UI_Delta(self, U1, U2, all_frames):
-        if len(all_frames[U1]) < 5 or len(all_frames[U2]) < 5:
-            return 1
-        count = 0
-        smaller = U1
-        if len(all_frames[U2]) < len(all_frames[U1]):
-            smaller = U2
-            larger = U1
-        else:
-            smaller = U1
-            larger = U2
-        total = 0
-        for id in all_frames[smaller]:
-            if id !=0:
-                total+=1
-                if id in all_frames[larger]:
-                    count+=1
-
-        if total == 0:
-            return 1
-        score = int(count/total)
-        return score
+        unique, uis = np.unique(all_frames, axis =1, return_index=True)
+        un = unique
+        un[un>0] =1
+        un = un.sum(axis=0)
+        un = np.argsort(un)
+        if len(un) > 6:
+            return un
+        un = un[:6]
+        uis = uis[un]
+        return uis
+    #
+    #     all_UIs = [0]
+    #     current_UI = 0
+    #     for i in range(len(all_frames)):
+    #         if self.UI_Delta(current_UI, i, all_frames) < 0.8:
+    #             current_UI = i
+    #             all_UIs.append(current_UI)
+    #
+    #     return all_UIs
+    #
+    # def UI_Delta(self, U1, U2, all_frames):
+    #     if len(all_frames[U1]) < 5 or len(all_frames[U2]) < 5:
+    #         return 1
+    #     count = 0
+    #     smaller = U1
+    #     if len(all_frames[U2]) < len(all_frames[U1]):
+    #         smaller = U2
+    #         larger = U1
+    #     else:
+    #         smaller = U1
+    #         larger = U2
+    #     total = 0
+    #     if smaller == 0:
+    #         return 1
+    #     assert sum(all_frames[smaller]) > 0
+    #     for id in all_frames[smaller]:
+    #         if id !=0:
+    #             total+=1
+    #             if id in all_frames[larger]:
+    #                 count+=1
+    #
+    #     if total == 0:
+    #         return 1
+    #     score = int(count/total)
+    #     print(score)
+    #     return score
     def check_compo_frequency(self, compos, frame_rgb, frame_count):
         frame_rgb = frame_rgb.copy()
         frequency = []

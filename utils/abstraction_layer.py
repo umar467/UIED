@@ -31,7 +31,10 @@ def process_video(config):
     video_reader_object = video_reader(config)
     start_head_location = 500
     video_reader_object.skip_frames(start_head_location)
-    # video_reader_object.total_number_of_rgb_frames = 820
+    max_frames = 580
+    # if video_reader_object.total_number_of_rgb_frames > max_frames:
+    #     video_reader_object.total_number_of_rgb_frames = max_frames
+    video_reader_object.total_number_of_rgb_frames = max_frames
     SIFT_processor = SIFT_bundle(config)
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
@@ -59,7 +62,7 @@ def process_video(config):
         detected_components = Compo_DB.compare_with_previously_detected_components(detected_components, frame_number,
                                                                                    current_frame_grey, JSON_Processor, config)
         JSON_Processor.process_frame()
-        # visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False)
+        #visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False)
         analyzer.analyze(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config)
 
         # JSON_Processor.process_frame()
@@ -102,7 +105,8 @@ def process_video(config):
         visualizer.Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config)
         visualizer.visualize_component_histograms(current_frame_rgb, detected_components, config)
         detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False, fill=False)
-        # analyzer.analyze_show(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config, detection_frame)
+        analyzer.analyze_show(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config, detection_frame)
+        analyzer.show_UI_Sets(Compo_DB.compos.copy(), video_reader_object)
         pbar.update(10)
 
     pbar.close()

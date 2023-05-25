@@ -91,9 +91,9 @@ class video_reader:
         '''
         if requested_rgb_frame_number < self.total_number_of_rgb_frames:
             self.video.set(cv2.CAP_PROP_POS_FRAMES, requested_rgb_frame_number-1)
-            rgb_frame  = self.get_next_rgb_frame()
+            rgb_frame  = self.get_processed_frame()
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_rgb_frame_number-1)
-            return self.get_processed_frame(rgb_frame)
+            return rgb_frame #self.get_processed_frame(rgb_frame)
         else:
             print(f'rgb_frame Number Exceeds Video Length of {self.total_number_of_rgb_frames} rgb_frames !!')
             return None
