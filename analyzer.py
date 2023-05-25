@@ -22,10 +22,10 @@ class Analyzer:
         plot.set_xlabel("Frames x 10")
         plot.set_ylabel("Frequency")
         fig = plot.get_figure()
-        fig.savefig("compos_by_category.png")
+        fig.savefig(self.config.output_folder +"compos_by_category.png")
         plt.close()
 
-        img = cv2.imread('compos_by_category.png')
+        img = cv2.imread(self.config.output_folder +'compos_by_category.png')
         # cv2.imshow('Compos by category', img)
         # cv2.waitKey(100)
         return img
@@ -40,9 +40,9 @@ class Analyzer:
         plot.set_xlabel("Frames x 10")
         plot.set_ylabel("Frequency")
         fig = plot.get_figure()
-        fig.savefig("compos_by_size.png")
+        fig.savefig(self.config.output_folder +"compos_by_size.png")
         plt.close()
-        img = cv2.imread('compos_by_size.png')
+        img = cv2.imread(self.config.output_folder +'compos_by_size.png')
         # cv2.imshow('Compos by size', img)
         # cv2.waitKey(100)
         return img
@@ -57,9 +57,9 @@ class Analyzer:
         plot.set_xlabel("Frames x 10")
         plot.set_ylabel("Frequency")
         fig = plot.get_figure()
-        fig.savefig("compos_by_area.png")
+        fig.savefig(self.config.output_folder + "compos_by_area.png")
         plt.close()
-        img = cv2.imread('compos_by_area.png')
+        img = cv2.imread(self.config.output_folder + 'compos_by_area.png')
         # cv2.imshow('Compos by area', img)
         # cv2.waitKey(100)
         return img
@@ -308,12 +308,12 @@ class Analyzer:
 
         return element_crop, boundary_crop
 
-    def visualize_results(self, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, frame_rgb, edge_result, nearby_components, freq):
-        print(area_plot.shape)
-        print(count_plot.shape)
-        print(size_plot.shape)
-        print(compo_pallet_plot.shape)
-        print(frame_pallet_plot.shape)
+    def visualize_results_2(self, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame):
+        # print(area_plot.shape)
+        # print(count_plot.shape)
+        # print(size_plot.shape)
+        # print(compo_pallet_plot.shape)
+        # print(frame_pallet_plot.shape)
 
         shapes = [(200, 200), (50, 100)]
 
@@ -331,26 +331,31 @@ class Analyzer:
         self.grand_frame[x:x+info_plots.shape[0], y:y+info_plots.shape[1]] = info_plots
 
         color_plots = np.vstack([compo_pallet_plot, np.zeros(compo_pallet_plot.shape), frame_pallet_plot])
-        x = 700
-        y = 700
-        self.grand_frame[x:x+color_plots.shape[0], y:y+color_plots.shape[1]] = color_plots
-
-        frame_rgb = pre.resize_by_height(frame_rgb, 400)
         x = 10
         y = 10
-        self.grand_frame[x:x + frame_rgb.shape[0], y:y + frame_rgb.shape[1]] = frame_rgb
+        self.grand_frame[x:x+color_plots.shape[0], y:y+color_plots.shape[1]] = color_plots
+
+        detection_frame = pre.resize_by_height(detection_frame, 400)
+        x = 600
+        y = 1000
+        self.grand_frame[x:x + detection_frame.shape[0], y:y + detection_frame.shape[1]] = detection_frame
+
+        text_small = pre.resize_by_height(text_small, 400)
+        x = 300
+        y = 1000
+        self.grand_frame[x:x + text_small.shape[0], y:y + text_small.shape[1]] = text_small
 
         nearby_components = pre.resize_by_height(nearby_components, 400)
-        x = 500
-        y = 10
+        x = 10
+        y = 1000
         self.grand_frame[x:x + nearby_components.shape[0], y:y + nearby_components.shape[1]] = nearby_components
 
 
         top_edge, bottom_edge = self.compute_edge_stats(edge_result)
         edges = np.vstack([top_edge, np.zeros(top_edge.shape), bottom_edge])
         edges = pre.resize_by_height(edges, 200)
-        x = 500
-        y = 300
+        x = 200
+        y = 100
         self.grand_frame[x:x + edges.shape[0], y:y + edges.shape[1]] = edges
 
         freq = np.vstack([freq[0], np.zeros(freq[0].shape), freq[1]])
@@ -358,6 +363,63 @@ class Analyzer:
         x = 400
         y = 400
         self.grand_frame[x:x + freq.shape[0], y:y + freq.shape[1]] = freq
+
+        heatmap = cv2.imread('json/0013/component_location_heatmap.png')
+        comp_stats = cv2.imread('json/0013/component_stats.png')
+        database_stats = cv2.imread('json/0013/database_stats.png')
+        sift_stats = cv2.imread('json/0013/sift.png')
+        # if heatmap is not None:
+        #     heatmap = pre.resize_by_height(heatmap, 200)
+        #     x = 400
+        #     y = 600
+        #     self.grand_frame[x:x + heatmap.shape[0], y:y + heatmap.shape[1]] = heatmap
+        #
+        #     comp_stats = pre.resize_by_height(comp_stats, 200)
+        #     x = 400
+        #     y = 800
+        #     self.grand_frame[x:x + comp_stats.shape[0], y:y + comp_stats.shape[1]] = comp_stats
+        #
+        #     database_stats = pre.resize_by_height(database_stats, 200)
+        #     x = 400
+        #     y = 1000
+        #     self.grand_frame[x:x + database_stats.shape[0], y:y + database_stats.shape[1]] = database_stats
+        #
+        #     sift_stats = pre.resize_by_height(sift_stats, 200)
+        #     x = 800
+        #     y = 600
+        #     self.grand_frame[x:x + sift_stats.shape[0], y:y + sift_stats.shape[1]] = sift_stats
+
+        cv2.imshow('grand_frame', self.grand_frame)
+        cv2.waitKey(1000)
+
+    def visualize_results(self, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame):
+        heatmap = cv2.imread(self.config.output_folder + 'component_location_heatmap.png')
+        comp_stats = cv2.imread(self.config.output_folder + 'component_stats.png')
+        database_stats = cv2.imread(self.config.output_folder + 'database_stats.png')
+        sift_stats = cv2.imread(self.config.output_folder + 'sift.png')
+        histogram = cv2.imread(self.config.output_folder + 'crops_hists.png')
+
+        area_plot = pre.resize_by_height(area_plot, 200)
+        count_plot = pre.resize_by_height(count_plot, 200)
+        size_plot = pre.resize_by_height(size_plot, 200)
+        sift_stats = pre.resize_by_height(sift_stats, 200)
+        database_stats = pre.resize_by_height(database_stats, 200)
+        comp_stats = pre.resize_by_height(comp_stats, 200)
+        info_plots = np.vstack([sift_stats, database_stats, comp_stats, count_plot, size_plot])
+
+        compo_pallet_plot = pre.resize_by_height(compo_pallet_plot, 50)
+        frame_pallet_plot = pre.resize_by_height(frame_pallet_plot, 50)
+        color_plots = np.vstack([compo_pallet_plot, np.zeros(compo_pallet_plot.shape), frame_pallet_plot])
+
+        frame_plots = np.hstack([detection_frame, heatmap, nearby_components, text_small])
+        frame_plots = pre.resize_by_height(frame_plots, 400)
+
+        x = 0;     y = 1000;   self.grand_frame[x:x+info_plots.shape[0], y:y+info_plots.shape[1]] = info_plots
+        x = 800;     y = 10;     self.grand_frame[x:x+color_plots.shape[0], y:y+color_plots.shape[1]] = color_plots
+        x = 10;    y = 10;   self.grand_frame[x:x + frame_plots.shape[0], y:y + frame_plots.shape[1]] = frame_plots
+        x = 10;    y = 600;   self.grand_frame[x:x + histogram.shape[0], y:y + histogram.shape[1]] = histogram
+
+
 
         cv2.imshow('grand_frame', self.grand_frame)
         cv2.waitKey(1000)
@@ -372,7 +434,7 @@ class Analyzer:
         # sort scores
         scores_sorted = np.array(scores)
         scores_sorted = np.argsort(scores)
-        print(scores_sorted)
+        #print(scores_sorted)
 
 
         # current = crops[scores_sorted[0]]
@@ -398,7 +460,165 @@ class Analyzer:
 
         return top, bottom
 
-    def analyze(self, compos, frame_rgb, frame_count):
+    def convert(self, frame):
+        # !/usr/bin/env python
+
+        # import webcolors
+        import numpy as np
+        import os
+        import sys
+        # from texttable import Texttable
+
+        class ColorBlindConverter(object):
+            def __init__(self):
+                (
+                    self.Normal,
+                    self.Protanopia,
+                    self.Deuteranopia,
+                    self.Tritanopia,
+                    self.Protanomaly,
+                    self.Deuteranomaly,
+                    self.Tritanomaly,
+                    self.Monochromacy
+                ) = range(8)
+
+                self.powGammaLookup = np.power(np.linspace(0, 256, 256) / 256, 2.2)
+                self.conversion_coeffs = [
+                    {'cpu': 0.735, 'cpv': 0.265, 'am': 1.273463, 'ayi': -0.073894},
+                    {'cpu': 1.140, 'cpv': -0.140, 'am': 0.968437, 'ayi': 0.003331},
+                    {'cpu': 0.171, 'cpv': -0.003, 'am': 0.062921, 'ayi': 0.292119}]
+
+            def _inversePow(self, x):
+                return int(255.0 * float(0 if x <= 0 else (1 if x >= 1 else np.power(x, 1 / 2.2))))
+
+            def convert(self, rgb, cb_type):
+                self.rgb = rgb
+                self.cb_type = cb_type
+
+                if self.cb_type == 0:
+                    self.converted_rgb = self._convert_normal()
+                elif self.cb_type in range(1, 4):
+                    self.converted_rgb = self._convert_colorblind()
+                elif self.cb_type in range(4, 7):
+                    self.converted_rgb = self._convert_anomylize(self._convert_colorblind())
+                elif self.cb_type == 7:
+                    self.converted_rgb = self._convert_monochrome()
+                return
+
+            def _convert_normal(self):
+                return self.rgb
+
+            def _convert_colorblind(self):
+
+                wx = 0.312713;
+                wy = 0.329016;
+                wz = 0.358271;
+
+                cpu, cpv, am, ayi = self.conversion_coeffs[{
+                    1: 0, 4: 0,
+                    2: 1, 5: 1,
+                    3: 2, 6: 2,
+                }[self.cb_type]].values()
+
+                r, g, b = self.rgb
+
+                cr = self.powGammaLookup[r]
+                cg = self.powGammaLookup[g]
+                cb = self.powGammaLookup[b]
+
+                # rgb -> xyz
+                cx = (0.430574 * cr + 0.341550 * cg + 0.178325 * cb)
+                cy = (0.222015 * cr + 0.706655 * cg + 0.071330 * cb)
+                cz = (0.020183 * cr + 0.129553 * cg + 0.939180 * cb)
+
+                sum_xyz = cx + cy + cz
+                cu = 0
+                cv = 0
+
+                if (sum_xyz != 0):
+                    cu = cx / sum_xyz
+                    cv = cy / sum_xyz
+
+                nx = wx * cy / wy
+                nz = wz * cy / wy
+                clm = 0
+                dy = 0
+
+                clm = (cpv - cv) / (cpu - cu) if (cu < cpu) else (cv - cpv) / (cu - cpu)
+                clyi = cv - cu * clm
+                du = (ayi - clyi) / (clm - am)
+                dv = (clm * du) + clyi
+
+                sx = du * cy / dv
+                sy = cy
+                sz = (1 - (du + dv)) * cy / dv
+
+                # xyz->rgb
+                sr = (3.063218 * sx - 1.393325 * sy - 0.475802 * sz)
+                sg = (-0.969243 * sx + 1.875966 * sy + 0.041555 * sz)
+                sb = (0.067871 * sx - 0.228834 * sy + 1.069251 * sz)
+
+                dx = nx - sx
+                dz = nz - sz
+
+                # xyz->rgb
+
+                dr = (3.063218 * dx - 1.393325 * dy - 0.475802 * dz)
+                dg = (-0.969243 * dx + 1.875966 * dy + 0.041555 * dz)
+                db = (0.067871 * dx - 0.228834 * dy + 1.069251 * dz)
+
+                adjr = ((0 if sr < 0 else 1) - sr) / dr if dr > 0 else 0
+                adjg = ((0 if sg < 0 else 1) - sg) / dg if dg > 0 else 0
+                adjb = ((0 if sb < 0 else 1) - sb) / db if db > 0 else 0
+
+                adjust = max([
+                    0 if (adjr > 1 or adjr < 0) else adjr,
+                    0 if (adjg > 1 or adjg < 0) else adjg,
+                    0 if (adjb > 1 or adjb < 0) else adjb])
+
+                sr = sr + (adjust * dr)
+                sg = sg + (adjust * dg)
+                sb = sb + (adjust * db)
+
+                return [self._inversePow(sr), self._inversePow(sg), self._inversePow(sb)]
+
+            def _convert_anomylize(self, p_cb):
+                v = 1.75
+                d = v + 1
+
+                r_orig, g_orig, b_orig = self.rgb
+                r_cb, g_cb, b_cb = p_cb
+
+                r_new = (v * r_cb + r_orig) / d
+                g_new = (v * g_cb + g_orig) / d
+                b_new = (v * b_cb + b_orig) / d
+
+                return [int(r_new), int(g_new), int(b_new)]
+
+            def _convert_monochrome(self):
+                r_old, g_old, b_old = self.rgb
+                g_new = (r_old * 0.299) + (g_old * 0.587) + (b_old * 0.114)
+                return [int(g_new)] * 3
+
+        cb_types = {
+            'Normal': '(normal vision)',
+            'Protanopia': '(red-blind)',
+            'Deuteranopia': '(green-blind)',
+            'Tritanopia': '(blue-blind)',
+            'Protanomaly': '(red-weak)',
+            'Deuteranomaly': '(green-weak)',
+            'Tritanomaly': '(blue-weak)',
+            'Monochromacy': '(totally colorblind)'
+        }
+        cbconv = ColorBlindConverter()
+        shape = frame.shape
+
+        cbconv.convert(frame, 3)
+
+    def analyze_show(self, compos, frame_rgb, frame_count, DB_Compos, config, detection_frame):
+        self.config = config
+        #frame_rgb = self.convert(frame_rgb)
+
         frame = frame_rgb.copy()
         nearby_components = self.check_nearby_compos(compos, frame_rgb)
         frame_rgb = frame.copy()
@@ -424,8 +644,62 @@ class Analyzer:
 
         text_small = self.check_small_text(compos, frame_rgb)
         freq = self.check_compo_frequency(compos, frame_rgb, frame_count)
-        self.visualize_results(area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq)
+        # UI_Sets = self.show_UI_Sets(DB_Compos, frame_count)
+        self.visualize_results(area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame)
 
+    def analyze(self, compos, frame_rgb, frame_count, DB_Compos, config):
+        self.config = config
+
+        area_plot = self.graph_area_text_image(compos)
+        count_plot = self.count_compo_catagory(compos)
+        size_plot = self.count_compo_by_size(compos)
+
+
+    def show_UI_Sets(self, DB_Compos, frame_count):
+        uis = self.compute_UI_Sets(DB_Compos, frame_count)
+        #print('unique UIs: ', len(uis))
+    def compute_UI_Sets(self, DB_Compos, frame_count):
+        all_frames = []
+        for compo in DB_Compos:
+            if compo.category == "Text":
+                continue
+            arr = compo.detected_in_frames.copy()
+            frames = np.zeros((frame_count,))
+            frames[arr] = compo.id
+            all_frames.append(frames)
+
+        # test this whole bit
+        all_frames = np.unique(all_frames, axis =0)
+
+        all_UIs = []
+        current_UI = 0
+        for i in range(len(all_frames)):
+            if self.UI_Delta(current_UI, i, all_frames) < 0.8:
+                current_UI = i
+                all_UIs.append(current_UI)
+
+    def UI_Delta(self, U1, U2, all_frames):
+        if len(all_frames[U1]) < 5 or len(all_frames[U2]) < 5:
+            return 1
+        count = 0
+        smaller = U1
+        if len(all_frames[U2]) < len(all_frames[U1]):
+            smaller = U2
+            larger = U1
+        else:
+            smaller = U1
+            larger = U2
+        total = 0
+        for id in all_frames[smaller]:
+            if id !=0:
+                total+=1
+                if id in all_frames[larger]:
+                    count+=1
+
+        if total == 0:
+            return 1
+        score = int(count/total)
+        return score
     def check_compo_frequency(self, compos, frame_rgb, frame_count):
         frame_rgb = frame_rgb.copy()
         frequency = []
@@ -440,7 +714,7 @@ class Analyzer:
         # sort scores
         frequency_sorted = np.array(frequency)
         frequency_sorted = np.argsort(frequency)
-        print(frequency_sorted)
+        #print(frequency_sorted)
 
         size = (128,128)
 
@@ -490,10 +764,10 @@ class Analyzer:
         # plt.show()
 
         # save figure as a png file
-        plt.savefig('freq.png')
+        plt.savefig(self.config.output_folder +'freq.png')
         plt.close()
 
-        img = cv2.imread('freq.png')
+        img = cv2.imread(self.config.output_folder +'freq.png')
         # cv2.imshow('freq', img)
         # cv2.waitKey(1000)
 
@@ -504,11 +778,13 @@ class Analyzer:
         text_small = []
         for compo in compos:
             if compo.category == 'Text':
-                print(compo.height, compo.word_width)
+                #print(compo.height, compo.word_width)
+
                 if compo.height < 10 or compo.word_width < 10:
                     text_small.append(compo)
                     bbox = compo.bbox.put_bbox()
                     frame_rgb = cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
+        cv2.imwrite(self.config.output_folder + 'text_small.png', frame_rgb)
         return frame_rgb
     def contrast_measure(self, frame_rgb):
         import numpy as np
@@ -574,6 +850,7 @@ class Analyzer:
         # cv2.waitKey(100)
         # cv2.imshow('frame', frame_rgb)
         # cv2.waitKey(100)
+        cv2.imwrite(self.config.output_folder + 'compo_color_pallete.png', palplot_img)
         return palplot_img
 
     def count_compo_by_size(self, compos):
@@ -692,4 +969,5 @@ class Analyzer:
             palplot_img[:, i*100:(i+1)*100] = np.array(color, dtype=np.uint8)
         # cv2.imshow('palplot2', palplot_img)
         # cv2.waitKey(100)
+        cv2.imwrite(self.config.output_folder + 'frame_color_pallete.png', palplot_img)
         return palplot_img

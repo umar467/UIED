@@ -162,14 +162,14 @@ def visualize_component_crops(frame, components, rgb=True, name='component_visua
     component_crops = organize_crop_images(component_crops)
     return drawing_frame, component_crops
 
-def visualize_component_histograms(frame, components):
+def visualize_component_histograms(frame, components, config):
     crops = get_component_crops_from_frame(frame, components)
     histogram_images = get_histograms_from_comopnent_crops(crops)
-    show_crops_and_histograms(crops, histogram_images)
+    show_crops_and_histograms(crops, histogram_images, config)
 def get_component_crops_from_frame(frame, components):
     component_crops = []
     for compo in components:
-        bbox = compo.put_bbox()
+        bbox = compo.bbox.put_bbox()
         crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         crop = cv2.resize(crop, (128, 128))
         component_crops.append(crop)
@@ -200,13 +200,27 @@ def histogram_to_image(histogram, histImage=None):
     return histImage
 
 # horizontally stack crop image and histogram image and show on screen using oepncv imshow
-def show_crops_and_histograms(crops, histogram_images):
-    for i in range(len(crops)):
+def show_crops_and_histograms(crops, histogram_images, config):
+    shape = (128,128)
+    crop = crops[-1]
+    crop = cv2.resize(crop, shape)
+    histogram = histogram_images[-1]
+    histogram = cv2.resize(histogram, shape)
+    big_image = np.hstack([crop, histogram])
+    no = 5
+    if len(crops) < no:
+        no = len(crops)
+    for i in range(no):
         crop = crops[i]
-        histogram_image = histogram_images[i]
-        cv2.imshow('crop', crop)
-        cv2.imshow('histogram', histogram_image)
-        cv2.waitKey(0)
+        crop = cv2.resize(crop, shape)
+        histogram = histogram_images[i]
+        histogram = cv2.resize(histogram, shape)
+        current = np.hstack([crop, histogram])
+        big_image = np.vstack([big_image, current])
+
+    cv2.imwrite(config.output_folder + 'crops_hists.png', big_image)
+    # cv2.imshow('crops and histograms', big_image)
+    # cv2.waitKey(0)
 
 def organize_crop_images(crops):
     max_height = 800

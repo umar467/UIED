@@ -20,6 +20,11 @@ class Compo_Database:
 
 
     def compare_components(self, comp1, comp2, frame):
+        if comp1.category != comp2.category:
+            return False
+        if comp1.category == 'text':
+            if comp1.content != comp2.content:
+                return False
         relation = comp1.compo_relation(comp2)
         if relation != 0:
             component_present_in_frame = self.component_present_in_frame(comp2, frame, comp2.bbox.put_bbox())
