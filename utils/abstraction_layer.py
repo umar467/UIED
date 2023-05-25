@@ -31,7 +31,7 @@ def process_video(config):
     video_reader_object = video_reader(config)
     start_head_location = 800
     video_reader_object.skip_frames(start_head_location)
-    video_reader_object.total_number_of_rgb_frames = 1100 
+    video_reader_object.total_number_of_rgb_frames = 900
     SIFT_processor = SIFT_bundle(config)
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
@@ -60,9 +60,8 @@ def process_video(config):
                                                                                    current_frame_grey, JSON_Processor, config)
         JSON_Processor.process_frame()
         # visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False)
-        
-        analyzer.analyze(detected_components, current_frame_rgb)
-         
+        analyzer.analyze(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames)
+
         # JSON_Processor.process_frame()
         pbar.update(10)  # as every 10th frame processed
     video_reader_object.set_reader_head_to_frame_number(start_head_location)

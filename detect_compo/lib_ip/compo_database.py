@@ -85,6 +85,20 @@ class Compo_Database:
                         previous_component.bbox_historical.append(previous_component.bbox.put_bbox())
                         updated_compos.append(previous_component)
                         #print('Addded extra 111')
+
+        # check duplicate components
+        for component in updated_compos:
+            for previous_component in updated_compos:
+                if component != previous_component:
+                    match = self.compare_components(component, previous_component, frame)
+                    if match:
+                        for frame_no_p in previous_component.detected_in_frames:
+                            component.detected_in_frames.append(frame_no_p)
+                        for bbox_historical in previous_component.bbox_historical:
+                            component.bbox_historical.append(bbox_historical)
+                        updated_compos.remove(previous_component)
+                        #print('Removed duplicate')
+
         self.last_frame = frame
         JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(updated_compos))
         return updated_compos
