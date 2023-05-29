@@ -305,6 +305,9 @@ def compo_filter(compos, min_area):
             continue
         if compo.height > C.maximum_component_height or compo.width > C.maximum_component_width:
             continue
+        bbox = compo.bbox.put_bbox()
+        if bbox[2] <= bbox[0] or bbox[3] <= bbox[1]:
+            continue
         compos_new.append(compo)
     return compos_new
 

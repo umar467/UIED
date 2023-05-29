@@ -33,6 +33,7 @@ class SIFT_Processor:
         self.static_objects = [] # X Y coordinates of the detected sift points which are stationary across consecutive frames
         self.statistics = [] # [total_pts_detected, static_pts, dynamic_pts]
         plt.ion()
+        self.global_distance = 0
 
     def get_SIFT_Points(self, frame):
         points = []
@@ -141,6 +142,8 @@ class SIFT_Processor:
         Match Points is all the points that are common and don't move 
         """
 
+        distance_average = 0
+        distance_average_count = 0
         for i,(m,n) in enumerate(matches):
             if m.distance < 0.7*n.distance:
                 good_points.append(des1[m.queryIdx])
@@ -158,6 +161,10 @@ class SIFT_Processor:
                             static_points[des1[m.queryIdx].tobytes()] = [np.array(pt1), count]
                     if self.config.log_info:
                         print(i, pt1,pt2, dis)
+                else:
+                    distance_average+=dis
+                    distance_average_count+=1
+        self.global_distance += distance_average/distance_average_count
         
         return np.array(good_points), good_des
 

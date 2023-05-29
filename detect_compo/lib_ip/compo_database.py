@@ -104,6 +104,12 @@ class Compo_Database:
                         updated_compos.remove(previous_component)
                         #print('Removed duplicate')
 
+        # Remove invalid components
+        for component in updated_compos:
+            bbox = component.bbox.put_bbox()
+            if bbox[2] <= bbox[0] or bbox[3] <= bbox[1]:
+                updated_compos.remove(component)
+
         self.last_frame = frame
         JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(updated_compos))
         return updated_compos
@@ -125,6 +131,8 @@ class Compo_Database:
         crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         crop_last_frame = self.last_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         # resize crop and crop last frame to iamges_size
+        if crop.shape[0] == 0 or crop.shape[1] == 0:
+            return False
         crop = cv2.resize(crop, image_size)
         crop_last_frame = cv2.resize(crop_last_frame, image_size)
 
@@ -181,6 +189,8 @@ class Compo_Database:
         bbox = component.bbox.put_bbox()
         crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         # reshape crop to 128x128 while preserving the aspect ratio
+        if crop.shape[0] == 0 or crop.shape[1] == 0:
+            return
         crop = pre.resize_by_height(crop, config.component_png_size[0])
         # crop = cv2.resize(crop, config.component_png_size)
         cv2.imwrite(config.output_folder + '/' + str(component.id)+'.png', crop)
