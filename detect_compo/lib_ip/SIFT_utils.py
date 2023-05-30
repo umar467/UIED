@@ -164,7 +164,9 @@ class SIFT_Processor:
                 else:
                     distance_average+=dis
                     distance_average_count+=1
-        self.global_distance += distance_average/distance_average_count
+        if distance_average_count>0:
+            self.global_distance += distance_average/distance_average_count
+            #print(self.global_distance)
         
         return np.array(good_points), good_des
 

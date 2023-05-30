@@ -487,7 +487,7 @@ class Analyzer:
         #frame_rgb = self.convert(frame_rgb)
 
         frame = frame_rgb.copy()
-        nearby_components = self.check_nearby_compos(compos, frame_rgb)
+        nearby_components, nearby_triggers = self.check_nearby_compos(compos, frame_rgb)
         frame_rgb = frame.copy()
         area_plot = self.graph_area_text_image(compos)
         frame_rgb = frame.copy()
@@ -513,7 +513,7 @@ class Analyzer:
         freq = self.check_compo_frequency(compos, frame_rgb, frame_count)
         # UI_Sets = self.show_UI_Sets(DB_Compos, frame_count)
         self.visualize_results(frame_rgb, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame)
-
+        return nearby_triggers
     def analyze(self, compos, frame_rgb, frame_count, DB_Compos, config):
         self.config = config
 
@@ -525,7 +525,7 @@ class Analyzer:
     def show_UI_Sets(self, DB_Compos, video_reader):
         frame_count = video_reader.total_number_of_rgb_frames
         uis = self.compute_UI_Sets(DB_Compos, frame_count)
-        print('unique UIs: ', len(uis))
+        #print('unique UIs: ', len(uis))
         show = video_reader.get_processed_frame()
         for ui in uis:
             show = np.hstack([show, video_reader.get_specific_frame(ui-1)])
@@ -647,7 +647,6 @@ class Analyzer:
         max = frame_count + 1
         min = 0
         max = int(max)
-        freq = int(freq)
         arr = np.zeros((max, len(freq)))
         arr[freq]=1
 
@@ -831,7 +830,7 @@ class Analyzer:
         # cv2.imshow('Densest area on frame', frame_show)
         # cv2.waitKey(1000)
 
-        return frame_show
+        return frame_show, ds
 
     def get_rgb_color_pallete_frame(self, compos, frame_rgb):
         # set all compo crops in frame_rgb to black

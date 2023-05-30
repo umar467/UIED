@@ -105,7 +105,7 @@ def process_video(config):
         visualizer.Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config)
         visualizer.visualize_component_histograms(current_frame_rgb, detected_components, config)
         detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False, fill=False)
-        analyzer.analyze_show(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config, detection_frame)
+        nearby_triggers = analyzer.analyze_show(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config, detection_frame)
         analyzer.show_UI_Sets(Compo_DB.compos.copy(), video_reader_object)
         pbar.update(10)
 
