@@ -90,7 +90,7 @@ class Text:
         else:
             con_relation = False
 
-        if pos_relation and con_relation:
+        if pos_relation or con_relation:
             return 1
         return 0
     def is_intersected(self, text_b, bias):

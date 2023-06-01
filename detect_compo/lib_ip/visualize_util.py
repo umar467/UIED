@@ -313,7 +313,7 @@ def assign_red_to_top_percentile(image):
     color_image[np.where(image > percentile_threshold/3)] = [0, 255, 0]
     color_image[np.where(image > percentile_threshold/3*2)] = [255, 0, 0]
     color_image[np.where(image > percentile_threshold)] = [0, 0, 255]
-
+    color_image[np.where(image < percentile_threshold/3)] = [0, 0, 0]
     return color_image
 def display_intensity_maps(stack,config):
     #mean_image = np.mean(stack, axis=2)  # Calculate the mean image

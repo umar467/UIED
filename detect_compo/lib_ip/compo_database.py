@@ -76,7 +76,11 @@ class Compo_Database:
                     updated_compos.append(previous_component)
                     break
             if not match:
-                component.id = self.counter_id
+
+                if component.category == 'Text':
+                    component.id = 'T_' + str(self.counter_id)
+                else:
+                    component.id = self.counter_id
                 self.counter_id+=1
                 self.compos.append(component)
                 self.loaded_compos+=1
@@ -85,11 +89,12 @@ class Compo_Database:
         if force_check_previous_componenets:
             for previous_component in self.compos:
                 if previous_component not in updated_compos:
-                    if self.component_present_in_frame_historic(previous_component, frame):
-                        previous_component.detected_in_frames.append(frame_number)
-                        previous_component.bbox_historical.append(previous_component.bbox.put_bbox())
-                        updated_compos.append(previous_component)
-                        #print('Addded extra 111')
+                    if previous_component.width/previous_component.height < 2:
+                        if self.component_present_in_frame_historic(previous_component, frame):
+                            previous_component.detected_in_frames.append(frame_number)
+                            previous_component.bbox_historical.append(previous_component.bbox.put_bbox())
+                            updated_compos.append(previous_component)
+                            #print('Addded extra 111')
 
         # check duplicate components
         for component in updated_compos:
