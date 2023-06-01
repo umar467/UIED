@@ -17,6 +17,7 @@ class Json_Utils:
         self.ui_id = 0
         self.components_in_current_frame = []
         self.config = config
+        self.global_distance = 0
 
     def add_sift_statistics_to_current_frame(self, sift_statistics):
         self.current_frame['SIFT_Statistics'] = sift_statistics
@@ -142,7 +143,7 @@ class Json_Utils:
     def produce_json_from_database_components(self, database):
         components = database.get_all_components()
         json_format_version = .3
-        json_output = {'json_format_version': json_format_version, 'elements': [], 'warnings': []}
+        json_output = {'json_format_version': json_format_version, 'average_video_movement':[self.global_distance], 'elements': [], 'warnings': []}
         sample_warning = {'warning_type': 'Elements Too Close Warning', 'bbox': [22, 55, 66, 77], 'frames_occurs_in': [1, 2, 3]}
         json_output['warnings'].append(sample_warning)
         for component in components:

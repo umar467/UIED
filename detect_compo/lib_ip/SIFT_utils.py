@@ -193,6 +193,8 @@ class SIFT_Processor:
         static_pixels, new_ui = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
         JSON_Processor.add_sift_statistics_to_current_frame(self.statistics)
         self.plot_SIFT_detection_plots()
+        distance_average = self.global_distance/self.loaded_frames
+        JSON_Processor.global_distance = distance_average
         return static_pixels, new_ui
     def get_static_objects(self, across_n_frames=10):
         """
