@@ -1,8 +1,9 @@
 class Configuration:
 
     def __init__(self):
+        self.current_ui_number = 0
         self.min_text_confidence = 0.7
-        self.ssim_threshold = 0.5
+        self.ssim_threshold = 0.2
         self.new_UI_layout_change_ratio = 0.8
         self.EAST_PATH = "data/model_weights/east_icdar2015_resnet_v1_50_rbox"
         self.maximum_SIFT_points_per_frame = 3000

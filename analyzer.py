@@ -514,9 +514,8 @@ class Analyzer:
         # UI_Sets = self.show_UI_Sets(DB_Compos, frame_count)
         self.visualize_results(frame_rgb, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame)
         return nearby_triggers
-    def analyze(self, compos, frame_rgb, frame_count, DB_Compos, config):
+    def analyze(self, compos, config):
         self.config = config
-
         area_plot = self.graph_area_text_image(compos)
         count_plot = self.count_compo_catagory(compos)
         size_plot = self.count_compo_by_size(compos)

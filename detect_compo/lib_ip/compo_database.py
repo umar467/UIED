@@ -193,4 +193,8 @@ class Compo_Database:
             return
         crop = pre.resize_by_height(crop, config.component_png_size[0])
         # crop = cv2.resize(crop, config.component_png_size)
-        cv2.imwrite(config.output_folder + '/' + str(component.id)+'.png', crop)
+        output = config.output_folder + '/component_crops/'
+        import os
+        if not os.path.exists(output):
+            os.makedirs(output)
+        cv2.imwrite(output +  str(component.id)+'.png', crop)

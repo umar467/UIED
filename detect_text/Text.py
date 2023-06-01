@@ -3,7 +3,7 @@ import numpy as np
 from detect_compo.lib_ip.Bbox import Bbox
 
 class Text:
-    def __init__(self, id, content, location, confidence):
+    def __init__(self, id, content, location, confidence, imcrop):
         self.id = id
         self.category = 'Text'
         self.content = content
@@ -18,6 +18,7 @@ class Text:
         self.image_shape = (0, 0)
         self.box_area = self.width * self.height
         self.bbox = self.put_bbox()
+        self.imcrop = imcrop
 
 
     def put_bbox(self):

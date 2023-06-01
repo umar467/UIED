@@ -48,6 +48,7 @@ class Component:
         self.detected_in_frames = []
         self.bbox_historical = []
 
+        self.imcrop = None
     def compo_update(self, id, org_shape):
         self.id = id
         self.image_shape = org_shape

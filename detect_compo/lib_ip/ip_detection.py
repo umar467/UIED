@@ -349,9 +349,9 @@ def plot_detection_statistics(statistics, config):
         os.mkdir(video_name)
     fig.savefig(video_name + "compo.png")
     plt.close()
-def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, detected_text_components = None, Text_Statistics = None, config = None):
+def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, detected_text_components = None, Text_Statistics = None, config = None, rgb_frame=None):
     current_stats = []
-    #binary = remove_text_detections_from_binary_image(binary, detected_text_components)
+    binary = remove_text_detections_from_binary_image(binary, detected_text_components)
     components = component_detection(binary)
     current_stats.append(len(components))
     area_filtered_components = compo_filter(components, C.min_object_area)
@@ -366,6 +366,10 @@ def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, d
     JSON_Processor.add_component_filtration_statistics_to_current_frame(current_stats)
     #Text_Statistics.append(current_stats)
     #plot_detection_statistics(Text_Statistics, config)
+    for compo in overlapping_filtered_components:
+        bbox = compo.bbox.put_bbox()
+        compo.imcrop = rgb_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+
     return overlapping_filtered_components
 
 # take the binary image as input

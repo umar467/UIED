@@ -81,6 +81,15 @@ def save_json(frame, compos, file_path):
         output[name].append(c)
 
     json.dump(output, f_out, indent=4)
+
+def new_ui_save(frame0, framel, config):
+
+    if not os.path.exists(config.output_folder + '/uis/'):
+        os.mkdir(config.output_folder + '/uis/')
+    cv2.imwrite(config.output_folder + '/uis/' + str(config.current_ui_number) + '.png', frame0)
+    config.current_ui_number += 1
+    cv2.imwrite(config.output_folder + '/uis/' + str(config.current_ui_number) + '.png', framel)
+    config.current_ui_number += 1
 def visualize_components(frame, components, rgb=True, name='component_visualization', config=None, fill=False, show=True, drawn_frame=None, last_outline = None, offset=0):
     if rgb:
         drawing_frame = frame.copy()
@@ -118,6 +127,22 @@ def visualize_components(frame, components, rgb=True, name='component_visualizat
         cv2.imshow(name, drawing_frame)
         cv2.waitKey(500)
     return drawing_frame
+
+def visualize_components_accumulative(frame, components, text = False):
+    frame = np.zeros(frame.shape)
+    frame = frame.astype(np.float64)
+    for compo in components:
+        if text:
+            if compo.category == 'Text':
+                bbox = compo.bbox.put_bbox()
+                for xx in compo.detected_in_frames:
+                    frame[bbox[1]:bbox[3], bbox[0]:bbox[2]] += 255
+        else:
+            if compo.category != 'Text':
+                bbox = compo.bbox.put_bbox()
+                for xx in compo.detected_in_frames:
+                    frame[bbox[1]:bbox[3], bbox[0]:bbox[2]] += 255
+    return frame
 
 def visualize_component_crops(frame, components, rgb=True, name='component_visualization', config=None, fill=False, show=True, drawn_frame=None, last_outline = None):
     component_crops = []
@@ -291,10 +316,8 @@ def assign_red_to_top_percentile(image):
 
     return color_image
 def display_intensity_maps(stack,config):
-    mean_image = np.mean(stack, axis=2)  # Calculate the mean image
+    #mean_image = np.mean(stack, axis=2)  # Calculate the mean image
 
-    mean_image = cv2.GaussianBlur(mean_image, (25, 25), 0)
-    cv2.imwrite(config.output_folder + 'component_location_heatmap.png', assign_red_to_top_percentile(mean_image))
     # cv2.imshow('test', assign_red_to_top_percentile(mean_image))
     # cv2.waitKey(100)
     # Create heatmap using seaborn
@@ -317,16 +340,14 @@ def display_intensity_maps(stack,config):
 
 
 
-def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
-    image_np = display_intensity_maps(np.array(component_fill_accumulator),config)
-    # Visualize using cv2.imshow
-    cv2.imwrite(config.output_folder + "intensity_map.jpg", image_np)
-    # cv2.imshow("Intensity Maps", image_np)
-    # cv2.waitKey(100)
-    # sift = cv2.imread('sift.png')
-    # cv2.imshow('sift', sift)
-    # cv2.waitKey(100)
-    # cv2.destroyAllWindows()
+def Save_plots_and_heatmpas(JSON_Processor, compos, frame, config):
+    frame = visualize_components_accumulative(frame, compos, text=True)
+    mean_image = cv2.GaussianBlur(frame, (25, 25), 0)
+    cv2.imwrite(config.output_folder + 'text_heatmap.png', assign_red_to_top_percentile(mean_image))
+
+    frame = visualize_components_accumulative(frame, compos)
+    mean_image = cv2.GaussianBlur(frame, (25, 25), 0)
+    cv2.imwrite(config.output_folder + 'non_text_heatmap.png', assign_red_to_top_percentile(mean_image))
 
     import pandas as pd
     fd = JSON_Processor.get_stats()
@@ -337,19 +358,12 @@ def Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config):
     fig = plot.get_figure()
     fig.savefig(config.output_folder + "component_stats.png")
     plt.close()
-    # sift = cv2.imread('s.png')
-    # cv2.imshow('s', sift)
-    # cv2.waitKey(100)
+
 
     p = pd.DataFrame(fd[1], columns=['total_detected', 'filtered'])
     plot = p.plot(title='database filter stats');
-    # plot.title('SIFT Features across Frames')
     plot.set_xlabel("Frames x 10")
     plot.set_ylabel("Frequency")
     fig = plot.get_figure()
     fig.savefig(config.output_folder + "database_stats.png")
     plt.close()
-    # sift = cv2.imread('d.png')
-    # cv2.imshow('d', sift)
-    # cv2.waitKey(100)
-

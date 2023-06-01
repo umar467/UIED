@@ -47,66 +47,54 @@ def process_video(config):
     analyzer = analyzer_class()
     pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='First pass')
     while(video_reader_object.has_enough_frames()):
-        # print(video_reader_object.current_rgb_frame_number)
+
         current_frame_buffer_rgb = video_reader_object.get_Frames()
         current_frame_buffer_grey = pre.conver_frames_to_grey(current_frame_buffer_rgb)
         current_frame_buffer_gradients = pre.conver_frames_to_gradient(current_frame_buffer_grey)
         common_gradients = pre.extract_common_gradients(current_frame_buffer_gradients)
-        static_pixels = SIFT_processor.get_static_pixels(current_frame_buffer_grey, JSON_Processor)
+        static_pixels, new_ui = SIFT_processor.get_static_pixels(current_frame_buffer_grey, JSON_Processor)
         binary_image = pre.convert_frame_to_binary(common_gradients)
         current_frame_rgb = current_frame_buffer_rgb[-1]
         current_frame_grey = current_frame_buffer_grey[-1]
         frame_number = video_reader_object.current_rgb_frame_number
-        detected_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor)
-        detected_components += Text_Extractor.detect_text_from_frame(current_frame_rgb)
-        detected_components = Compo_DB.compare_with_previously_detected_components(detected_components, frame_number,
-                                                                                   current_frame_grey, JSON_Processor, config)
-        JSON_Processor.process_frame()
-        #visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False)
-        analyzer.analyze(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config)
+        text_components = Text_Extractor.detect_text_from_frame(current_frame_rgb)
+        non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor, detected_text_components=text_components, rgb_frame = current_frame_rgb)
+        visualizer.visualize_components(current_frame_rgb, text_components, rgb=True, show=True, fill=False,
+                                        name='t')
+        visualizer.visualize_components(current_frame_rgb, non_text_components, rgb=True, show=True, fill=False,
+                                        name='nt')
+        components = text_components + non_text_components
+        detected_components = Compo_DB.compare_with_previously_detected_components(components, frame_number,
+                                                                                   current_frame_grey, JSON_Processor, config,
+                                                                                   force_check_previous_componenets=True)
 
-        # JSON_Processor.process_frame()
-        pbar.update(10)  # as every 10th frame processed
-    video_reader_object.set_reader_head_to_frame_number(start_head_location)
-    pbar.close()
-
-    progress('second pass')
-    pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='Second pass')
-    while (video_reader_object.has_enough_frames()):
-        current_frame_buffer_rgb = video_reader_object.get_Frames()
-        current_frame_buffer_grey = pre.conver_frames_to_grey(current_frame_buffer_rgb)
-        current_frame_buffer_gradients = pre.conver_frames_to_gradient(current_frame_buffer_grey)
-        common_gradients = pre.extract_common_gradients(current_frame_buffer_gradients)
-        static_pixels = SIFT_processor.get_static_pixels(current_frame_buffer_grey, JSON_Processor)
-        binary_image = pre.convert_frame_to_binary(common_gradients)
-        current_frame_rgb = current_frame_buffer_rgb[-1]
-        current_frame_grey = current_frame_buffer_grey[-1]
-        frame_number = video_reader_object.current_rgb_frame_number
-        detected_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor)
-        detected_components += Text_Extractor.detect_text_from_frame(current_frame_rgb)
-        detected_components = Compo_DB.compare_with_previously_detected_components(detected_components,
-                                                                                   frame_number,
-                                                                                   current_frame_grey,
-                                                                                   JSON_Processor, config)
-
-        component_image = visualizer.visualize_components(current_frame_grey, detected_components, rgb=False, show=False, fill=True)
-        if component_fill_accumulator is None:
-            component_fill_accumulator = np.array(component_image)
-        if component_image is not None:
-            component_fill_accumulator = np.dstack((component_fill_accumulator, component_image))
-
-
-        if not os.path.exists(config.output_folder):
-            os.makedirs(config.output_folder)
-
+        if new_ui:
+            visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
+        visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False,
+                                        name='db')
+        # analyzer.analyze(detected_components, config)
+        #video_reader_object.skip_frames(100)
+        pbar.update(10)
+        JSON_Processor.next_frame()
+        print(frame_number)
+        visualizer.Save_plots_and_heatmpas(JSON_Processor, Compo_DB.compos.copy(), current_frame_grey, config)
         JSON_Processor.write_json_to_file(Compo_DB)
 
 
-        visualizer.Save_plots_and_heatmpas(JSON_Processor, component_fill_accumulator, config)
-        visualizer.visualize_component_histograms(current_frame_rgb, detected_components, config)
-        detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False, fill=False)
-        nearby_triggers = analyzer.analyze_show(detected_components, current_frame_rgb, video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(), config, detection_frame)
-        analyzer.show_UI_Sets(Compo_DB.compos.copy(), video_reader_object)
-        pbar.update(10)
+        # if frame_number % 10 == 0:
+
+
+            #visualizer.visualize_component_histograms(current_frame_rgb, detected_components, config)
+            # detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
+            #                                                   fill=False)
+            # nearby_triggers = analyzer.analyze_show(detected_components, current_frame_rgb,
+            #                                         video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(),
+            #                                         config, detection_frame)
+            # analyzer.show_UI_Sets(Compo_DB.compos.copy(), video_reader_object)
+
+
+
+
+
 
     pbar.close()

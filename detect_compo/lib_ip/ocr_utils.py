@@ -17,7 +17,7 @@ class text_extractor:
         self.data = None
         self.ocr = PaddleOCR(use_angle_cls=True, lang='en', show_log=False)
 
-    def convert_detected_text_to_components(self, detected_text):
+    def convert_detected_text_to_components(self, detected_text, frame):
         text_components = []
         for detection in detected_text:
             for cluster in detection:
@@ -29,7 +29,12 @@ class text_extractor:
                 location['right'] = cluster[0][1][0]
                 location['top'] = cluster[0][2][1]
                 location['bottom'] = cluster[0][0][1]
-                text_element = text_component_builder.Text(id, content, location, confidence)
+
+                bbox = [location['left'], location['bottom'], location['right'], location['top']]
+                bbox = [int(x) for x in bbox]
+
+                imcrop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+                text_element = text_component_builder.Text(id, content, location, confidence, imcrop)
                 if confidence > self.config.min_text_confidence:
                     text_components.append(text_element)
         # text_components = self.compo_filter(text_components, self.config)
@@ -57,7 +62,7 @@ class text_extractor:
         #     for line in res:
         #         print(line)
         #self.show_detected_text_from_frame(result, frame)
-        result = self.convert_detected_text_to_components(result)
+        result = self.convert_detected_text_to_components(result, frame)
         return result
     def show_detected_text_from_frame(self, result, frame):
         # draw result

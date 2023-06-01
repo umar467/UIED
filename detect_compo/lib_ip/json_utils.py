@@ -28,7 +28,7 @@ class Json_Utils:
         self.current_frame['Database_Statistics'] = database_statistics[0:2]
         self.components_in_current_frame = database_statistics[2]
 
-    def process_frame(self):
+    def next_frame(self):
         self.all_frames.append(self.current_frame)
         self.processed_frames += 1
         self.current_frame = {}

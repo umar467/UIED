@@ -34,6 +34,7 @@ class SIFT_Processor:
         self.statistics = [] # [total_pts_detected, static_pts, dynamic_pts]
         plt.ion()
         self.global_distance = 0
+        self.current_ui_number = 0
 
     def get_SIFT_Points(self, frame):
         points = []
@@ -189,10 +190,10 @@ class SIFT_Processor:
     def get_static_pixels(self, frames, JSON_Processor):
         for frame in frames:
             self.get_SIFT_features(frame)
-        static_pixels = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
+        static_pixels, new_ui = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
         JSON_Processor.add_sift_statistics_to_current_frame(self.statistics)
         self.plot_SIFT_detection_plots()
-        return static_pixels
+        return static_pixels, new_ui
     def get_static_objects(self, across_n_frames=10):
         """
         Input: greyscale Frame
@@ -212,9 +213,14 @@ class SIFT_Processor:
                 good_points, good_des = self.match_points(good_points, good_des, self.data[rep][1], self.data[rep][0], static_points)
 
         static_points = self.process_static_common_points(static_points)
+        if len(static_points)==0:
+            new_ui = True
+        else:
+            new_ui = False
+
         self.static_objects.append(static_points)
         self.update_stats(good_points, static_points)
-        return static_points
+        return static_points, new_ui
 
     def process_static_common_points(self, static_points):
         if len(static_points)>1:
