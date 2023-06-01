@@ -12,6 +12,7 @@ class Analyzer:
         self.compo_type_area_per_frame = []
         self.grand_frame = np.zeros((1000, 1920, 3), np.uint8)
         self.counter_png = 0
+        self.contrast_frames =[]
 
     def plot_category(self, array):
         import pandas as pd
@@ -394,7 +395,7 @@ class Analyzer:
         cv2.waitKey(1000)
 
     def visualize_results(self, frame_rgb, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame):
-        heatmap = cv2.imread(self.config.output_folder + 'component_location_heatmap.png')
+        heatmap = cv2.imread(self.config.output_folder + 'non_text_heatmap.png')
         comp_stats = cv2.imread(self.config.output_folder + 'component_stats.png')
         database_stats = cv2.imread(self.config.output_folder + 'database_stats.png')
         sift_stats = cv2.imread(self.config.output_folder + 'sift.png')
@@ -445,13 +446,24 @@ class Analyzer:
         # cv2.imshow('grand_frame', self.grand_frame)
         # cv2.waitKey(100)
 
-    def compute_edge_stats(self, edge_result):
+    def contrast_stretch(self, image):
+        # Calculate the minimum and maximum pixel values
+        min_val = np.min(image)
+        max_val = np.max(image)
+
+        # Perform contrast stretching
+        stretched_image = cv2.normalize(image, None, 0, 255, cv2.NORM_MINMAX)
+        return stretched_image
+    def compute_edge_stats(self, edge_result, frame_rgb):
         crops = []
         scores = []
+        compos = []
+        drawing_frame = np.zeros(frame_rgb.shape).astype(np.float64)
         for pair in edge_result:
+            #pair[0] = self.contrast_stretch(pair[0])
             crops.append(pair[0])
             scores.append(pair[1])
-
+            compos.append(pair[2])
         # sort scores
         scores_sorted = np.array(scores)
         scores_sorted = np.argsort(scores)
@@ -459,61 +471,92 @@ class Analyzer:
 
 
         # current = crops[scores_sorted[0]]
-        current = np.zeros(crops[0].shape)
-        top = cv2.resize(current, (128, 128))
-        for i in range(5):
+        # current = np.zeros(crops[0].shape)
+        # top = cv2.resize(current, (128, 128))
+        length = int(len(scores_sorted)/2)
+        for i in range(length):
             current = crops[scores_sorted[i]]
+            # sort numpy array from 0 to 255
+            #cv2.imwrite(self.config.output_folder + '/contrast_bad'+str(i)+'.png', current)
+            bbox = compos[scores_sorted[i]].bbox.put_bbox()
+
+            drawing_frame = cv2.rectangle(drawing_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), -1)
+            # cv2.imshow('bbottom', cv2.resize(current, (128, 128)))
+            # cv2.waitKey(1000)
             current = cv2.resize(current, (128, 128))
-            top = np.hstack([top, current])
+            #top = np.hstack([top, current])
         # cv2.imshow('top', top)
         # cv2.waitKey(1000)
-        bottom = top
+        #bottom = top
 
         # current = crops[scores_sorted[-1]]
-        current = np.zeros(crops[0].shape)
-        top = cv2.resize(current, (128, 128))
-        for i in range(5):
+        # current = np.zeros(crops[0].shape)
+        # top = cv2.resize(current, (128, 128))
+        for i in range(length):
             current = crops[scores_sorted[-i]]
-            current = cv2.resize(current, (128, 128))
-            top = np.hstack([top, current])
-        # cv2.imshow('bottom', top)
-        # cv2.waitKey(1000)
+            #cv2.imwrite(self.config.output_folder + '/contrast_good' + str(i) + '.png', current)
+            bbox = compos[scores_sorted[-i]].bbox.put_bbox()
+            drawing_frame = cv2.rectangle(drawing_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), -1)
+            # cv2.imshow('topp', cv2.resize(current, (128,128)))
+            # cv2.waitKey(1000)
+            # current = cv2.resize(current, (128, 128))
+            # top = np.hstack([top, current])
 
-        return top, bottom
+
+        return drawing_frame#top, bottom
 
 
     def analyze_show(self, compos, frame_rgb, frame_count, DB_Compos, config, detection_frame):
         self.config = config
         #frame_rgb = self.convert(frame_rgb)
 
-        frame = frame_rgb.copy()
-        nearby_components, nearby_triggers = self.check_nearby_compos(compos, frame_rgb)
-        frame_rgb = frame.copy()
-        area_plot = self.graph_area_text_image(compos)
-        frame_rgb = frame.copy()
-        count_plot = self.count_compo_catagory(compos)
-        frame_rgb = frame.copy()
-        size_plot = self.count_compo_by_size(compos)
-        frame_rgb = frame.copy()
-        compo_pallet_plot = self.get_compos_pallete(compos, frame_rgb)
-        frame_rgb = frame.copy()
-        frame_pallet_plot = self.get_rgb_color_pallete_frame(compos, frame_rgb)
-        frame_rgb = frame.copy()
+        # frame = frame_rgb.copy()
+        # nearby_components, nearby_triggers = self.check_nearby_compos(compos, frame_rgb)
+        # frame_rgb = frame.copy()
+        # area_plot = self.graph_area_text_image(compos)
+        # frame_rgb = frame.copy()
+        # count_plot = self.count_compo_catagory(compos)
+        # frame_rgb = frame.copy()
+        # size_plot = self.count_compo_by_size(compos)
+        # frame_rgb = frame.copy()
+        # compo_pallet_plot = self.get_compos_pallete(compos, frame_rgb)
+        # frame_rgb = frame.copy()
+        # frame_pallet_plot = self.get_rgb_color_pallete_frame(compos, frame_rgb)
+        # frame_rgb = frame.copy()
 
         # quantize frame_rgb to 3 bits per channel
-        frame_rgb = np.right_shift(frame_rgb, 5)
-        frame_rgb = np.left_shift(frame_rgb, 5)
+        # frame_rgb = np.right_shift(frame_rgb, 5)
+        # frame_rgb = np.left_shift(frame_rgb, 5)
 
         edge_result = []
         for compo in compos:
-            element_crop, score = self.bbox_boundary_color_analysis(compo, frame_rgb)
-            edge_result.append([element_crop, score])
+            try:
+                element_crop, score = self.bbox_boundary_color_analysis(compo, frame_rgb)
+                score = int(score/compo.area)
+                edge_result.append([element_crop, score, compo])
+            except:
+                pass
 
         text_small = self.check_small_text(compos, frame_rgb)
-        freq = self.check_compo_frequency(compos, frame_rgb, frame_count)
+        # freq = self.check_compo_frequency(compos, frame_rgb, frame_count)
         # UI_Sets = self.show_UI_Sets(DB_Compos, frame_count)
-        self.visualize_results(frame_rgb, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame)
-        return nearby_triggers
+        self.contrast_frames.append(self.compute_edge_stats(edge_result, frame_rgb))
+
+        final_contrast = np.zeros(self.contrast_frames[0].shape)
+        for frame in self.contrast_frames:
+            final_contrast = final_contrast + frame
+        # cv2.imshow('cont', final_contrast)
+        # cv2.waitKey(1000)
+        cv2.imwrite(self.config.output_folder + '/contrast.png', final_contrast)
+
+        # top_edge, bottom_edge =
+        # text = np.zeros(top_edge.shape)
+        # text = cv2.putText(text, 'Top Good // Bottom Bad } Contrast', (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.0,
+        #                    (255, 255, 255), 2, cv2.LINE_AA)
+        # edges = np.vstack([top_edge, text, bottom_edge])
+        # edges = pre.resize_by_height(edges, 200)
+        #self.visualize_results(frame_rgb, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame)
+        return
     def analyze(self, compos, config):
         self.config = config
         area_plot = self.graph_area_text_image(compos)
@@ -674,7 +717,7 @@ class Analyzer:
                     text_small.append(compo)
                     bbox = compo.bbox.put_bbox()
                     frame_rgb = cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
-        cv2.imwrite(self.config.output_folder + 'text_small.png', frame_rgb)
+                    cv2.imwrite(self.config.output_folder + 'text_small.png', frame_rgb)
         return frame_rgb
     def contrast_measure(self, frame_rgb):
         import numpy as np

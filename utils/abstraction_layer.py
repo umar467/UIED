@@ -31,10 +31,9 @@ def process_video(config):
     video_reader_object = video_reader(config)
     start_head_location = 100
     video_reader_object.skip_frames(start_head_location)
-    max_frames = 1000
-    # if video_reader_object.total_number_of_rgb_frames > max_frames:
-    #     video_reader_object.total_number_of_rgb_frames = max_frames
-    video_reader_object.total_number_of_rgb_frames = max_frames
+    max_frames = 800
+    if video_reader_object.total_number_of_rgb_frames:
+        video_reader_object.total_number_of_rgb_frames = max_frames
     SIFT_processor = SIFT_bundle(config)
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
@@ -46,6 +45,7 @@ def process_video(config):
             config.progress_callback(info)
     analyzer = analyzer_class()
     pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='First pass')
+    from color_utils import convert as convert_color
     while(video_reader_object.has_enough_frames()):
 
         current_frame_buffer_rgb = video_reader_object.get_Frames()
@@ -67,10 +67,10 @@ def process_video(config):
         if new_ui:
             visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
 
-        visualizer.visualize_components(current_frame_rgb, non_text_components, rgb=True, show=True, fill=False,
-                                         name='nt')
-        visualizer.visualize_components(current_frame_rgb, text_components, rgb=True, show=True, fill=False,
-                                        name='t')
+        # visualizer.visualize_components(current_frame_rgb, non_text_components, rgb=True, show=True, fill=False,
+        #                                  name='nt')
+        # visualizer.visualize_components(current_frame_rgb, text_components, rgb=True, show=True, fill=False,
+        #                                 name='t')
         visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False,
                                         name='db')
         # analyzer.analyze(detected_components, config)
@@ -80,22 +80,26 @@ def process_video(config):
         # print(frame_number)
         visualizer.Save_plots_and_heatmpas(JSON_Processor, Compo_DB.compos.copy(), current_frame_grey, config)
         JSON_Processor.write_json_to_file(Compo_DB)
-
+        #visualizer.visualize_component_histograms(current_frame_rgb, detected_components, config)
+        detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
+                                                          fill=False)
+        analyzer.analyze_show(detected_components, current_frame_rgb,
+                                                video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(),
+                                                config, detection_frame)
 
         # if frame_number % 10 == 0:
 
 
-            #visualizer.visualize_component_histograms(current_frame_rgb, detected_components, config)
-            # detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
-            #                                                   fill=False)
-            # nearby_triggers = analyzer.analyze_show(detected_components, current_frame_rgb,
-            #                                         video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(),
-            #                                         config, detection_frame)
+
+
             # analyzer.show_UI_Sets(Compo_DB.compos.copy(), video_reader_object)
 
 
 
 
 
-
+    c1 = convert_color(current_frame_rgb, 3)
+    c2 = convert_color(current_frame_rgb, 5)
+    c3 = convert_color(current_frame_rgb, 7)
+    cv2.imwrite(config.output_folder + 'colors.png', np.hstack([current_frame_rgb, c1, c2, c3]))
     pbar.close()
