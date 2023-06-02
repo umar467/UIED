@@ -32,14 +32,18 @@ def process_video(config):
     else:
         print("WARNING: The output folder already exists. This means that the video has already been processed.")
     '''
-    The start Head location is the index of the first frame that processing will start from.
-    The max_frames is the maximum number of frames that will be processed.
+    The start Head location is the index of the first frame that processing will start from. If there are more than a 100 frames left afterwards otherwise the processing starts from 0.
+    The max_frames is the maximum number of frames that will be processed, if the this number is greater than the total number of frames in the video, then the total number of frames will be processed.
     So in this case below, the frames 100 to 800 will be processed.
     '''
-    start_head_location = 100
+    start_head_location = 0
     max_frames = 800
     video_reader_object = video_reader(config)
-    video_reader_object.skip_frames(start_head_location)
+    if video_reader_object.total_number_of_rgb_frames < start_head_location + 100:
+        start_head_location = 0
+        if video_reader_object.total_number_of_rgb_frames < 50:
+            print("The video has less than 50 frames. Warning.")
+    video_reader_object.skip_frames(start_head_location) # skipping the n-frames from the start
     if video_reader_object.total_number_of_rgb_frames > max_frames:
         video_reader_object.total_number_of_rgb_frames = max_frames
     SIFT_processor = SIFT_bundle(config)
@@ -84,8 +88,4 @@ def process_video(config):
                                                 video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(),
                                                 config, detection_frame)
 
-    c1 = convert_color(current_frame_rgb, 3)
-    c2 = convert_color(current_frame_rgb, 5)
-    c3 = convert_color(current_frame_rgb, 7)
-    cv2.imwrite(config.output_folder + 'colors.png', np.hstack([current_frame_rgb, c1, c2, c3]))
     pbar.close()
