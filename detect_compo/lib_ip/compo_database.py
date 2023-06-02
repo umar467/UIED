@@ -15,6 +15,7 @@ class Compo_Database:
         self.config = config
         self.compos = []
         self.loaded_compos = 0
+        self.processed_frames = 0
         self.statistics = []
         self.counter_id = 1
         self.ids_in_last_frame = []
@@ -120,6 +121,7 @@ class Compo_Database:
 
         self.last_frame = frame
         JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(updated_compos))
+        self.processed_frames += 1
         return updated_compos
 
     def component_present_in_frame_historic(self, component, frame):

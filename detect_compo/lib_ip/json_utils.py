@@ -124,7 +124,7 @@ class Json_Utils:
 
     def produce_json_for_component(self, component):
         c = {'id': component.id, 'class': component.category}
-        c['frequency'] = 1
+        c['frequency'] = len(component.detected_in_frames)
         (c['column_min'], c['row_min'], c['column_max'], c['row_max']) = component.bbox.put_bbox()
         c['width'] = component.width
         c['height'] = component.height
@@ -143,7 +143,9 @@ class Json_Utils:
     def produce_json_from_database_components(self, database):
         components = database.get_all_components()
         json_format_version = .3
-        json_output = {'json_format_version': json_format_version, 'average_video_movement':[self.global_distance], 'elements': [], 'warnings': []}
+        json_output = {'json_format_version': json_format_version, 'info': [], 'elements': [], 'warnings': []}
+        Video_Information = {'Video_Shape':[368, 800], 'average_video_movement':[self.global_distance], 'total_objects_found': [database.loaded_compos], 'total_frames_analyzed': [database.processed_frames*10]}
+        json_output['info'].append(Video_Information)
         sample_warning = {'warning_type': 'Elements Too Close Warning', 'bbox': [22, 55, 66, 77], 'frames_occurs_in': [1, 2, 3]}
         json_output['warnings'].append(sample_warning)
         for component in components:
