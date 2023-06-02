@@ -29,6 +29,11 @@ Note, tensorflow wihtout gpu/cuda support falls back to the cpu and this is abst
 * **Keras**
 * **TensorFlow**
 
+Note that mkl needs to be set up in conda via
+'''
+conda install mkl-service
+'''
+
 ### Pre-trained CNN Weight Files
 
 No longer required as using paddleocr now.
