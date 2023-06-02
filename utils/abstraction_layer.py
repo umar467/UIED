@@ -23,7 +23,7 @@ plt.ion()
 def process_video(config):
     if not os.path.exists(config.output_folder):
         os.makedirs(config.output_folder)
-    config.output_folder = config.output_folder + '/' + config.input_video.split('/')[-1].split('.')[0] + '/'
+    config.output_folder = config.output_folder + os.sep + config.input_video.split(os.sep)[-1].split('.')[0] + os.sep
     if not os.path.exists(config.output_folder):
         os.makedirs(config.output_folder)
     else:
