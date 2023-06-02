@@ -1,4 +1,7 @@
+import mkl
+mkl.set_num_threads(1)
 import cv2
+cv2.setNumThreads(1)
 import numpy as np
 from time import time
 
@@ -28,17 +31,21 @@ def process_video(config):
         os.makedirs(config.output_folder)
     else:
         print("WARNING: The output folder already exists. This means that the video has already been processed.")
-    video_reader_object = video_reader(config)
+    '''
+    The start Head location is the index of the first frame that processing will start from.
+    The max_frames is the maximum number of frames that will be processed.
+    So in this case below, the frames 100 to 800 will be processed.
+    '''
     start_head_location = 100
-    video_reader_object.skip_frames(start_head_location)
     max_frames = 800
-    if video_reader_object.total_number_of_rgb_frames:
+    video_reader_object = video_reader(config)
+    video_reader_object.skip_frames(start_head_location)
+    if video_reader_object.total_number_of_rgb_frames > max_frames:
         video_reader_object.total_number_of_rgb_frames = max_frames
     SIFT_processor = SIFT_bundle(config)
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
     Text_Extractor = Text_Processor(config)
-    component_fill_accumulator = None
 
     def progress(info: str):
         if config.progress_callback:
@@ -67,36 +74,15 @@ def process_video(config):
         if new_ui:
             visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
 
-        # visualizer.visualize_components(current_frame_rgb, non_text_components, rgb=True, show=True, fill=False,
-        #                                  name='nt')
-        # visualizer.visualize_components(current_frame_rgb, text_components, rgb=True, show=True, fill=False,
-        #                                 name='t')
-        # visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False,
-                                        name='db')
-        # analyzer.analyze(detected_components, config)
-        #video_reader_object.skip_frames(100)
         pbar.update(10)
         JSON_Processor.next_frame()
-        # print(frame_number)
         visualizer.Save_plots_and_heatmpas(JSON_Processor, Compo_DB.compos.copy(), current_frame_grey, config)
         JSON_Processor.write_json_to_file(Compo_DB)
-        #visualizer.visualize_component_histograms(current_frame_rgb, detected_components, config)
         detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
                                                           fill=False)
         analyzer.analyze_show(detected_components, current_frame_rgb,
                                                 video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(),
                                                 config, detection_frame)
-
-        # if frame_number % 10 == 0:
-
-
-
-
-            # analyzer.show_UI_Sets(Compo_DB.compos.copy(), video_reader_object)
-
-
-
-
 
     c1 = convert_color(current_frame_rgb, 3)
     c2 = convert_color(current_frame_rgb, 5)

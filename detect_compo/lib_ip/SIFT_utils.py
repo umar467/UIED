@@ -6,7 +6,10 @@ Created on Tue Apr 18 19:54:24 2023
 @author: umar
 """
 
+import mkl
+mkl.set_num_threads(1)
 import cv2
+cv2.setNumThreads(1)
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -64,7 +67,7 @@ class SIFT_Processor:
             self.last_frame = self.current_frame
             return
         import numpy as np
-        import cv2
+        #import cv2
         from matplotlib import pyplot as plt
         
         MIN_MATCH_COUNT = 10

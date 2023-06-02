@@ -1,4 +1,7 @@
+import mkl
+# mkl.set_num_threads(1)
 import cv2
+# cv2.setNumThreads(1)
 import numpy as np
 from config.CONFIG import Configuration
 config = Configuration()

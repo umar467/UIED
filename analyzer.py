@@ -1,5 +1,9 @@
-import numpy as np
+
+import mkl
+mkl.set_num_threads(1)
 import cv2
+cv2.setNumThreads(1)
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import detect_compo.lib_ip.ip_preprocessing as pre
@@ -721,7 +725,7 @@ class Analyzer:
         return frame_rgb
     def contrast_measure(self, frame_rgb):
         import numpy as np
-        import cv2
+        #import cv2
         size_n = 5  # NxN neighborhood around each pixel
         # Read input image
         img = frame_rgb.copy()  # cv2.imread('chelsea.png')
