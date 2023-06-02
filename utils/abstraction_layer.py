@@ -71,7 +71,7 @@ def process_video(config):
         #                                  name='nt')
         # visualizer.visualize_components(current_frame_rgb, text_components, rgb=True, show=True, fill=False,
         #                                 name='t')
-        visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False,
+        # visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True, fill=False,
                                         name='db')
         # analyzer.analyze(detected_components, config)
         #video_reader_object.skip_frames(100)
