@@ -56,7 +56,7 @@ def process_video(config):
             config.progress_callback(info)
     analyzer = analyzer_class()
     pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='Inspecting frames')
-    from color_utils import convert as convert_color
+
     while(video_reader_object.has_enough_frames()):
 
         current_frame_buffer_rgb = video_reader_object.get_Frames()

@@ -17,6 +17,7 @@ class Analyzer:
         self.grand_frame = np.zeros((1000, 1920, 3), np.uint8)
         self.counter_png = 0
         self.contrast_frames =[]
+        self.saved_colours = False
 
     def plot_category(self, array):
         import pandas as pd
@@ -560,6 +561,17 @@ class Analyzer:
         # edges = np.vstack([top_edge, text, bottom_edge])
         # edges = pre.resize_by_height(edges, 200)
         #self.visualize_results(frame_rgb, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame)
+
+        if not self.saved_colours:
+            import random
+            rand_draw = random.random()
+            if rand_draw > 0.3:
+                from color_utils import convert as convert_color
+                converted_frame = convert_color(frame_rgb, 2)
+                converted_frame = np.hstack([frame_rgb, converted_frame])
+                cv2.imwrite(self.config.output_folder + '/cblind_check.png', converted_frame)
+                self.saved_colours = True
+
         return
     def analyze(self, compos, config):
         self.config = config
