@@ -80,7 +80,6 @@ class Json_Utils:
         with open(json_output_file_path, 'w+') as f_out:
             json.dump(output, f_out, indent=4)
 
-
     def produce_json_for_frame_detections(self, components, frame_number, config):
 
         if components is None:
@@ -136,17 +135,20 @@ class Json_Utils:
             c['word_width'] = component.word_width
             c['content'] = component.content
             c['confidence'] = component.confidence
-        #else:
-            #c['image_crop'] = np.zeros((128, 128)).tolist()
+        # else:
+        # c['image_crop'] = np.zeros((128, 128)).tolist()
         return c
 
     def produce_json_from_database_components(self, database):
         components = database.get_all_components()
         json_format_version = .3
-        json_output = {'json_format_version': json_format_version, 'info': [], 'elements': [], 'warnings': []}
-        Video_Information = {'Video_Shape':[368, 800], 'average_video_movement':[self.global_distance], 'total_objects_found': [database.loaded_compos], 'total_frames_analyzed': [database.processed_frames*10]}
-        json_output['info'].append(Video_Information)
-        sample_warning = {'warning_type': 'Elements Too Close Warning', 'bbox': [22, 55, 66, 77], 'frames_occurs_in': [1, 2, 3]}
+        json_output = {'json_format_version': json_format_version, 'info': {}, 'elements': [], 'warnings': []}
+        video_information = {'video_shape': [368, 800], 'average_video_movement': self.global_distance,
+                             'total_objects_found': database.loaded_compos,
+                             'total_frames_analyzed': database.processed_frames * 10}
+        json_output['info'].update(video_information)
+        sample_warning = {'warning_type': 'Elements Too Close Warning', 'bbox': [22, 55, 66, 77],
+                          'frames_occurs_in': [1, 2, 3]}
         json_output['warnings'].append(sample_warning)
         for component in components:
             component_json = self.produce_json_for_component(component)
