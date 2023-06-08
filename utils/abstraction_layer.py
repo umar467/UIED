@@ -54,7 +54,7 @@ def process_video(config):
     def progress(info: str):
         if config.progress_callback:
             config.progress_callback(info)
-    analyzer = analyzer_class()
+    analyzer = analyzer_class(config)
     pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='First pass')
 
     while(video_reader_object.has_enough_frames()):

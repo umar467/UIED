@@ -10,7 +10,7 @@ import detect_compo.lib_ip.ip_preprocessing as pre
 plt.ion()
 
 class Analyzer:
-    def __init__(self):
+    def __init__(self, config):
         self.compo_type_per_frame = []
         self.compo_size_per_frame = []
         self.compo_type_area_per_frame = []
@@ -18,6 +18,8 @@ class Analyzer:
         self.counter_png = 0
         self.contrast_frames =[]
         self.saved_colours = False
+        self.saved_contrast = False
+        self.config = config
 
     def plot_category(self, array):
         import pandas as pd
@@ -479,6 +481,21 @@ class Analyzer:
         # current = np.zeros(crops[0].shape)
         # top = cv2.resize(current, (128, 128))
         length = int(len(scores_sorted)/2)
+
+        output = self.config.output_folder + '/contrast_worst/'
+        import os
+        if not os.path.exists(output):
+            os.makedirs(output)
+
+        if not self.saved_contrast:
+            import random
+            rand_draw = random.random()
+            if rand_draw > 0.3:
+                for i in range(length):
+                    current = crops[scores_sorted[i]]
+                    cv2.imwrite(output +str(i)+'.png', current)
+            self.saved_contrast = True
+
         for i in range(length):
             current = crops[scores_sorted[i]]
             # sort numpy array from 0 to 255
