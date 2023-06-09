@@ -36,8 +36,8 @@ def process_video(config):
     The max_frames is the maximum number of frames that will be processed, if the this number is greater than the total number of frames in the video, then the total number of frames will be processed.
     So in this case below, the frames 100 to 800 will be processed.
     '''
-    start_head_location = 800
-    max_frames = 1200
+    start_head_location = 100
+    max_frames = 800
     video_reader_object = video_reader(config)
     if video_reader_object.total_number_of_rgb_frames < start_head_location + 100:
         start_head_location = 0

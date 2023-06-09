@@ -1,6 +1,11 @@
 class Configuration:
 
     def __init__(self):
+        self.AA_contrast_ratio = 3.5
+        self.AAA_contrast_ratio = 4.5
+        self.compo_min_contrast_ratio = 0.01
+        self.compo_good_contrast_ratio = 0.1
+        self.max_cblind_contrast_delta = 0.017
         self.current_ui_number = 0
         self.min_text_confidence = 0.7
         self.ssim_threshold = 0.2
@@ -25,6 +30,8 @@ class Configuration:
         self.minimum_gradient_difference = 20
         self.frame_buffer_size = 10
         self.binary_dilation_iterations = 2
+        self.min_text_height = 7
+        self.min_text_width = 7
         self.minimum_component_height = 10
         self.minimum_component_width = 10
         self.maximum_component_height = 80

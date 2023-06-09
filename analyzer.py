@@ -78,8 +78,8 @@ class Analyzer:
     def get_component_contrast(self, compo, contrast_frame):
         bbox = compo.bbox.put_bbox()
         element_crop = contrast_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-        white = np.count_nonzero(element_crop[element_crop > 3.5])
-        black = np.count_nonzero(element_crop[element_crop < 3.5])
+        white = np.count_nonzero(element_crop[element_crop > self.config.AA_contrast_ratio])
+        black = np.count_nonzero(element_crop[element_crop < self.config.AA_contrast_ratio])
         black += 1
         score = white / black
         return score
@@ -94,13 +94,13 @@ class Analyzer:
         for compo in compos:
             bbox = compo.bbox.put_bbox()
             contrast = np.array(compo.contrast_scores).mean()
-            if contrast < 0.01:
+            if contrast < self.config.compo_min_contrast_ratio:
                 cv2.imwrite(bad + str(compo.id) + '.png', frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]])
                 warning = {'warning_type': 'Contrast Bad', 'bbox': bbox,
                            'frames_occurs_in': frame_count, 'component_id': compo.id}
                 print(warning)
                 JSON_Processor.log_warning(warning)
-            if contrast > 0.1:
+            if contrast > self.config.compo_good_contrast_ratio:
                 cv2.imwrite(good + str(compo.id) + '.png', frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]])
     def get_contrast_frame_from_component_contrast(self, compos, frame_rgb, JSON_Processor, frame_number):
         contrast_frame_from_component_contrast = np.zeros(frame_rgb.shape)
@@ -108,7 +108,7 @@ class Analyzer:
             bbox = compo.bbox.put_bbox()
             contrast = np.array(compo.contrast_scores).mean()
             cb_contrast = np.array(compo.contrast_cb_scores).mean()
-            if abs(contrast - cb_contrast) > 0.017:
+            if abs(contrast - cb_contrast) > self.config.max_cblind_contrast_delta:
                 print('contrast', contrast, 'cb_contrast', cb_contrast, 'delta', abs(contrast - cb_contrast))
                 warning = {'warning_type': 'Contrast Diff. b/w CB & RGB', 'bbox': bbox,
                                   'frames_occurs_in': frame_number, 'component_id': compo.id}
@@ -125,9 +125,9 @@ class Analyzer:
         return contrast_frame_from_component_contrast
     def get_visual_raw_contrast(self, contrast_frame):
         visual_contrast_frame = np.zeros((contrast_frame.shape[0], contrast_frame.shape[1],3))
-        visual_contrast_frame[contrast_frame >= 3.5] = [255, 0, 0]
-        visual_contrast_frame[contrast_frame >= 4.5] = [0, 255, 0]
-        visual_contrast_frame[contrast_frame < 3.5] = [0, 0, 0]
+        visual_contrast_frame[contrast_frame >= self.config.AA_contrast_ratio] = [255, 0, 0]
+        visual_contrast_frame[contrast_frame >= self.config.AAA_contrast_ratio] = [0, 255, 0]
+        visual_contrast_frame[contrast_frame < self.config.AA_contrast_ratio] = [0, 0, 0]
         return visual_contrast_frame
     def show_contrast_raw(self, contrast_frame):
         self.contrast_frames.append(contrast_frame)
@@ -176,7 +176,7 @@ class Analyzer:
         text_small = []
         for compo in compos:
             if compo.category == 'Text':
-                if compo.height < 7 or compo.word_width < 7:
+                if compo.height < self.config.min_text_height or compo.word_width < self.config.min_text_width:
                     text_small.append(compo)
                     bbox = compo.bbox.put_bbox()
                     frame_rgb = cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
