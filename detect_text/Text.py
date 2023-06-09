@@ -19,6 +19,8 @@ class Text:
         self.box_area = self.width * self.height
         self.bbox = self.put_bbox()
         self.imcrop = imcrop
+        self.contrast_scores = []
+        self.contrast_cb_scores = []
 
 
     def put_bbox(self):

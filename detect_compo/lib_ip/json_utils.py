@@ -18,6 +18,7 @@ class Json_Utils:
         self.components_in_current_frame = []
         self.config = config
         self.global_distance = 0
+        self.warnings= []
 
     def add_sift_statistics_to_current_frame(self, sift_statistics):
         self.current_frame['SIFT_Statistics'] = sift_statistics
@@ -94,7 +95,7 @@ class Json_Utils:
         output = {name: []}
 
         output[name].append(
-            {'json_format_version': 0.1, 'id': 0, 'class': 'Background', 'frequency': 0, 'column_min': 0,
+            {'json_format_version': 0.2, 'id': 0, 'class': 'Background', 'frequency': 0, 'column_min': 0,
              'row_min': 0, 'column_max': img_shape[1],
              'row_max': img_shape[0], 'width': img_shape[1], 'height': img_shape[0]})
 
@@ -138,7 +139,15 @@ class Json_Utils:
         # else:
         # c['image_crop'] = np.zeros((128, 128)).tolist()
         return c
-
+    def log_warning(self, new_warning):
+        for warning in self.warnings:
+            if warning['warning_type'] == new_warning['warning_type']:
+                if warning['component_id'] == new_warning['component_id']:
+                    if isinstance(warning['frames_occurs_in'], int):
+                        warning['frames_occurs_in'] = [warning['frames_occurs_in']]
+                    warning['frames_occurs_in'].append(new_warning['frames_occurs_in'])
+                    return
+        self.warnings.append(new_warning)
     def produce_json_from_database_components(self, database):
         components = database.get_all_components()
         json_format_version = .3
@@ -150,6 +159,9 @@ class Json_Utils:
         sample_warning = {'warning_type': 'Elements Too Close Warning', 'bbox': [22, 55, 66, 77],
                           'frames_occurs_in': [1, 2, 3]}
         json_output['warnings'].append(sample_warning)
+        for warning in self.warnings:
+            json_output['warnings'].append(warning)
+
         for component in components:
             component_json = self.produce_json_for_component(component)
             json_output['elements'].append(component_json)
