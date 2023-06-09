@@ -83,147 +83,8 @@ class Analyzer:
         distance = np.sqrt((centroid1[0] - centroid2[0])**2 + (centroid1[1] - centroid2[1])**2)
         return distance
 
-    def bbox_boundary_color_analysis_2(self, compos, frame_rgb):
-        op_mask = np.zeros((frame_rgb.shape), dtype=np.uint8)
-        tr_mask = np.zeros((frame_rgb.shape), dtype=np.uint8)
-        real_frame_rgb = frame_rgb.copy()
-        for compo in compos:
-            bbox = compo.bbox.put_bbox()
-            # get average color of the bbox
-            bbox_color = frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-            compo_bbox_color = np.median(bbox_color, axis=(0,1))
-            #self.contrast_measure(bbox_color)
-            # # get four bbox around each edge of the bbox with padding and buffer
-            # buffer = 10
-            padding = 10
-            #
-            bbox_top = (bbox[0]-padding, bbox[1]-padding, bbox[2]+padding, bbox[1])
-            bbox_bottom = (bbox[0]-padding, bbox[3], bbox[2]+padding, bbox[3]+padding)
-            bbox_left = (bbox[0]-padding, bbox[1], bbox[0], bbox[3])
-            bbox_right = (bbox[2], bbox[1], bbox[2]+padding, bbox[3])
-            bboxs = [bbox_top, bbox_bottom, bbox_left, bbox_right]
-            #
-            # # get the color of each bbox
-            # bbox_colors = []
-            # for bbox in bboxs:
-            #     bbox_color = frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-            #     # get the average color of each bbox
-            #     bbox_color = np.median(bbox_color, axis=(0,1))
-            #     bbox_colors.append(bbox_color)
-            #
-            # # get the average color of each bbox
-            # bbox_colors = np.array(bbox_colors)
-            # bbox_colors = np.median(bbox_colors, axis=0)
-            #
-            #
-            #
-            # # check if bbox_colors array is nan
-            # if np.isnan(bbox_colors).any():
-            #     # print('boundary color is nan')
-            #     continue
-            # #check if compo_bbox_color is nan
-            # if np.isnan(compo_bbox_color).any():
-            #     # print('compo color is nan')
-            #     continue
-            # # compare two rgb colors
-            # if np.sum(np.abs(compo_bbox_color - bbox_colors)) < 50:
-            # if all(compo_bbox_color == bbox_colors):
-            if np.mean(self.contrast_measure(bbox_color)) >100:
-                # print('boundary color is same')
-                for bbox in bboxs:
-                    #cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), bbox_colors, 2)
-                    cv2.rectangle(tr_mask, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 255, 255), -1)
-                    # cv2.imshow('frame_boundary', frame_rgb)
-                    # cv2.waitKey(100)
-                bbox = compo.bbox.put_bbox()
-                cv2.rectangle(tr_mask, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 255, 255), -1)
-            else:
-                # increase bbox by padding
-                bbox = compo.bbox.put_bbox()
-                bbox = (bbox[0] - padding, bbox[1] - padding, bbox[2] + padding, bbox[3] + padding)
-                # draw the bbox on the frame
-                #cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), compo_bbox_color, 2)
-                cv2.rectangle(op_mask, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 255, 255), -1)
-                # cv2.imshow('frame_boundary', frame_rgb)
-                # cv2.waitKey(100)
-        masked_op_frame = cv2.bitwise_and(real_frame_rgb, op_mask)
-        cv2.imshow('masked_op_frame', masked_op_frame)
-        cv2.waitKey(100)
-        masked_tr_frame = cv2.bitwise_and(real_frame_rgb, tr_mask)
-        cv2.imshow('masked_tr_frame', masked_tr_frame)
-        cv2.waitKey(100)
-    def bbox_boundary_color_analysis_3(self, compos, frame_rgb):
-        op_mask = np.zeros((frame_rgb.shape), dtype=np.uint8)
-        tr_mask = np.zeros((frame_rgb.shape), dtype=np.uint8)
-        real_frame_rgb = frame_rgb.copy()
-        for compo in compos:
-            bbox = compo.bbox.put_bbox()
-            # get average color of the bbox
-            bbox_color = frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-            compo_bbox_color = np.median(bbox_color, axis=(0,1))
-            #self.contrast_measure(bbox_color)
-            # # get four bbox around each edge of the bbox with padding and buffer
-            # buffer = 10
-            padding = 10
-            #
-            bbox_top = (bbox[0]-padding, bbox[1]-padding, bbox[2]+padding, bbox[1])
-            bbox_bottom = (bbox[0]-padding, bbox[3], bbox[2]+padding, bbox[3]+padding)
-            bbox_left = (bbox[0]-padding, bbox[1], bbox[0], bbox[3])
-            bbox_right = (bbox[2], bbox[1], bbox[2]+padding, bbox[3])
-            bboxs = [bbox_top, bbox_bottom, bbox_left, bbox_right]
-
-            # get the color of each bbox
-            bbox_colors = []
-            for bbox in bboxs:
-                bbox_color = frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-                # get the average color of each bbox
-                bbox_color = np.median(bbox_color, axis=(0,1))
-                bbox_colors.append(bbox_color)
-
-            # get the average color of each bbox
-            bbox_colors = np.array(bbox_colors)
-            bbox_colors = np.median(bbox_colors, axis=0)
-
-
-
-            # check if bbox_colors array is nan
-            if np.isnan(bbox_colors).any():
-                # print('boundary color is nan')
-                continue
-            #check if compo_bbox_color is nan
-            if np.isnan(compo_bbox_color).any():
-                # print('compo color is nan')
-                continue
-            # # compare two rgb colors
-            # if np.sum(np.abs(compo_bbox_color - bbox_colors)) < 50:
-            if all(compo_bbox_color == bbox_colors):
-            #if np.mean(self.contrast_measure(bbox_color)) >100:
-                # print('boundary color is same')
-                for bbox in bboxs:
-                    #cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), bbox_colors, 2)
-                    cv2.rectangle(tr_mask, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 255, 255), -1)
-                    # cv2.imshow('frame_boundary', frame_rgb)
-                    # cv2.waitKey(100)
-                bbox = compo.bbox.put_bbox()
-                cv2.rectangle(tr_mask, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 255, 255), -1)
-            else:
-                # increase bbox by padding
-                bbox = compo.bbox.put_bbox()
-                bbox = (bbox[0] - padding, bbox[1] - padding, bbox[2] + padding, bbox[3] + padding)
-                # draw the bbox on the frame
-                #cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), compo_bbox_color, 2)
-                cv2.rectangle(op_mask, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 255, 255), -1)
-                # cv2.imshow('frame_boundary', frame_rgb)
-                # cv2.waitKey(100)
-        masked_op_frame = cv2.bitwise_and(real_frame_rgb, op_mask)
-        cv2.imshow('masked_op_frame', masked_op_frame)
-        cv2.waitKey(100)
-        masked_tr_frame = cv2.bitwise_and(real_frame_rgb, tr_mask)
-        cv2.imshow('masked_tr_frame', masked_tr_frame)
-        cv2.waitKey(100)
-
     def bbox_boundary_color_analysis(self, compo, frame_rgb):
-        element_crop, boundary_crop = self.get_element_and_boundary_crops(compo, frame_rgb)
+        element_crop, boundary_crop, padded_crop = self.get_element_and_boundary_crops(compo, frame_rgb)
 
         # reshape boundary crop to element crop shape even if it is smaller or bigger
         if boundary_crop.shape[0] < element_crop.shape[0] or boundary_crop.shape[1] < element_crop.shape[1]:
@@ -235,15 +96,98 @@ class Analyzer:
         boundary_color_stats = self.get_color_stats(boundary_crop)
 
         color_similarity = self.compare_colors(element_color_stats, boundary_color_stats)
+        tc = self.convert_to_contrast(padded_crop)
+        #convert to greyscale
+        #tc = cv2.cvtColor(tc, cv2.COLOR_BGR2GRAY)
+        # cv2.imshow('tc', cv2.resize(tc, (128,128)))
+        # cv2.imshow('element_crop', cv2.resize(element_crop, (128,128)))
+        #cv2.imshow('boundary_crop', cv2.resize(boundary_crop, (128,128)))
+        print('\n\n\n\n\n')
+        print(color_similarity)
 
-        # if color_similarity > 1500:
-            # cv2.imshow('element_crop', element_crop)
-            # cv2.imshow('boundary_crop', boundary_crop)
-            # print('\n\n\n\n\n')
-            # print(color_similarity)
-            # cv2.waitKey(10000)
+        # cv2.waitKey(10000)
+        # cv2.destroyAllWindows()
+        white = np.count_nonzero(tc[tc > tc.mean()])
+        black = np.count_nonzero(tc[tc < tc.mean()])
+        black+=1
+        tc = white/black
+        #tc = np.mean(tc)
+        # divide bu comoponent area
+        tc = tc / (element_crop.shape[0] * element_crop.shape[1])
+        color_similarity = tc
+        print(color_similarity)
+
+        # cframe = self.convert_to_contrast(frame_rgb)
+        # cv2.imshow('cfimg', cframe)
+        # cv2.waitKey(1000)
+
         return element_crop, color_similarity
+    def convert_to_contrast(self, img):
+        img = img.copy()
+        # normalize img to 0-1
+        img = img.astype(np.float32) / 255.0
+        assert (img.max() <= 1.0 and img.min() >= 0.0)
+        nimg = np.zeros((img.shape))
+        nimgy = np.zeros((img.shape))
+        rows = img.shape[0]
+        cols = img.shape[1] - 1
+        for i in range(rows):
+            for j in range(0, cols, 1):
+                nimg[i][j] = self.web_contrast(img[i][j], img[i][j+1])
+        nimg = nimg.astype(np.float32)/ nimg.max()
+        rows = rows - 1
+        for i in range(cols):
+            for j in range(0, rows, 1):
+                nimgy[j][i] = self.web_contrast(img[j][i], img[j][i+1])
+        nimgy = nimgy.astype(np.float32)/ nimgy.max()
+        #remove every 2nd column from nimgy
+        #nimgy = nimgy[:, ::2]
+        #remove every 2nd row from nimg
+        #nimg = nimg[::2, :]
+        fimg = nimg + nimgy
+        # nimg = cv2.resize(nimg, (128,128))
+        # fimg = cv2.resize(fimg, (128, 128))
+        # nimgy = cv2.resize(nimgy, (128, 128))
+        # img = cv2.resize(img, (128,128))
+        # cv2.imshow('nimg', nimg)
+        # cv2.imshow('fimg', fimg)
+        # cv2.imshow('nimgy', nimgy)
+        # cv2.imshow('img', img)
+        # cv2.waitKey(10000)
+        return fimg
+    def web_contrast(self, c1, c2):
 
+        def rgb(rgb1, rgb2):
+            for r, g, b in (rgb1, rgb2):
+                if not 0.0 <= r <= 1.0:
+                    raise ValueError("r is out of valid range (0.0 - 1.0)")
+                if not 0.0 <= g <= 1.0:
+                    raise ValueError("g is out of valid range (0.0 - 1.0)")
+                if not 0.0 <= b <= 1.0:
+                    raise ValueError("b is out of valid range (0.0 - 1.0)")
+
+            l1 = _relative_luminance(*rgb1)
+            l2 = _relative_luminance(*rgb2)
+
+            if l1 > l2:
+                return (l1 + 0.05) / (l2 + 0.05)
+            else:
+                return (l2 + 0.05) / (l1 + 0.05)
+
+        def _relative_luminance(r, g, b):
+            r = _linearize(r)
+            g = _linearize(g)
+            b = _linearize(b)
+
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+        def _linearize(v):
+            if v <= 0.03928:
+                return v / 12.92
+            else:
+                return ((v + 0.055) / 1.055) ** 2.4
+
+        return rgb(c1, c2)
     def compare_colors(self, col1, col2):
         # compare average color
         avg_color_diff = np.sum(np.abs(col1[0] - col2[0]))
@@ -279,11 +223,16 @@ class Analyzer:
         real_frame_rgb = frame_rgb.copy()
         frame_rgb = frame_rgb.copy()
 
+        padding = int(compo.width // 10)
+
         bbox = compo.bbox.put_bbox()
         element_crop = frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-
+        try:
+            padded_crop =  frame_rgb[bbox[1]-padding:bbox[3]+padding, bbox[0]-padding:bbox[2]+padding]
+        except:
+            padded_crop = element_crop
         # buffer = 10
-        padding = int(compo.width // 10)
+
 
         bbox_top = (bbox[0]-padding, bbox[1]-padding, bbox[2]+padding, bbox[1])
         bbox_bottom = (bbox[0]-padding, bbox[3], bbox[2]+padding, bbox[3]+padding)
@@ -315,7 +264,7 @@ class Analyzer:
         # cv2.imshow('frame_rgb', frame_rgb)
         # cv2.waitKey(1000)
 
-        return element_crop, boundary_crop
+        return element_crop, boundary_crop, padded_crop
 
     def visualize_results_2(self, area_plot, count_plot, size_plot, compo_pallet_plot, frame_pallet_plot, text_small, edge_result, nearby_components, freq, detection_frame):
         # print(area_plot.shape)
@@ -482,19 +431,35 @@ class Analyzer:
         # top = cv2.resize(current, (128, 128))
         length = int(len(scores_sorted)/2)
 
-        output = self.config.output_folder + '/contrast_worst/'
-        import os
-        if not os.path.exists(output):
-            os.makedirs(output)
+
 
         if not self.saved_contrast:
+            output = self.config.output_folder + '/contrast_worst/'
+            import os
+            if not os.path.exists(output):
+                os.makedirs(output)
             import random
             rand_draw = random.random()
-            if rand_draw > 0.3:
+            if rand_draw > 0:
                 for i in range(length):
                     current = crops[scores_sorted[i]]
                     cv2.imwrite(output +str(i)+'.png', current)
-            self.saved_contrast = True
+            #self.saved_contrast = True
+
+
+
+        if not self.saved_contrast:
+            output = self.config.output_folder + '/contrast_best/'
+            import os
+            if not os.path.exists(output):
+                os.makedirs(output)
+            import random
+            rand_draw = random.random()
+            if rand_draw > 0:
+                for i in range(length):
+                    current = crops[scores_sorted[-i]]
+                    cv2.imwrite(output + str(i) + '.png', current)
+            #self.saved_contrast = True
 
         for i in range(length):
             current = crops[scores_sorted[i]]
@@ -552,23 +517,22 @@ class Analyzer:
 
         edge_result = []
         for compo in compos:
-            try:
-                element_crop, score = self.bbox_boundary_color_analysis(compo, frame_rgb)
-                score = int(score/compo.area)
-                edge_result.append([element_crop, score, compo])
-            except:
-                pass
+
+            element_crop, score = self.bbox_boundary_color_analysis(compo, frame_rgb)
+            #score = int(score/compo.area)
+            edge_result.append([element_crop, score, compo])
 
         text_small = self.check_small_text(compos, frame_rgb)
         # freq = self.check_compo_frequency(compos, frame_rgb, frame_count)
         # UI_Sets = self.show_UI_Sets(DB_Compos, frame_count)
         self.contrast_frames.append(self.compute_edge_stats(edge_result, frame_rgb))
 
-        final_contrast = np.zeros(self.contrast_frames[0].shape)
+        final_contrast = np.zeros(self.contrast_frames[0].shape).astype(np.float32)
         for frame in self.contrast_frames:
             final_contrast = final_contrast + frame
         # cv2.imshow('cont', final_contrast)
         # cv2.waitKey(1000)
+        # convert highest 10 percent pixel values to green colour in final_contrast
         cv2.imwrite(self.config.output_folder + '/contrast.png', final_contrast)
 
         # top_edge, bottom_edge =
