@@ -46,22 +46,6 @@ class Json_Utils:
 
         return [f, d, s]
 
-    def visualize_sift(self):
-        sift_stats = []
-        for frame in self.all_frames:
-            if 'SIFT_Statistics' in frame:
-                sift_stats.append(frame['SIFT_Statistics'])
-        self.save_plots(sift_stats)
-
-    def save_plots(self, data):
-        p = pd.DataFrame(data, columns=['current_frame', 'total_common', 'static', 'dynamic'])
-        plot = p.plot();
-        # plot.title('SIFT Features across Frames')
-        plot.set_xlabel("Frames x 10")
-        plot.set_ylabel("Frequency")
-        fig = plot.get_figure()
-        fig.savefig("sift.png")
-        plt.close()
 
     def dump_current_json_to_file(self, config):
 

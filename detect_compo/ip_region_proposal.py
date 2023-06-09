@@ -1,9 +1,5 @@
-#import cv2
 from os.path import join as pjoin
 import time
-import json
-import numpy as np
-
 import detect_compo.lib_ip.ip_preprocessing as pre
 import detect_compo.lib_ip.ip_draw as draw
 import detect_compo.lib_ip.ip_detection as det
