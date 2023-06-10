@@ -2,11 +2,7 @@ import mkl
 mkl.set_num_threads(1)
 import cv2
 cv2.setNumThreads(1)
-import numpy as np
-from time import time
-
 from tqdm import tqdm
-
 import detect_compo.lib_ip.ip_preprocessing as pre
 from detect_compo.lib_ip.video_utils import video_reader
 import detect_compo.lib_ip.ip_detection as det
@@ -16,10 +12,7 @@ from detect_compo.lib_ip.compo_database import Compo_Database as Component_Datab
 from detect_compo.lib_ip.json_utils import Json_Utils as json_processor
 from detect_compo.lib_ip.ocr_utils import text_extractor as Text_Processor
 import os
-
 from analyzer import Analyzer as analyzer_class
-import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 plt.ion()
 
@@ -50,15 +43,16 @@ def process_video(config):
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
     Text_Extractor = Text_Processor(config)
+    analyzer = analyzer_class(config)
+    last_frame = video_reader_object.current_rgb_frame_number
 
     def progress(info: str):
         if config.progress_callback:
             config.progress_callback(info)
-    analyzer = analyzer_class(config)
-    pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='First pass')
+    pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='Processing Video')
+
 
     while(video_reader_object.has_enough_frames()):
-
         current_frame_buffer_rgb = video_reader_object.get_Frames()
         current_frame_buffer_grey = pre.conver_frames_to_grey(current_frame_buffer_rgb)
         current_frame_buffer_gradients = pre.conver_frames_to_gradient(current_frame_buffer_grey)
@@ -82,10 +76,13 @@ def process_video(config):
         JSON_Processor.next_frame()
         visualizer.Save_plots_and_heatmpas(JSON_Processor, Compo_DB.compos.copy(), current_frame_grey, config)
         JSON_Processor.write_json_to_file(Compo_DB)
-        detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
-                                                          fill=False)
-        analyzer.analyze_show(detected_components, current_frame_rgb,
-                                                video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(),
-                                                config, detection_frame, JSON_Processor)
+
+        if frame_number - last_frame > 100:
+            last_frame = frame_number
+            detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
+                                                              fill=False)
+            analyzer.analyze_show(detected_components, current_frame_rgb,
+                                                    video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(),
+                                                    config, detection_frame, JSON_Processor)
 
     pbar.close()

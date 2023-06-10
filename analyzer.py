@@ -6,6 +6,7 @@ cv2.setNumThreads(1)
 import numpy as np
 import matplotlib.pyplot as plt
 from color_utils import convert as convert_color_blind
+import os
 plt.ion()
 
 class Analyzer:
@@ -97,23 +98,33 @@ class Analyzer:
             if contrast < self.config.compo_min_contrast_ratio:
                 cv2.imwrite(bad + str(compo.id) + '.png', frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]])
                 warning = {'warning_type': 'Contrast Bad', 'bbox': bbox,
-                           'frames_occurs_in': frame_count, 'component_id': compo.id}
-                print(warning)
+                           'frames_occurs_in': frame_count, 'component_id': compo.id, 'contrast': contrast}
                 JSON_Processor.log_warning(warning)
             if contrast > self.config.compo_good_contrast_ratio:
                 cv2.imwrite(good + str(compo.id) + '.png', frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]])
-    def get_contrast_frame_from_component_contrast(self, compos, frame_rgb, JSON_Processor, frame_number):
+    def save_cb_rgb_crop(self, compo, frame_rgb, cb_frame):
+        cb_rgb = self.config.output_folder + '/cb_rgb_anomaly/'
+        if not os.path.exists(cb_rgb):
+            os.makedirs(cb_rgb)
+        bbox = compo.bbox.put_bbox()
+        rgb_crop = frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        cb_crop = cb_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        im = np.hstack([rgb_crop, cb_crop])
+        cv2.imwrite(cb_rgb + str(compo.id) + '.png', im)
+
+    def get_contrast_frame_from_component_contrast(self, compos, frame_rgb, JSON_Processor, frame_number, cb_frame):
         contrast_frame_from_component_contrast = np.zeros(frame_rgb.shape)
         for compo in compos:
             bbox = compo.bbox.put_bbox()
             contrast = np.array(compo.contrast_scores).mean()
             cb_contrast = np.array(compo.contrast_cb_scores).mean()
             if abs(contrast - cb_contrast) > self.config.max_cblind_contrast_delta:
-                print('contrast', contrast, 'cb_contrast', cb_contrast, 'delta', abs(contrast - cb_contrast))
                 warning = {'warning_type': 'Contrast Diff. b/w CB & RGB', 'bbox': bbox,
-                                  'frames_occurs_in': frame_number, 'component_id': compo.id}
+                                  'frames_occurs_in': frame_number, 'component_id': compo.id,
+                                'contrast_difference': abs(contrast - cb_contrast), 'contrast': contrast, 'cb_contrast': cb_contrast}
                 JSON_Processor.warnings.append(warning)
-                color = [50, 127, 205]
+                color = [50, 127, 205] # Brown in BGR
+                self.save_cb_rgb_crop(compo, frame_rgb, cb_frame)
             else:
                 if contrast >= 0.05:
                     color = [255, 0, 0]  # Blue in BGR
@@ -155,20 +166,17 @@ class Analyzer:
             cb_score = self.get_component_contrast(compo, contrast_cb_frame)
             compo.contrast_cb_scores.append(cb_score)
 
-        contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count)
+        contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count, cb_frame)
         self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
         visual_raw_contrast = self.get_visual_raw_contrast(contrast_frame)
         self.show_contrast_raw(visual_raw_contrast)
         cv2.imwrite(self.config.output_folder + '/contrast.png', contrast_frame_from_component_contrast)
         self.check_small_text(compos, frame_rgb, JSON_Processor, frame_count)
-        if not self.saved_colours:
-            import random
-            rand_draw = random.random()
-            if rand_draw > 0.3:
-                converted_frame = np.hstack([frame_rgb, cb_frame])
-                cv2.imwrite(self.config.output_folder + '/cblind_check.png', converted_frame)
-                self.saved_colours = True
 
+        cv2.imwrite(self.config.output_folder + '/frame.png', frame_rgb)
+        cv2.imwrite(self.config.output_folder + '/cb_frame.png', cb_frame)
+        converted_frame = np.hstack([frame_rgb, cb_frame])
+        cv2.imwrite(self.config.output_folder + '/cblind_check.png', converted_frame)
 
 
     def check_small_text(self, compos, frame_rgb, JSON_Processor, frame_number):
@@ -182,7 +190,8 @@ class Analyzer:
                     frame_rgb = cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
                     cv2.imwrite(self.config.output_folder + 'text_small.png', frame_rgb)
                     warning = {'warning_type': 'Small Text', 'bbox': bbox,
-                               'frames_occurs_in': frame_number, 'component_id': compo.id}
+                               'frames_occurs_in': frame_number, 'component_id': compo.id,
+                               'text_character_height': compo.height, 'text_character_width': compo.word_width}
                     JSON_Processor.log_warning(warning)
         return frame_rgb
 
