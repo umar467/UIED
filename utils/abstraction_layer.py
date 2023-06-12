@@ -82,7 +82,7 @@ def process_video(config):
             detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
                                                               fill=False)
             analyzer.analyze_show(detected_components, current_frame_rgb,
-                                                    video_reader_object.total_number_of_rgb_frames, Compo_DB.compos.copy(),
+                                                    video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
                                                     config, detection_frame, JSON_Processor)
 
     pbar.close()
