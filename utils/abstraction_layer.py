@@ -1,11 +1,12 @@
 import mkl
+
+from utils.tqdm_callback import TqdmCallback
+
 mkl.set_num_threads(1)
 import cv2
 cv2.setNumThreads(1)
 import numpy as np
 from time import time
-
-from tqdm import tqdm
 
 import detect_compo.lib_ip.ip_preprocessing as pre
 from detect_compo.lib_ip.video_utils import video_reader
@@ -51,11 +52,11 @@ def process_video(config):
     JSON_Processor = json_processor(config)
     Text_Extractor = Text_Processor(config)
 
-    def progress(info: str):
-        if config.progress_callback:
-            config.progress_callback(info)
+
     analyzer = analyzer_class()
-    pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='Inspecting frames')
+    pbar = TqdmCallback(total=video_reader_object.total_number_of_rgb_frames,
+                        desc='Inspecting frames',
+                        callback=config.progress_callback)
 
     while(video_reader_object.has_enough_frames()):
 
