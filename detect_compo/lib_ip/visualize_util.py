@@ -37,50 +37,6 @@ def visualize_points(frame, points, rgb=True, show=True, name="SIFT Point Visual
         cv2.waitKey(10)
     return drawing_frame
 
-def get_json(frame, compos):
-    if compos is None:
-        return
-    if len(compos)==0:
-        return
-
-    name = 'Frame '+str(frame[0])
-    output = {name: []}
-    img_shape = compos[0].image_shape
-    output[name].append({'json_format_version':0.1, 'id': 0, 'class': 'Background', 'frequency': 0, 'column_min': 0, 'row_min': 0, 'column_max': img_shape[1],
-                             'row_max': img_shape[0], 'width': img_shape[1], 'height': img_shape[0]})
-    for compo in compos:
-        c = {'id': compo.id, 'class': compo.category}
-        c['frequency'] = 8
-        (c['column_min'], c['row_min'], c['column_max'], c['row_max']) = compo.put_bbox()
-        c['width'] = compo.width
-        c['height'] = compo.height
-        output[name].append(c)
-
-    return output
-def save_json(frame, compos, file_path):
-    if compos is None:
-        return
-    import json
-    name = 'Frame '+str(frame[0])
-    output = {name: []}
-    if os.path.exists(file_path):
-        append_write = 'a'  # append if already exists
-    else:
-        append_write = 'w'  # make a new file if not
-    f_out = open(file_path, append_write)
-
-    img_shape = compos[0].image_shape
-    output[name].append({'json_format_version':0.1, 'id': 0, 'class': 'Background', 'frequency': 0, 'column_min': 0, 'row_min': 0, 'column_max': img_shape[1],
-                             'row_max': img_shape[0], 'width': img_shape[1], 'height': img_shape[0]})
-    for compo in compos:
-        c = {'id': compo.id, 'class': compo.category}
-        c['frequency'] = 8
-        (c['column_min'], c['row_min'], c['column_max'], c['row_max']) = compo.put_bbox()
-        c['width'] = compo.width
-        c['height'] = compo.height
-        output[name].append(c)
-
-    json.dump(output, f_out, indent=4)
 
 def new_ui_save(frame0, framel, config):
 
@@ -143,62 +99,6 @@ def visualize_components_accumulative(frame, components, text = False):
                 for xx in compo.detected_in_frames:
                     frame[bbox[1]:bbox[3], bbox[0]:bbox[2]] += 255
     return frame
-
-def visualize_component_crops(frame, components, rgb=True, name='component_visualization', config=None, fill=False, show=True, drawn_frame=None, last_outline = None):
-    component_crops = []
-    if rgb:
-        drawing_frame = frame.copy()
-    else:
-        drawing_frame = np.zeros(frame.shape)
-        drawing_frame = drawing_frame.astype(np.uint8)
-    if drawn_frame is not None:
-        drawing_frame = drawn_frame
-    if components==None:
-        return
-    if fill:
-        fill_param = -1
-    else:
-        fill_param = 2
-    for compo in components:
-        bbox = compo.put_bbox()
-        if config is not None:
-            color_map=config.COLOR
-            color = color_map[compo.category]
-        else:
-            color = (255,0,0)
-        if not rgb:
-            color = (255,255,255)
-        #drawing_frame = cv2.rectangle(drawing_frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, fill_param)
-        crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-        drawing_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]] = crop
-        component_crops.append(crop)
-        '''
-        if last_outline is not None:
-            expected_match = (drawing_frame==drawing_frame).sum()
-            got_match = (drawing_frame==last_outline).sum()
-            diff = expected_match - got_match
-            if diff > 10000:
-                cv2.imshow('diff', drawing_frame)
-                cv2.waitKey(10)
-        '''
-    if show:
-        cv2.imshow(name, drawing_frame)
-        cv2.waitKey(1)
-    component_crops = organize_crop_images(component_crops)
-    return drawing_frame, component_crops
-
-def visualize_component_histograms(frame, components, config):
-    crops = get_component_crops_from_frame(frame, components)
-    histogram_images = get_histograms_from_comopnent_crops(crops)
-    show_crops_and_histograms(crops, histogram_images, config)
-def get_component_crops_from_frame(frame, components):
-    component_crops = []
-    for compo in components:
-        bbox = compo.bbox.put_bbox()
-        crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
-        crop = cv2.resize(crop, (128, 128))
-        component_crops.append(crop)
-    return component_crops
 
 
 def get_histograms_from_comopnent_crops(component_crops):
@@ -279,26 +179,6 @@ def organize_crop_images(crops):
     return new_image
 
 
-# compare component bbox crops in frame1 and frame2 to see if they have similar SSID score
-# Use SSIM to comapre component crops from both frames
-# import ssim from skimage.measure
-from skimage.metrics import structural_similarity as ssim
-def compare_component_crops(frame1, frame2, components):
-    component_crops1 = get_component_crops_from_frame(frame1, components)
-    component_crops2 = get_component_crops_from_frame(frame2, components)
-    scores = []
-    for i in range(len(component_crops1)):
-        crop1 = component_crops1[i]
-        crop2 = component_crops2[i]
-        score = ssim(crop1, crop2, multichannel=True)
-        print(f'/n/n \n\n\n\n {score} \n')
-        if score < 0.8:
-            cv2.imshow('cropdiff', np.hstack([crop1, crop2]))
-            cv2.waitKey(500)
-        scores.append(score)
-    return scores
-
-
 def assign_red_to_top_percentile(image):
     # Calculate the threshold value for the top 20% percentile
     percentile_threshold = np.percentile(image, 95)
@@ -315,27 +195,7 @@ def assign_red_to_top_percentile(image):
     color_image[np.where(image > percentile_threshold)] = [0, 0, 255]
     color_image[np.where(image < percentile_threshold/3)] = [0, 0, 0]
     return color_image
-def display_intensity_maps(stack,config):
-    #mean_image = np.mean(stack, axis=2)  # Calculate the mean image
 
-    # cv2.imshow('test', assign_red_to_top_percentile(mean_image))
-    # cv2.waitKey(100)
-    # Create heatmap using seaborn
-    import seaborn as sns
-    sns.set()
-    fig, ax = plt.subplots(figsize=(8, 8))
-    heatmap = sns.heatmap(mean_image, cmap='hot', ax=ax)
-    heatmap.set_title('Pixel Heatmap')
-    heatmap.set_xlabel('Columns')
-    heatmap.set_ylabel('Rows')
-
-    # Save the figure as a NumPy array
-    fig.canvas.draw()
-    img_np = np.array(fig.canvas.renderer.buffer_rgba())
-
-    plt.close()
-
-    return img_np
 
 
 

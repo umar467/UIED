@@ -47,6 +47,8 @@ class Component:
 
         self.detected_in_frames = []
         self.bbox_historical = []
+        self.contrast_scores = []
+        self.contrast_cb_scores = []
 
         self.imcrop = None
     def compo_update(self, id, org_shape):

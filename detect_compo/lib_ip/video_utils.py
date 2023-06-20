@@ -21,6 +21,10 @@ class video_reader:
         if self.config.log_info:
             self.print_stats()
 
+    def has_next(self):
+        if self.current_rgb_frame_number < (self.total_number_of_rgb_frames + 2):
+            return True
+        return False
     def has_enough_frames(self):
         if self.current_rgb_frame_number + self.config.frame_buffer_size < self.total_number_of_rgb_frames + 1:
             return True
