@@ -1,7 +1,7 @@
 import mkl
-mkl.set_num_threads(1)
+# mkl.set_num_threads(1)
 import cv2
-cv2.setNumThreads(1)
+# cv2.setNumThreads(1)
 from tqdm import tqdm
 import detect_compo.lib_ip.ip_preprocessing as pre
 from detect_compo.lib_ip.video_utils import video_reader
