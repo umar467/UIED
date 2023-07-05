@@ -1,7 +1,7 @@
 import mkl
-# mkl.set_num_threads(1)
+mkl.set_num_threads(1)
 import cv2
-# cv2.setNumThreads(1)
+cv2.setNumThreads(1)
 from tqdm import tqdm
 import detect_compo.lib_ip.ip_preprocessing as pre
 from detect_compo.lib_ip.video_utils import video_reader
@@ -43,7 +43,6 @@ def process_video(config):
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
     Text_Extractor = Text_Processor(config)
-    analyzer = analyzer_class(config)
     last_frame = video_reader_object.current_rgb_frame_number
 
     def progress(info: str):
@@ -51,6 +50,10 @@ def process_video(config):
             config.progress_callback(info)
     pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='Processing Video')
 
+    analyzer = analyzer_class()
+    pbar = TqdmCallback(total=video_reader_object.total_number_of_rgb_frames,
+                        desc='Inspecting frames',
+                        callback=config.progress_callback)
 
     while(video_reader_object.has_enough_frames()):
         current_frame_buffer_rgb = video_reader_object.get_Frames()
