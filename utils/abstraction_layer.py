@@ -50,7 +50,7 @@ def process_video(config):
             config.progress_callback(info)
     pbar = tqdm(total=video_reader_object.total_number_of_rgb_frames,  desc='Processing Video')
 
-    analyzer = analyzer_class()
+    analyzer = analyzer_class(config)
     pbar = TqdmCallback(total=video_reader_object.total_number_of_rgb_frames,
                         desc='Inspecting frames',
                         callback=config.progress_callback)
