@@ -1,4 +1,7 @@
 import mkl
+
+from utils.tqdm_callback import TqdmCallback
+
 mkl.set_num_threads(1)
 import cv2
 cv2.setNumThreads(1)
