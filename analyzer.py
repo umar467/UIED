@@ -6,6 +6,7 @@ cv2.setNumThreads(1)
 import numpy as np
 import matplotlib.pyplot as plt
 from color_utils import convert as convert_color_blind
+from color_utils import convert_fast as convert_color_blind_fast
 import os
 plt.ion()
 
@@ -242,7 +243,8 @@ class Analyzer:
         self.config = config
 
         contrast_frame = self.convert_to_contrast_fast(frame_rgb)
-        cb_frame = convert_color_blind(frame_rgb, 2)
+        cb_frame = convert_color_blind_fast(frame_rgb, 2)
+        #cb_frame = convert_color_blind(frame_rgb, 2)
         contrast_cb_frame = self.convert_to_contrast_fast(cb_frame)
 
         for compo in compos:
@@ -265,7 +267,7 @@ class Analyzer:
 
         #cv2.imwrite(self.config.output_folder + '/frame_'+str(frame_count)+'.png', frame_rgb)
         #cv2.imwrite(self.config.output_folder + '/cb_frame_'+str(frame_count)+'.png', cb_frame)
-        converted_frame = np.hstack([contrast_frame_from_component_contrast, visaul_raw_contrast])
+        converted_frame = np.hstack([cb_frame ,contrast_frame_from_component_contrast, visaul_raw_contrast])
         cv2.imwrite(self.config.output_folder + '/cblind_check_'+str(frame_count)+'.png', converted_frame)
 
 

@@ -5,6 +5,69 @@ cv2.setNumThreads(1)
 import numpy as np
 
 
+def convert_fast(frame, type_number):
+    import argparse
+    import os
+
+    import numpy as np
+    from PIL import Image
+    import cv2
+
+    def load_lms(img):
+        assert isinstance(img, np.ndarray), "Image must be a numpy array"
+        assert img.shape[2] == 3, "Image must be a 3 channel RGB image"
+        img = img/255.0
+        assert np.max(img) <= 1.0, "Image values must be in range 0 - 1"
+        assert np.min(img) >= 0.0, "Image values must be in range 0 - 1"
+
+        img_lms = np.dot(img[:, :, :3], rgb_to_lms())
+
+        return img_lms
+
+    def rgb_to_lms():
+        """
+        Matrix for RGB color-space to LMS color-space transformation.
+        """
+        return np.array([[17.8824, 43.5161, 4.11935],
+                         [3.45565, 27.1554, 3.86714],
+                         [0.0299566, 0.184309, 1.46709]]).T
+
+    def lms_to_rgb() -> np.ndarray:
+        """
+        Matrix for LMS colorspace to RGB colorspace transformation.
+        """
+        return np.array([[0.0809, -0.1305, 0.1167],
+                         [-0.0102, 0.0540, -0.1136],
+                         [-0.0004, -0.0041, 0.6935]]).T
+    def lms_protanopia_sim(degree: float = 0.5) -> np.ndarray:
+        """
+        Matrix for Simulating Protanopia colorblindness from LMS color-space.
+        :param degree: Protanopia degree.
+        """
+        degree_p = degree
+        degree_d = 1.0 - degree_p
+        return np.array([[1 - degree_p, 2.02344 * degree_p, -2.52581 * degree_p],
+                         [0.494207 * degree_d, 1 - degree_d, 1.24827 * degree_d],
+                         [0, 0, 1]]).T
+
+    frame = frame.copy()
+
+    # Load the image file in LMS colorspace
+    img_lms = load_lms(frame)
+
+    transform = lms_protanopia_sim()
+
+    # Transforming the LMS Image
+    img_sim = np.dot(img_lms, transform)
+
+    # Converting back to RGB colorspace
+    img_sim = np.uint8(np.dot(img_sim, lms_to_rgb()) * 255)
+
+    return img_sim
+
+
+
+
 def convert(frame, type_number):
     # !/usr/bin/env python
 
@@ -163,4 +226,5 @@ def convert(frame, type_number):
         new_frame[i] = cbconv.convert(frame[i], type_number)
     frame = new_frame.reshape(shape)
     return frame
+
 
