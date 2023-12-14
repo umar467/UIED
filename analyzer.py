@@ -22,7 +22,73 @@ class Analyzer:
         self.config = config
 
 
+    def convert_to_contrast_fast(self, img_o):
+        img = img_o.copy()
+        img = img.astype(np.float32) / 255.0
+        assert (img.max() <= 1.0 and img.min() >= 0.0)
+
+        cv2.imshow('orig',img)
+        cv2.waitKey(10)
+
+        r = img[:, :, 0]
+        g = img[:, :, 1]
+        b = img[:, :, 2]
+
+        # if value in r is <= 0.03928, then r = r/12.92 if r is > 0.03928, then r = ((r+0.055)/1.055)^2.4
+        r = np.where(r <= 0.03928, r / 12.92, r)
+        r = np.where(r > 0.03928, ((r + 0.055) / 1.055) ** 2.4, r)
+        r = r * 0.2126
+
+        # if value in g is <= 0.03928, then g = g/12.92 if g is > 0.03928, then g = ((g+0.055)/1.055)^2.4
+        g = np.where(g <= 0.03928, g / 12.92, g)
+        g = np.where(g > 0.03928, ((g + 0.055) / 1.055) ** 2.4, g)
+        g = g * 0.7152
+
+        # if value in b is <= 0.03928, then b = b/12.92 if b is > 0.03928, then b = ((b+0.055)/1.055)^2.4
+        b = np.where(b <= 0.03928, b / 12.92, b)
+        b = np.where(b > 0.03928, ((b + 0.055) / 1.055) ** 2.4, b)
+        b = b * 0.0722
+
+        img = r + g + b
+
+        cv2.imshow('real', img)
+        cv2.waitKey(10)
+
+        te = np.true_divide(img[:-1], img[1:])
+        te = img[:-1]/img[1:]
+        cv2.imshow('te', te)
+        cv2.waitKey(10)
+
+        dx = np.diff(img, axis=0)
+        cv2.imshow('dx', dx)
+        cv2.waitKey(10)
+        dy = np.diff(img, axis=1)
+        cv2.imshow('dy', dy)
+        cv2.waitKey(10)
+
+        dx = cv2.copyMakeBorder(dx,1,0,0,0,cv2.BORDER_REPLICATE)
+        dy = cv2.copyMakeBorder(dy,0,0,1,0,cv2.BORDER_REPLICATE)
+        fd = dx+dy
+
+        cv2.imshow('fd', fd)
+        cv2.waitKey(10)
+
+        fdv = self.get_visual_raw_contrast(fd)
+        cv2.imshow('fdv', fdv)
+        cv2.waitKey(0)
+        print('m')
+
+        old_contrast = self.convert_to_contrast(img_o)
+        old_contrast = self.get_visual_raw_contrast(old_contrast)
+        cv2.imshow('old_contrast', old_contrast)
+        cv2.waitKey(0)
+
+
+
     def convert_to_contrast(self, img):
+
+
+
         img = img.copy()
         img = img.astype(np.float32) / 255.0
         assert (img.max() <= 1.0 and img.min() >= 0.0)
@@ -156,6 +222,9 @@ class Analyzer:
     def analyze_show(self, compos, frame_rgb, frame_count, DB_Compos, config, detection_frame, JSON_Processor):
         frame_count = int(frame_count)
         self.config = config
+
+        self.convert_to_contrast_fast(frame_rgb)
+
         contrast_frame = self.convert_to_contrast(frame_rgb)
         cb_frame = convert_color_blind(frame_rgb, 2)
         contrast_cb_frame = self.convert_to_contrast(cb_frame)
