@@ -179,7 +179,8 @@ class Analyzer:
         cv2.imwrite(cb_rgb + str(compo.id) + '.png', im)
 
     def get_contrast_frame_from_component_contrast(self, compos, frame_rgb, JSON_Processor, frame_number, cb_frame):
-        contrast_frame_from_component_contrast = np.zeros(frame_rgb.shape)
+        contrast_frame_from_component_contrast = frame_rgb#np.zeros(frame_rgb.shape)
+
         for compo in compos:
             bbox = compo.bbox.put_bbox()
             contrast = np.array(compo.contrast_scores).mean()
@@ -198,15 +199,26 @@ class Analyzer:
                     color = [0, 255, 0]  # Green in BGR
                 if contrast < 0.05:
                     color = [0, 0, 255]  # Red in BGR
-            contrast_frame_from_component_contrast[bbox[1]:bbox[3], bbox[0]:bbox[2]] = color
+            contrast_frame_from_component_contrast = cv2.rectangle(contrast_frame_from_component_contrast, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 3)
+            #contrast_frame_from_component_contrast[bbox[1]:bbox[3], bbox[0]:bbox[2]] = color
         return contrast_frame_from_component_contrast
+    def process_raw_visual_contrast(self, compos, frame_rgb, JSON_Processor, frame_number, cb_frame):
+        processed_raw_visual_contrast = np.zeros(frame_rgb.shape)
+
+        for compo in compos:
+            bbox = compo.bbox.put_bbox()
+            color = [255, 255, 255]  # Red in BGR
+            processed_raw_visual_contrast[bbox[1]:bbox[3], bbox[0]:bbox[2]] = frame_rgb[bbox[1]:bbox[3],
+                                                                                       bbox[0]:bbox[2]]
+            #processed_raw_visual_contrast = cv2.rectangle(processed_raw_visual_contrast, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 1)
+        return processed_raw_visual_contrast
     def get_visual_raw_contrast(self, contrast_frame):
         visual_contrast_frame = np.zeros((contrast_frame.shape[0], contrast_frame.shape[1],3))
         visual_contrast_frame[contrast_frame >= self.config.AA_contrast_ratio] = [255, 0, 0]
         visual_contrast_frame[contrast_frame >= self.config.AAA_contrast_ratio] = [0, 255, 0]
         visual_contrast_frame[contrast_frame < self.config.AA_contrast_ratio] = [0, 0, 0]
         return visual_contrast_frame
-    def show_contrast_raw(self, contrast_frame):
+    def show_contrast_raw(self, contrast_frame, frame_count):
         self.contrast_frames.append(contrast_frame)
         if len(self.contrast_frames)>5:
             final_contrast = np.zeros(self.contrast_frames[0].shape).astype(np.float32)
@@ -216,8 +228,8 @@ class Analyzer:
             final_contrast = contrast_frame
         kernel = np.ones((5, 5), np.uint8)
         final_contrast = cv2.dilate(final_contrast, kernel, iterations=1)
-        cv2.imwrite(self.config.output_folder + '/contrast_raw.png', final_contrast)
-
+        #cv2.imwrite(self.config.output_folder + '/contrast_raw_'+str(frame_count)+'.png', final_contrast)
+        return final_contrast
 
     def analyze_show(self, compos, frame_rgb, frame_count, DB_Compos, config, detection_frame, JSON_Processor):
         frame_count = int(frame_count)
@@ -236,16 +248,21 @@ class Analyzer:
             compo.contrast_cb_scores.append(cb_score)
 
         contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count, cb_frame)
-        self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
+        #self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
         visual_raw_contrast = self.get_visual_raw_contrast(contrast_frame)
-        self.show_contrast_raw(visual_raw_contrast)
-        cv2.imwrite(self.config.output_folder + '/contrast.png', contrast_frame_from_component_contrast)
-        self.check_small_text(compos, frame_rgb, JSON_Processor, frame_count)
+        visaul_raw_contrast = self.show_contrast_raw(visual_raw_contrast, frame_count)
+        visaul_raw_contrast = self.process_raw_visual_contrast(compos, visaul_raw_contrast,
+                                                                                                 JSON_Processor,
+                                                                                                 frame_count, cb_frame)
+        # cv2.imwrite(self.config.output_folder + '/raw_contrast_bboxed_' + str(frame_count) + '.png',
+        #             visaul_raw_contrast)
+        # cv2.imwrite(self.config.output_folder + '/contrast_'+str(frame_count)+'.png', contrast_frame_from_component_contrast)
+        #self.check_small_text(compos, frame_rgb, JSON_Processor, frame_count)
 
-        cv2.imwrite(self.config.output_folder + '/frame.png', frame_rgb)
-        cv2.imwrite(self.config.output_folder + '/cb_frame.png', cb_frame)
-        converted_frame = np.hstack([frame_rgb, cb_frame])
-        cv2.imwrite(self.config.output_folder + '/cblind_check.png', converted_frame)
+        #cv2.imwrite(self.config.output_folder + '/frame_'+str(frame_count)+'.png', frame_rgb)
+        #cv2.imwrite(self.config.output_folder + '/cb_frame_'+str(frame_count)+'.png', cb_frame)
+        converted_frame = np.hstack([contrast_frame_from_component_contrast, visaul_raw_contrast])
+        cv2.imwrite(self.config.output_folder + '/cblind_check_'+str(frame_count)+'.png', converted_frame)
 
 
     def check_small_text(self, compos, frame_rgb, JSON_Processor, frame_number):
@@ -301,5 +318,5 @@ class Analyzer:
         palplot_img = np.zeros((100, 100*len(unique_colors), 3), dtype=np.uint8)
         for i, color in enumerate(unique_colors):
             palplot_img[:, i*100:(i+1)*100] = np.array(color, dtype=np.uint8)
-        cv2.imwrite(self.config.output_folder + 'frame_color_pallete.png', palplot_img)
+        cv2.imwrite(self.config.output_folder + 'frame_color_pallete_'+str(frame_count)+'.png', palplot_img)
         return palplot_img

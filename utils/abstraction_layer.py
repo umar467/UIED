@@ -32,9 +32,10 @@ def process_video(config):
     The max_frames is the maximum number of frames that will be processed, if the this number is greater than the total number of frames in the video, then the total number of frames will be processed.
     So in this case below, the frames 100 to 800 will be processed.
     '''
-    start_head_location = 100
-    max_frames = 800
     video_reader_object = video_reader(config)
+    start_head_location = video_reader_object.total_number_of_rgb_frames//2
+    start_head_location = 0
+    max_frames = 1800
     if video_reader_object.total_number_of_rgb_frames < start_head_location + 100:
         start_head_location = 0
         if video_reader_object.total_number_of_rgb_frames < 50:
@@ -74,7 +75,11 @@ def process_video(config):
         detected_components = Compo_DB.compare_with_previously_detected_components(components, frame_number,
                                                                                    current_frame_grey, JSON_Processor, config,
                                                                                    force_check_previous_componenets=True)
-
+        detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
+                                                          fill=False)
+        analyzer.analyze_show(detected_components, current_frame_rgb,
+                              video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
+                              config, detection_frame, JSON_Processor)
         if new_ui:
             visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
 

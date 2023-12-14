@@ -203,11 +203,11 @@ def assign_red_to_top_percentile(image):
 def Save_plots_and_heatmpas(JSON_Processor, compos, frame, config):
     frame = visualize_components_accumulative(frame, compos, text=True)
     mean_image = cv2.GaussianBlur(frame, (25, 25), 0)
-    cv2.imwrite(config.output_folder + 'text_heatmap.png', assign_red_to_top_percentile(mean_image))
+    #cv2.imwrite(config.output_folder + 'text_heatmap.png', assign_red_to_top_percentile(mean_image))
 
     frame = visualize_components_accumulative(frame, compos)
     mean_image = cv2.GaussianBlur(frame, (25, 25), 0)
-    cv2.imwrite(config.output_folder + 'non_text_heatmap.png', assign_red_to_top_percentile(mean_image))
+    #cv2.imwrite(config.output_folder + 'non_text_heatmap.png', assign_red_to_top_percentile(mean_image))
 
     import pandas as pd
     fd = JSON_Processor.get_stats()
