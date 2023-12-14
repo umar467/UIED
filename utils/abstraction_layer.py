@@ -88,12 +88,12 @@ def process_video(config):
         visualizer.Save_plots_and_heatmpas(JSON_Processor, Compo_DB.compos.copy(), current_frame_grey, config)
         JSON_Processor.write_json_to_file(Compo_DB)
 
-        # if frame_number - last_frame > 100:
-        #     last_frame = frame_number
-        detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
-                                                          fill=False)
-        analyzer.analyze_show(detected_components, current_frame_rgb,
-                                                video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
-                                                config, detection_frame, JSON_Processor)
+        if frame_number - last_frame > 100:
+            last_frame = frame_number
+            detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
+                                                              fill=False)
+            analyzer.analyze_show(detected_components, current_frame_rgb,
+                                                    video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
+                                                    config, detection_frame, JSON_Processor)
 
     pbar.close()

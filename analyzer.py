@@ -21,14 +21,10 @@ class Analyzer:
         self.saved_contrast = False
         self.config = config
 
-
     def convert_to_contrast_fast(self, img_o):
         img = img_o.copy()
         img = img.astype(np.float32) / 255.0
         assert (img.max() <= 1.0 and img.min() >= 0.0)
-
-        cv2.imshow('orig',img)
-        cv2.waitKey(10)
 
         r = img[:, :, 0]
         g = img[:, :, 1]
@@ -51,37 +47,47 @@ class Analyzer:
 
         img = r + g + b
 
-        cv2.imshow('real', img)
+        x_img = np.zeros(img.shape)
+        y_img = np.zeros(img.shape)
+
+        # still slow part !
+        [rows, cols] = img.shape
+        for i in range(rows - 1):
+            for j in range(cols-1):
+                if img[i, j] > img[i + 1, j]:
+                    x_img[i, j] = (img[i, j] + 0.05) / (img[i + 1, j] + 0.05)
+                else:
+                    x_img[i, j] = (img[i + 1, j] + 0.05) / (img[i, j] + 0.05)
+
+                if img[i, j] > img[i, j + 1]:
+                    y_img[i, j] = (img[i, j] + 0.05) / (img[i, j + 1] + 0.05)
+                else:
+                    y_img[i, j] = (img[i, j + 1] + 0.05) / (img[i, j] + 0.05)
+
+        # parity with old code
+        cimg = (x_img + y_img) / 2
+
+        return cimg
+
+    def compare_contrast(self, img_o):
+        # Currently 14 - > 1 reduction in seconds
+        import time
+
+        start = time.time()
+        new_contrast = self.convert_to_contrast_fast(img_o)
+        end = time.time()
+        print('new_contrast', end - start)
+        new_contrast = self.get_visual_raw_contrast(new_contrast)
+        cv2.imshow('new_contrast', new_contrast)
         cv2.waitKey(10)
 
-        te = np.true_divide(img[:-1], img[1:])
-        te = img[:-1]/img[1:]
-        cv2.imshow('te', te)
-        cv2.waitKey(10)
-
-        dx = np.diff(img, axis=0)
-        cv2.imshow('dx', dx)
-        cv2.waitKey(10)
-        dy = np.diff(img, axis=1)
-        cv2.imshow('dy', dy)
-        cv2.waitKey(10)
-
-        dx = cv2.copyMakeBorder(dx,1,0,0,0,cv2.BORDER_REPLICATE)
-        dy = cv2.copyMakeBorder(dy,0,0,1,0,cv2.BORDER_REPLICATE)
-        fd = dx+dy
-
-        cv2.imshow('fd', fd)
-        cv2.waitKey(10)
-
-        fdv = self.get_visual_raw_contrast(fd)
-        cv2.imshow('fdv', fdv)
-        cv2.waitKey(0)
-        print('m')
-
+        start = time.time()
         old_contrast = self.convert_to_contrast(img_o)
+        end = time.time()
+        print('old_contrast', end - start)
         old_contrast = self.get_visual_raw_contrast(old_contrast)
         cv2.imshow('old_contrast', old_contrast)
-        cv2.waitKey(0)
+        cv2.waitKey(10)
 
 
 
@@ -235,11 +241,9 @@ class Analyzer:
         frame_count = int(frame_count)
         self.config = config
 
-        self.convert_to_contrast_fast(frame_rgb)
-
-        contrast_frame = self.convert_to_contrast(frame_rgb)
+        contrast_frame = self.convert_to_contrast_fast(frame_rgb)
         cb_frame = convert_color_blind(frame_rgb, 2)
-        contrast_cb_frame = self.convert_to_contrast(cb_frame)
+        contrast_cb_frame = self.convert_to_contrast_fast(cb_frame)
 
         for compo in compos:
             score = self.get_component_contrast(compo, contrast_frame)
