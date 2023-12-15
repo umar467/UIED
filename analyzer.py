@@ -186,7 +186,7 @@ class Analyzer:
         cv2.imwrite(cb_rgb + str(compo.id) + '.png', im)
 
     def get_contrast_frame_from_component_contrast(self, compos, frame_rgb, JSON_Processor, frame_number, cb_frame):
-        contrast_frame_from_component_contrast = frame_rgb#np.zeros(frame_rgb.shape)
+        contrast_frame_from_component_contrast = np.zeros(frame_rgb.shape)
 
         for compo in compos:
             bbox = compo.bbox.put_bbox()
@@ -245,7 +245,8 @@ class Analyzer:
         contrast_frame = self.convert_to_contrast_fast(frame_rgb)
         cb_frame = convert_color_blind_fast(frame_rgb, 2)
         #cb_frame = convert_color_blind(frame_rgb, 2)
-        contrast_cb_frame = self.convert_to_contrast_fast(cb_frame)
+        contrast_cb_frame_raw = self.convert_to_contrast_fast(cb_frame)
+        contrast_cb_frame = self.get_visual_raw_contrast(contrast_cb_frame_raw)
 
         for compo in compos:
             score = self.get_component_contrast(compo, contrast_frame)
@@ -256,10 +257,9 @@ class Analyzer:
         contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count, cb_frame)
         #self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
         visual_raw_contrast = self.get_visual_raw_contrast(contrast_frame)
-        visaul_raw_contrast = self.show_contrast_raw(visual_raw_contrast, frame_count)
-        visaul_raw_contrast = self.process_raw_visual_contrast(compos, visaul_raw_contrast,
-                                                                                                 JSON_Processor,
-                                                                                                 frame_count, cb_frame)
+        #visual_raw_contrast = self.show_contrast_raw(visual_raw_contrast, frame_count)
+        #visual_raw_contrast = self.process_raw_visual_contrast(compos, visual_raw_contrast, JSON_Processor, frame_count, cb_frame)
+
         # cv2.imwrite(self.config.output_folder + '/raw_contrast_bboxed_' + str(frame_count) + '.png',
         #             visaul_raw_contrast)
         # cv2.imwrite(self.config.output_folder + '/contrast_'+str(frame_count)+'.png', contrast_frame_from_component_contrast)
@@ -267,8 +267,18 @@ class Analyzer:
 
         #cv2.imwrite(self.config.output_folder + '/frame_'+str(frame_count)+'.png', frame_rgb)
         #cv2.imwrite(self.config.output_folder + '/cb_frame_'+str(frame_count)+'.png', cb_frame)
-        converted_frame = np.hstack([cb_frame ,contrast_frame_from_component_contrast, visaul_raw_contrast])
+        converted_frame = np.hstack([cb_frame ,contrast_frame_from_component_contrast, visual_raw_contrast])
         cv2.imwrite(self.config.output_folder + '/cblind_check_'+str(frame_count)+'.png', converted_frame)
+
+        cv2.imshow('frame', frame_rgb)
+        cv2.imshow('cb_frame', cb_frame)
+        cv2.imshow('contrast_frame', visual_raw_contrast)
+        cv2.imshow('cbl_cont', contrast_cb_frame)
+        cdelta = abs(contrast_frame - contrast_cb_frame_raw) *10
+        cdelta = self.get_visual_raw_contrast(cdelta)
+        cv2.imshow('dc', cdelta)
+        cv2.imshow('cfra_com_con', contrast_frame_from_component_contrast)
+        cv2.waitKey(10)
 
 
     def check_small_text(self, compos, frame_rgb, JSON_Processor, frame_number):
