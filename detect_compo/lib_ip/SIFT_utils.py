@@ -110,13 +110,17 @@ class SIFT_Processor:
         fig.savefig(output_path)
         plt.close()
 
-    def show_SIFT_points(self, frame, descriptors, keypoints, name='SIFTs', use_cv=False, static_points=None):
+    def show_SIFT_points(self, rframe, descriptors, keypoints, name='SIFTs', use_cv=False, static_points=None):
         # draw_frame = cv2.drawKeypoints(frame, keypoints, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        frame = np.zeros_like(rframe)
         for pt, size in static_points:
             pt = tuple(pt.astype(int))
-            frame = cv2.circle(frame, pt, int(size), (0, 255, 0), 2)
+            if size<5:size=size*10
+            if size<10:size=size*5
+            if size<15:size=size*2
+            frame = cv2.circle(frame, pt, int(size), (255, 255, 255), cv2.FILLED, 8,0)
         if use_cv:
-            cv2.imshow(name, frame)
+            cv2.imshow(name, rframe*frame)
             cv2.waitKey(1000)
         else:
             import matplotlib.pyplot as plt

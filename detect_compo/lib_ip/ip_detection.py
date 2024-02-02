@@ -444,7 +444,7 @@ def component_detection(binary, min_obj_area =C.min_object_area,
         print('Area:%d' % (len(region)))
         draw.draw_boundary(compos_all, binary.shape, show=True)
 
-    draw.draw_boundary(compos_all, binary.shape, show=True)
+    #draw.draw_boundary(compos_all, binary.shape, show=True)
     if rec_detect:
         return compos_rec, compos_nonrec
     else:

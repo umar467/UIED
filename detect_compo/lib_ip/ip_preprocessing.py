@@ -82,7 +82,7 @@ def extract_common_gradients(frames):
     for frame in frames:
         #visualizer.show_frame(frame, use_cv=True, name='grad_frame')
         current_grad = old_grad & frame
-    visualizer.show_frame(current_grad, use_cv=True, name='common_grad_frame')
+    #visualizer.show_frame(current_grad, use_cv=True, name='common_grad_frame')
     return current_grad
 
 def convert_frame_to_binary(frame):

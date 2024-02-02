@@ -99,11 +99,11 @@ def process_video(config):
 
         min_std_common_gradients = ndimage.minimum_filter(common_gradients, size=2)
         # min_std_common_gradients = cv2.dilate(min_std_common_gradients, np.ones((3,3)))
-        visualizer.show_frame(min_std_common_gradients, use_cv=True, name='min_std_common_gradients')
+        # visualizer.show_frame(min_std_common_gradients, use_cv=True, name='min_std_common_gradients')
 
         percentile_std_common_gradients = ndimage.percentile_filter(common_gradients, percentile=20, size=2)
         # percentile_std_common_gradients = cv2.dilate(percentile_std_common_gradients, np.ones((3,3)))
-        visualizer.show_frame(percentile_std_common_gradients, use_cv=True, name='percentile_std_common_gradients')
+        # visualizer.show_frame(percentile_std_common_gradients, use_cv=True, name='percentile_std_common_gradients')
 
         std_rgb = np.std(current_frame_buffer_rgb, axis=0)
         std_grey = np.std(current_frame_buffer_grey, axis=0)
@@ -150,7 +150,7 @@ def process_video(config):
             smask = diff <250
             diff[smask] = 0
             fmask = diff >250
-            cv2.imshow('diff', diff)
+            #cv2.imshow('diff', diff)
             cv2.waitKey(100)
         fmask = np.stack([fmask,fmask,fmask],axis=2)
         visualizer.show_frame(current_frame_buffer_rgb[0] * fmask, use_cv=True, name='ssim_filtered')
@@ -171,7 +171,7 @@ def process_video(config):
         static_pixels, new_ui = SIFT_processor.get_static_pixels(current_frame_buffer_grey, JSON_Processor)
         binary_image = pre.convert_frame_to_binary(current_frame_buffer_gradients[0])
         binary_image = pre.grad_to_binary(current_frame_buffer_gradients[0], config.minimum_gradient_difference)
-        visualizer.show_frame(binary_image, use_cv=True, name='binary_image')
+        #visualizer.show_frame(binary_image, use_cv=True, name='binary_image')
         current_frame_rgb = current_frame_buffer_rgb[-1]
         current_frame_grey = current_frame_buffer_grey[-1]
         frame_number = video_reader_object.current_rgb_frame_number
