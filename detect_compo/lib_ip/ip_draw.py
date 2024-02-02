@@ -105,7 +105,7 @@ def draw_boundary(components, shape, show=False):
             board[point[0], point[1]] = 255
     if show:
         cv2.imshow('rec', board)
-        cv2.waitKey(0)
+        cv2.waitKey(1)
     return board
 
 

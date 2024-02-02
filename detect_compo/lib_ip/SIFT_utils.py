@@ -48,6 +48,7 @@ class SIFT_Processor:
             des = des[0:2]
         self.data.append([kp, des])
         self.loaded_frames+=1
+        #self.show_SIFT_points(frame, des, kp, name='SIFTs', use_cv=True)
         return kp, des
     # Not Used but Functional
     def match_points(self, des1, kp1, des2, kp2, static_points):
@@ -75,12 +76,12 @@ class SIFT_Processor:
                 dis = cv2.norm(pt1,pt2)
                 if dis<0.05:
                     if des1[m.queryIdx].tobytes() not in static_points:
-                        static_points[des1[m.queryIdx].tobytes()] = [np.array(pt1), 1]
+                        static_points[des1[m.queryIdx].tobytes()] = [np.array(pt1), 1, kp1[m.queryIdx].size]
                     else:
-                        pt , count = static_points[des1[m.queryIdx].tobytes()]
+                        pt , count, size = static_points[des1[m.queryIdx].tobytes()]
                         if cv2.norm(pt1, pt) < 0.05:
                             count+=1
-                            static_points[des1[m.queryIdx].tobytes()] = [np.array(pt1), count]
+                            static_points[des1[m.queryIdx].tobytes()] = [np.array(pt1), count, size]
                     if self.config.log_info:
                         print(i, pt1,pt2, dis)
                 else:
@@ -108,6 +109,22 @@ class SIFT_Processor:
         output_path = self.config.output_folder + 'sift.png'
         fig.savefig(output_path)
         plt.close()
+
+    def show_SIFT_points(self, frame, descriptors, keypoints, name='SIFTs', use_cv=False, static_points=None):
+        # draw_frame = cv2.drawKeypoints(frame, keypoints, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        for pt, size in static_points:
+            pt = tuple(pt.astype(int))
+            frame = cv2.circle(frame, pt, int(size), (0, 255, 0), 2)
+        if use_cv:
+            cv2.imshow(name, frame)
+            cv2.waitKey(1000)
+        else:
+            import matplotlib.pyplot as plt
+            plt.imshow(frame)
+            plt.show()
+
+        return
+
     def get_static_pixels(self, frames, JSON_Processor):
         for frame in frames:
             self.get_SIFT_features(frame)
@@ -141,6 +158,7 @@ class SIFT_Processor:
         else:
             new_ui = False
 
+        self.show_SIFT_points(self.current_frame,[], good_des, name='SIFT_COMMON', use_cv=True, static_points=static_points)
         self.static_objects.append(static_points)
         self.update_stats(good_points, static_points)
         return static_points, new_ui
@@ -151,14 +169,18 @@ class SIFT_Processor:
             static_points = list(static_points)
             counts = []
             points = []
-            for pt, count in static_points:
+            for pt, count,size in static_points:
                 counts.append(count)
                 points.append(pt)
             counts = np.array(counts)
             points = np.array(points)
             indices = np.argwhere(counts == counts.max())
-            static_points = points[indices]
+            static_points = np.array(static_points)
+            static_points = static_points[indices]
             static_points = static_points.squeeze()
+            static_points = static_points[:,[0,2]]
+            # static_points = points[indices]
+            # static_points = static_points.squeeze()
         return static_points
 
     def update_stats(self, good_points, static_points):

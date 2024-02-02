@@ -27,7 +27,7 @@ def visualize_points(frame, points, rgb=True, show=True, name="SIFT Point Visual
     if points is None:
         #print("skipping points")
         return drawing_frame
-    for point in points:
+    for point,size in points:
         if point.shape == (2,):
             cv2.circle(drawing_frame, (int(point[0]),int(point[1])), 5, (255,0,0), thickness=-1, lineType=8, shift=0)
     if show:
@@ -37,7 +37,16 @@ def visualize_points(frame, points, rgb=True, show=True, name="SIFT Point Visual
         cv2.waitKey(10)
     return drawing_frame
 
-
+def show_frame(frame, scale_down=False, use_cv=False, name = ''):
+    if scale_down:
+        frame = resize_by_height(frame, 800)
+    if use_cv:
+        cv2.imshow(name, frame)
+        cv2.waitKey(10)
+    else:
+        import matplotlib.pyplot as plt
+        plt.imshow(frame)
+        plt.show()
 def new_ui_save(frame0, framel, config):
 
     if not os.path.exists(config.output_folder + '/uis/'):

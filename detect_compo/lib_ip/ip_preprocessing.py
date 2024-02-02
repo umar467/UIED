@@ -3,6 +3,7 @@ import mkl
 import cv2
 # cv2.setNumThreads(1)
 import numpy as np
+import detect_compo.lib_ip.visualize_util as visualizer
 from config.CONFIG import Configuration
 config = Configuration()
 
@@ -79,7 +80,9 @@ def conver_frames_to_gradient(grey_frames):
 def extract_common_gradients(frames):
     old_grad = frames[0]
     for frame in frames:
+        #visualizer.show_frame(frame, use_cv=True, name='grad_frame')
         current_grad = old_grad & frame
+    visualizer.show_frame(current_grad, use_cv=True, name='common_grad_frame')
     return current_grad
 
 def convert_frame_to_binary(frame):

@@ -43,6 +43,19 @@ class video_reader:
         frames = np.array(frames)
         return frames
 
+    def get_all_Frames(self):
+        no_of_frames = self.total_number_of_rgb_frames
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, 1)
+        frames = []
+        for _ in range(no_of_frames):
+            frame = self.get_processed_frame()
+            if frame is not None:
+                frames.append(frame)
+        frames = np.array(frames)
+        self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_rgb_frame_number - 1)
+        return frames
+
+
     def get_processed_frame(self, rgb_frame = None):
         '''
         Input: Objects internal frame read head

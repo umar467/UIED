@@ -21,6 +21,7 @@ class Analyzer:
         self.saved_colours = False
         self.saved_contrast = False
         self.config = config
+        self.pseudo_frame_count = 0
 
     def convert_to_contrast_fast(self, img_o):
         img = img_o.copy()
@@ -75,20 +76,42 @@ class Analyzer:
         import time
 
         start = time.time()
+        new_contrast = convert_color_blind_fast(img_o,2)
+        end = time.time()
+        print('new_contrast', end - start)
+
+        cv2.imwrite(self.config.output_folder + '/new_color_'+str(self.pseudo_frame_count)+'.png', new_contrast)
+        self.pseudo_frame_count += 1
+
+
+        start = time.time()
+        old_contrast = convert_color_blind(img_o,2)
+        end = time.time()
+        print('old_contrast', end - start)
+        cv2.imwrite(self.config.output_folder + '/old_color_'+str(self.pseudo_frame_count)+'.png', new_contrast)
+
+    def compare_color_speed(self, img_o):
+        # Currently 14 - > 1 reduction in seconds
+        import time
+
+        start = time.time()
         new_contrast = self.convert_to_contrast_fast(img_o)
         end = time.time()
         print('new_contrast', end - start)
         new_contrast = self.get_visual_raw_contrast(new_contrast)
-        cv2.imshow('new_contrast', new_contrast)
-        cv2.waitKey(10)
+        cv2.imwrite(self.config.output_folder + '/new_color_'+str(self.pseudo_frame_count)+'.png', new_contrast)
+        #self.pseudo_frame_count += 1
+        # cv2.imshow('new_contrast', new_contrast)
+        # cv2.waitKey(10)
 
         start = time.time()
         old_contrast = self.convert_to_contrast(img_o)
         end = time.time()
         print('old_contrast', end - start)
         old_contrast = self.get_visual_raw_contrast(old_contrast)
-        cv2.imshow('old_contrast', old_contrast)
-        cv2.waitKey(10)
+        cv2.imwrite(self.config.output_folder + '/old_color_'+str(self.pseudo_frame_count)+'.png', new_contrast)
+        # cv2.imshow('old_contrast', old_contrast)
+        # cv2.waitKey(10)
 
 
 
@@ -192,20 +215,21 @@ class Analyzer:
             bbox = compo.bbox.put_bbox()
             contrast = np.array(compo.contrast_scores).mean()
             cb_contrast = np.array(compo.contrast_cb_scores).mean()
+            if contrast < 0.10:
+                color = [255, 0, 0]  # Blue in BGR
+            if contrast >= 0.10:
+                color = [0, 255, 0]  # Green in BGR
+            percent_contrast_difference = abs(contrast - cb_contrast) / contrast
+            print(percent_contrast_difference)
             if abs(contrast - cb_contrast) > self.config.max_cblind_contrast_delta:
+                #print(abs(contrast - cb_contrast))
                 warning = {'warning_type': 'Contrast Diff. b/w CB & RGB', 'bbox': bbox,
                                   'frames_occurs_in': frame_number, 'component_id': compo.id,
                                 'contrast_difference': abs(contrast - cb_contrast), 'contrast': contrast, 'cb_contrast': cb_contrast}
                 JSON_Processor.warnings.append(warning)
                 color = [50, 127, 205] # Brown in BGR
                 self.save_cb_rgb_crop(compo, frame_rgb, cb_frame)
-            else:
-                if contrast >= 0.05:
-                    color = [255, 0, 0]  # Blue in BGR
-                if contrast >= 0.10:
-                    color = [0, 255, 0]  # Green in BGR
-                if contrast < 0.05:
-                    color = [0, 0, 255]  # Red in BGR
+                color = [0,0,255]
             contrast_frame_from_component_contrast = cv2.rectangle(contrast_frame_from_component_contrast, (bbox[0], bbox[1]), (bbox[2], bbox[3]), color, 3)
             #contrast_frame_from_component_contrast[bbox[1]:bbox[3], bbox[0]:bbox[2]] = color
         return contrast_frame_from_component_contrast
@@ -242,11 +266,13 @@ class Analyzer:
         frame_count = int(frame_count)
         self.config = config
 
+
+        #contrast_frame = self.compare_contrast(frame_rgb)
         contrast_frame = self.convert_to_contrast_fast(frame_rgb)
         cb_frame = convert_color_blind_fast(frame_rgb, 2)
-        #cb_frame = convert_color_blind(frame_rgb, 2)
-        contrast_cb_frame_raw = self.convert_to_contrast_fast(cb_frame)
-        contrast_cb_frame = self.get_visual_raw_contrast(contrast_cb_frame_raw)
+        cb_frame = convert_color_blind(frame_rgb, 2)
+        contrast_cb_frame = self.convert_to_contrast_fast(cb_frame)
+        #contrast_cb_frame_show = self.get_visual_raw_contrast(contrast_cb_frame_raw)
 
         for compo in compos:
             score = self.get_component_contrast(compo, contrast_frame)
@@ -255,7 +281,7 @@ class Analyzer:
             compo.contrast_cb_scores.append(cb_score)
 
         contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count, cb_frame)
-        #self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
+        self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
         visual_raw_contrast = self.get_visual_raw_contrast(contrast_frame)
         #visual_raw_contrast = self.show_contrast_raw(visual_raw_contrast, frame_count)
         #visual_raw_contrast = self.process_raw_visual_contrast(compos, visual_raw_contrast, JSON_Processor, frame_count, cb_frame)
@@ -270,15 +296,17 @@ class Analyzer:
         converted_frame = np.hstack([cb_frame ,contrast_frame_from_component_contrast, visual_raw_contrast])
         cv2.imwrite(self.config.output_folder + '/cblind_check_'+str(frame_count)+'.png', converted_frame)
 
-        cv2.imshow('frame', frame_rgb)
-        cv2.imshow('cb_frame', cb_frame)
-        cv2.imshow('contrast_frame', visual_raw_contrast)
-        cv2.imshow('cbl_cont', contrast_cb_frame)
-        cdelta = abs(contrast_frame - contrast_cb_frame_raw) *10
-        cdelta = self.get_visual_raw_contrast(cdelta)
-        cv2.imshow('dc', cdelta)
-        cv2.imshow('cfra_com_con', contrast_frame_from_component_contrast)
-        cv2.waitKey(10)
+        # cv2.imshow('frame', frame_rgb)
+        # cv2.imshow('cb_frame', cb_frame)
+        # cv2.imshow('contrast_frame', visual_raw_contrast)
+        # cv2.imshow('cbl_cont', contrast_cb_frame)
+        # cdelta = abs(contrast_frame - contrast_cb_frame_raw) * 10
+        # cdelta = self.get_visual_raw_contrast(cdelta)
+        # cv2.imshow('dc', cdelta)
+        # cv2.imshow('cfra_com_con', contrast_frame_from_component_contrast)
+        # cv2.waitKey(10)
+
+        # the im show command is not working in headless mode
 
 
     def check_small_text(self, compos, frame_rgb, JSON_Processor, frame_number):
