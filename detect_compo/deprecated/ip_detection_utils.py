@@ -8,25 +8,25 @@ C = Config()
 
 
 # detect object(connected region)
-# def boundary_bfs_connected_area(img, x, y, mark):
-#     def neighbor(img, x, y, mark, stack):
-#         for i in range(x - 1, x + 2):
-#             if i < 0 or i >= img.shape[0]: continue
-#             for j in range(y - 1, y + 2):
-#                 if j < 0 or j >= img.shape[1]: continue
-#                 if img[i, j] == 255 and mark[i, j] == 0:
-#                     stack.append([i, j])
-#                     mark[i, j] = 255
-#
-#     stack = [[x, y]]  # points waiting for inspection
-#     area = [[x, y]]  # points of this area
-#     mark[x, y] = 255  # drawing broad
-#
-#     while len(stack) > 0:
-#         point = stack.pop()
-#         area.append(point)
-#         neighbor(img, point[0], point[1], mark, stack)
-#     return area
+def boundary_bfs_connected_area(img, x, y, mark):
+    def neighbor(img, x, y, mark, stack):
+        for i in range(x - 1, x + 2):
+            if i < 0 or i >= img.shape[0]: continue
+            for j in range(y - 1, y + 2):
+                if j < 0 or j >= img.shape[1]: continue
+                if img[i, j] == 255 and mark[i, j] == 0:
+                    stack.append([i, j])
+                    mark[i, j] = 255
+
+    stack = [[x, y]]  # points waiting for inspection
+    area = [[x, y]]  # points of this area
+    mark[x, y] = 255  # drawing broad
+
+    while len(stack) > 0:
+        point = stack.pop()
+        area.append(point)
+        neighbor(img, point[0], point[1], mark, stack)
+    return area
 
 
 # def line_check_perpendicular(lines_h, lines_v, max_thickness):

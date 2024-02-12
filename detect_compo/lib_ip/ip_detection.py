@@ -1,3 +1,5 @@
+import copy
+
 import mkl
 # mkl.set_num_threads(1)
 import cv2
@@ -9,6 +11,7 @@ import detect_compo.lib_ip.ip_preprocessing as pre
 from detect_compo.lib_ip.Component import Component
 import detect_compo.lib_ip.Component as Compo
 import detect_compo.lib_ip.visualize_util as visualizer
+
 from config.CONFIG import Configuration as Config
 C = Config()
 
@@ -444,7 +447,251 @@ def component_detection(binary, min_obj_area =C.min_object_area,
         print('Area:%d' % (len(region)))
         draw.draw_boundary(compos_all, binary.shape, show=True)
 
-    #draw.draw_boundary(compos_all, binary.shape, show=True)
+    draw.draw_boundary(compos_all, binary.shape, show=True)
+    if rec_detect:
+        return compos_rec, compos_nonrec
+    else:
+        return compos_all
+
+def boundary_bfs_connected_area(img, x, y, mark):
+    def neighbor(img, x, y, mark, stack):
+        for i in range(x - 1, x + 2):
+            if i < 0 or i >= img.shape[0]: continue
+            for j in range(y - 1, y + 2):
+                if j < 0 or j >= img.shape[1]: continue
+                if img[i, j] == 255 and mark[i, j] == 0:
+                    stack.append([i, j])
+                    mark[i, j] = 255
+
+    stack = [[x, y]]  # points waiting for inspection
+    area = [[x, y]]  # points of this area
+    mark[x, y] = 255  # drawing broad
+
+    while len(stack) > 0:
+        point = stack.pop()
+        area.append(point)
+        neighbor(img, point[0], point[1], mark, stack)
+    return area
+
+def get_region_bfs(binary, i, j, mask):
+    # get connected area
+    region = boundary_bfs_connected_area(binary, i, j, mask)
+    return region
+def get_region_floodfill(binary,i,j,mask):
+    min_obj_area = 1 #C.min_object_area
+    mask_copy = mask.copy()
+    ff = cv2.floodFill(binary, mask, (j, i), None, 0, 0, cv2.FLOODFILL_MASK_ONLY)
+    if ff[0] < min_obj_area: return None
+    mask_copy = mask - mask_copy
+    region = np.reshape(cv2.findNonZero(mask_copy[1:-1, 1:-1]), (-1, 2))
+    region = [(p[1], p[0]) for p in region]
+
+    return region
+def component_detection_simplified_floodfill(binary, min_obj_area =C.min_object_area,
+                        line_thickness=C.THRESHOLD_LINE_THICKNESS,
+                        min_rec_evenness=C.THRESHOLD_REC_MIN_EVENNESS,
+                        max_dent_ratio=C.THRESHOLD_REC_MAX_DENT_RATIO,
+                        step_h = 5, step_v = 2,
+                        rec_detect=False, show=False, test=False):
+
+    mask = np.zeros((binary.shape[0] + 2, binary.shape[1] + 2), dtype=np.uint8)
+    compos_all = []
+    compos_rec = []
+    compos_nonrec = []
+    row, column = binary.shape[0], binary.shape[1]
+    for i in range(0, row, step_h):
+        for j in range(i % 2, column, step_v):
+            if binary[i, j] == 255 and mask[i, j] == 0:
+
+                region = get_region_floodfill(binary, i,j, mask)
+                if region ==None:
+                    continue
+                # filter out some compos
+                component = Component(region, binary.shape)
+                # calculate the boundary of the connected area
+                # ignore small area
+                # if component.width <= C.minimum_component_width or component.height <= C.minimum_component_height:
+                #     continue
+                # if component.width > C.maximum_component_width or component.height > C.maximum_component_height:
+                #     continue
+                # check if it is line by checking the length of edges
+                # if component.compo_is_line(line_thickness):
+                #     continue
+
+                if test:
+                    print('Area:%d' % (len(region)))
+                    draw.draw_boundary([component], binary.shape, show=True)
+
+                compos_all.append(component)
+
+                if rec_detect:
+                    # rectangle check
+                    if component.compo_is_rectangle(min_rec_evenness, max_dent_ratio):
+                        component.rect_ = True
+                        compos_rec.append(component)
+                    else:
+                        component.rect_ = False
+                        compos_nonrec.append(component)
+
+    if show:
+        print('Area:%d' % (len(region)))
+        draw.draw_boundary(compos_all, binary.shape, show=True)
+
+    draw.draw_boundary(compos_all, binary.shape, show=True, name='ffill')
+    if rec_detect:
+        return compos_rec, compos_nonrec
+    else:
+        return compos_all
+
+def get_region_floodfill_rgb(binary,rgb,i,j,mask):
+    min_obj_area = 1 #C.min_object_area
+    mask_copy = mask.copy()
+
+    ff = cv2.floodFill(rgb, mask, (j, i), None, 0, 0, cv2.FLOODFILL_MASK_ONLY)
+
+    if ff[0] < min_obj_area: return None
+    mask_copy = mask - mask_copy
+    region = np.reshape(cv2.findNonZero(mask_copy[1:-1, 1:-1]), (-1, 2))
+    region = [(p[1], p[0]) for p in region]
+
+    return region
+def component_detection_simplified_floodfill_rgb(binary,rgb, min_obj_area =C.min_object_area,
+                        line_thickness=C.THRESHOLD_LINE_THICKNESS,
+                        min_rec_evenness=C.THRESHOLD_REC_MIN_EVENNESS,
+                        max_dent_ratio=C.THRESHOLD_REC_MAX_DENT_RATIO,
+                        step_h = 5, step_v = 2,
+                        rec_detect=False, show=False, test=False):
+
+    mask = np.zeros((binary.shape[0] + 2, binary.shape[1] + 2), dtype=np.uint8)
+    compos_all = []
+    compos_rec = []
+    compos_nonrec = []
+    row, column = binary.shape[0], binary.shape[1]
+
+    rgb_t = copy.deepcopy(rgb)
+    cv2.imshow('rgb', rgb_t)
+    cv2.waitKey(10)
+    #
+    blur = cv2.bilateralFilter(rgb_t, 9, 75, 75)
+
+    cv2.imshow('blurred_rgb', blur)
+    cv2.waitKey(10)
+
+    contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(rgb_t, contours, -1, (0, 255, 0), 3)
+
+    cv2.imshow('cont_rgb_bin', rgb_t)
+    cv2.waitKey(10)
+
+
+    grey_frame = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
+    gradn = pre.gray_to_gradient(grey_frame)
+    binn = pre.grad_to_binary(gradn, C.minimum_gradient_difference)
+
+    contours, hierarchy = cv2.findContours(binn, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(blur, contours, -1, (0, 255, 0), thickness=3, hierarchy=hierarchy, maxLevel=1)
+
+    cv2.imshow('cont_blur_binn', blur)
+    cv2.waitKey(10)
+
+
+    rgb = blur
+
+    for i in range(0, row, step_h):
+        for j in range(i % 2, column, step_v):
+            if binary[i, j] == 255 and mask[i, j] == 0:
+
+                region = get_region_floodfill_rgb(binary, rgb,i,j, mask)
+                if region ==None:
+                    continue
+                # filter out some compos
+                component = Component(region, binary.shape)
+                # calculate the boundary of the connected area
+                # ignore small area
+                # if component.width <= C.minimum_component_width or component.height <= C.minimum_component_height:
+                #     continue
+                # if component.width > C.maximum_component_width or component.height > C.maximum_component_height:
+                #     continue
+                # check if it is line by checking the length of edges
+                # if component.compo_is_line(line_thickness):
+                #     continue
+
+                if test:
+                    print('Area:%d' % (len(region)))
+                    draw.draw_boundary([component], binary.shape, show=True)
+
+                compos_all.append(component)
+
+                if rec_detect:
+                    # rectangle check
+                    if component.compo_is_rectangle(min_rec_evenness, max_dent_ratio):
+                        component.rect_ = True
+                        compos_rec.append(component)
+                    else:
+                        component.rect_ = False
+                        compos_nonrec.append(component)
+
+    if show:
+        print('Area:%d' % (len(region)))
+        draw.draw_boundary(compos_all, binary.shape, show=True)
+
+    draw.draw_boundary(compos_all, binary.shape, show=True, name='ffill_rgb')
+    if rec_detect:
+        return compos_rec, compos_nonrec
+    else:
+        return compos_all
+
+def component_detection_simplified_bfs(binary, min_obj_area =C.min_object_area,
+                        line_thickness=C.THRESHOLD_LINE_THICKNESS,
+                        min_rec_evenness=C.THRESHOLD_REC_MIN_EVENNESS,
+                        max_dent_ratio=C.THRESHOLD_REC_MAX_DENT_RATIO,
+                        step_h = 5, step_v = 2,
+                        rec_detect=False, show=False, test=False):
+
+    mask = np.zeros((binary.shape[0] + 2, binary.shape[1] + 2), dtype=np.uint8)
+    compos_all = []
+    compos_rec = []
+    compos_nonrec = []
+    row, column = binary.shape[0], binary.shape[1]
+    for i in range(0, row, step_h):
+        for j in range(i % 2, column, step_v):
+            if binary[i, j] == 255 and mask[i, j] == 0:
+
+                region = get_region_bfs(binary, i,j, mask)
+                if region ==None:
+                    continue
+                # filter out some compos
+                component = Component(region, binary.shape)
+                # calculate the boundary of the connected area
+                # ignore small area
+                # if component.width <= C.minimum_component_width or component.height <= C.minimum_component_height:
+                #     continue
+                # if component.width > C.maximum_component_width or component.height > C.maximum_component_height:
+                #     continue
+                # check if it is line by checking the length of edges
+                # if component.compo_is_line(line_thickness):
+                #     continue
+
+                if test:
+                    print('Area:%d' % (len(region)))
+                    draw.draw_boundary([component], binary.shape, show=True)
+
+                compos_all.append(component)
+
+                if rec_detect:
+                    # rectangle check
+                    if component.compo_is_rectangle(min_rec_evenness, max_dent_ratio):
+                        component.rect_ = True
+                        compos_rec.append(component)
+                    else:
+                        component.rect_ = False
+                        compos_nonrec.append(component)
+
+    if show:
+        print('Area:%d' % (len(region)))
+        draw.draw_boundary(compos_all, binary.shape, show=True)
+
+    draw.draw_boundary(compos_all, binary.shape, show=True, name='bfs')
     if rec_detect:
         return compos_rec, compos_nonrec
     else:

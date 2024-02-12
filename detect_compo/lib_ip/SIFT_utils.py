@@ -7,9 +7,9 @@ Created on Tue Apr 18 19:54:24 2023
 """
 
 import mkl
-mkl.set_num_threads(1)
+# mkl.set_num_threads(1)
 import cv2
-cv2.setNumThreads(1)
+# cv2.setNumThreads(1)
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt

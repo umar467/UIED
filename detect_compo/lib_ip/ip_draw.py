@@ -85,7 +85,7 @@ def draw_line(org, lines, color=(0, 255, 0), show=False):
     return board
 
 
-def draw_boundary(components, shape, show=False):
+def draw_boundary(components, shape, show=False, name ='rec'):
     """
     Draw boundary of objects on the black withe
     :param components: boundary: [top, bottom, left, right]
@@ -104,7 +104,7 @@ def draw_boundary(components, shape, show=False):
         for point in component.boundary[2] + component.boundary[3]:
             board[point[0], point[1]] = 255
     if show:
-        cv2.imshow('rec', board)
+        cv2.imshow(name, board)
         cv2.waitKey(1)
     return board
 

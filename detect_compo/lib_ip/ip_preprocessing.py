@@ -40,7 +40,8 @@ def conver_frames_to_grey(frames):
     grey_frames = np.array(grey_frames)
     return grey_frames
 
-def gray_to_gradient(img):
+
+def gray_to_gradient_old(img):
     if len(img.shape) == 3:
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     img_f = np.copy(img)
@@ -51,6 +52,35 @@ def gray_to_gradient(img):
     dst1 = abs(cv2.filter2D(img_f, -1, kernel_h))
     dst2 = abs(cv2.filter2D(img_f, -1, kernel_v))
     gradient = (dst1 + dst2).astype('uint8')
+    return gradient
+
+
+def gray_to_gradient(img):
+
+    # return gray_to_gradient_old(img)
+
+    if len(img.shape) == 3:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img_f = np.copy(img)
+    img_f = img_f.astype("float")
+
+
+    # kernel_h = np.array([[-1.,0,1.], [-2.,0.,2.], [-1.,0,1.]])
+    # kernel_v = np.array([[1.,2.,1.], [0,0,0], [-1.,-2.,-1.]])
+    # kernel_45 = np.array([[0,0,1.], [0,-1.,0], [1.,0,0]])
+    # kernel_135 = np.array([[1.,0,0], [0,-1.,0], [0,0,1.]])
+    kernel_h = np.array([[0, 0, 0], [0, -1., 1.], [0, 0, 0]])
+    kernel_v = np.array([[0, 0, 0], [0, -1., 0], [0, 1., 0]])
+    kernel_45 = np.array([[0, 0, 0], [0, -1., 0], [1., 0, 0]])
+    kernel_135 = np.array([[0, 0, 0], [0, -1., 0], [0, 0, 1.]])
+
+    dst1 = abs(cv2.filter2D(img_f, -1, kernel_h))
+    dst2 = abs(cv2.filter2D(img_f, -1, kernel_v))
+    dst3 = abs(cv2.filter2D(img_f, -1, kernel_45))
+    dst4 = abs(cv2.filter2D(img_f, -1, kernel_135))
+    gradient = (dst1 + dst2 + dst3 + dst4).astype('uint8')
+    # gradient = gradient/gradient.max()
+    # gradient = (gradient*255).astype('uint8')
     return gradient
 
 
