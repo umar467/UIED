@@ -110,8 +110,10 @@ class SIFT_Processor:
         fig.savefig(output_path)
         plt.close()
 
-    def show_SIFT_points(self, rframe, descriptors, keypoints, name='SIFTs', use_cv=False, static_points=None):
+    def get_SIFT_point_mask(self, static_points):
         # draw_frame = cv2.drawKeypoints(frame, keypoints, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+        # compare results and implementation
+        rframe = self.current_frame
         frame = np.zeros_like(rframe)
         for pt, size in static_points:
             pt = tuple(pt.astype(int))
@@ -119,15 +121,7 @@ class SIFT_Processor:
             if size<10:size=size*5
             if size<15:size=size*2
             frame = cv2.circle(frame, pt, int(size), (255, 255, 255), cv2.FILLED, 8,0)
-        if use_cv:
-            cv2.imshow(name, rframe*frame)
-            cv2.waitKey(1000)
-        else:
-            import matplotlib.pyplot as plt
-            plt.imshow(frame)
-            plt.show()
-
-        return
+        return frame
 
     def get_static_pixels(self, frames, JSON_Processor):
         for frame in frames:
@@ -162,7 +156,6 @@ class SIFT_Processor:
         else:
             new_ui = False
 
-        self.show_SIFT_points(self.current_frame,[], good_des, name='SIFT_COMMON', use_cv=True, static_points=static_points)
         self.static_objects.append(static_points)
         self.update_stats(good_points, static_points)
         return static_points, new_ui

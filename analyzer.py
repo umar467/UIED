@@ -220,7 +220,7 @@ class Analyzer:
             if contrast >= 0.10:
                 color = [0, 255, 0]  # Green in BGR
             percent_contrast_difference = abs(contrast - cb_contrast) / contrast
-            print(percent_contrast_difference)
+            #print(percent_contrast_difference)
             if abs(contrast - cb_contrast) > self.config.max_cblind_contrast_delta:
                 #print(abs(contrast - cb_contrast))
                 warning = {'warning_type': 'Contrast Diff. b/w CB & RGB', 'bbox': bbox,
@@ -270,7 +270,7 @@ class Analyzer:
         #contrast_frame = self.compare_contrast(frame_rgb)
         contrast_frame = self.convert_to_contrast_fast(frame_rgb)
         cb_frame = convert_color_blind_fast(frame_rgb, 2)
-        cb_frame = convert_color_blind(frame_rgb, 2)
+        # cb_frame = convert_color_blind(frame_rgb, 2)
         contrast_cb_frame = self.convert_to_contrast_fast(cb_frame)
         #contrast_cb_frame_show = self.get_visual_raw_contrast(contrast_cb_frame_raw)
 
@@ -293,8 +293,8 @@ class Analyzer:
 
         #cv2.imwrite(self.config.output_folder + '/frame_'+str(frame_count)+'.png', frame_rgb)
         #cv2.imwrite(self.config.output_folder + '/cb_frame_'+str(frame_count)+'.png', cb_frame)
-        converted_frame = np.hstack([cb_frame ,contrast_frame_from_component_contrast, visual_raw_contrast])
-        cv2.imwrite(self.config.output_folder + '/cblind_check_'+str(frame_count)+'.png', converted_frame)
+        # converted_frame = np.hstack([cb_frame ,contrast_frame_from_component_contrast, visual_raw_contrast])
+        # cv2.imwrite(self.config.output_folder + '/cblind_check_'+str(frame_count)+'.png', converted_frame)
 
         # cv2.imshow('frame', frame_rgb)
         # cv2.imshow('cb_frame', cb_frame)
