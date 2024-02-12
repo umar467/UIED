@@ -115,6 +115,14 @@ def extract_common_gradients(frames):
     #visualizer.show_frame(current_grad, use_cv=True, name='common_grad_frame')
     return current_grad
 
+def convert_rgb_frame_to_binary(frame):
+    grey_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    grad_frame = gray_to_gradient(grey_frame)
+    binary_frame = grad_to_binary(grad_frame, config.minimum_gradient_difference)
+    return binary_frame
+
+
+
 def convert_frame_to_binary(frame):
     binary = grad_to_binary(frame, config.minimum_gradient_difference)
     morphed_binary = cv2.dilate(binary, None, iterations=config.binary_dilation_iterations)

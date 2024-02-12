@@ -65,7 +65,7 @@ def process_video(config):
 
     while(video_reader_object.has_enough_frames()):
 
-        current_frame_buffer_rgb = video_reader_object.get_Frames()
+        current_frame_buffer_rgb, frame_numbers = video_reader_object.get_Frames()
         current_frame_buffer_grey = pre.conver_frames_to_grey(current_frame_buffer_rgb)
         current_frame_buffer_gradients = pre.conver_frames_to_gradient(current_frame_buffer_grey)
         common_gradients = pre.extract_common_gradients(current_frame_buffer_gradients)
@@ -219,14 +219,15 @@ def process_video(config):
 
 
 
-        static_pixels, new_ui = SIFT_processor.get_static_pixels(current_frame_buffer_grey, JSON_Processor)
-        sift_point_mask = SIFT_processor.get_SIFT_point_mask(static_pixels)
+        static_pixels, new_ui, sift_point_mask = SIFT_processor.get_static_pixels(current_frame_buffer_grey, JSON_Processor)
+
 
         binary_image = pre.convert_frame_to_binary(current_frame_buffer_gradients[0])
         binary_image = pre.grad_to_binary(current_frame_buffer_gradients[0], config.minimum_gradient_difference)
         visualizer.show_frame(binary_image, use_cv=True, name='binary_image')
         current_frame_rgb = current_frame_buffer_rgb[-1]
         current_frame_grey = current_frame_buffer_grey[-1]
+        current_frame_number = frame_numbers[-1]
         frame_number = video_reader_object.current_rgb_frame_number
         text_components = Text_Extractor.detect_text_from_frame(current_frame_rgb)
         non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor, detected_text_components=text_components, rgb_frame = current_frame_rgb)
@@ -238,7 +239,8 @@ def process_video(config):
                                                           fill=False)
         analyzer.analyze_show(detected_components, current_frame_rgb,
                               video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
-                              config, detection_frame, JSON_Processor)
+                              config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
+
         if new_ui:
             visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
 
@@ -256,6 +258,6 @@ def process_video(config):
                                                               fill=False)
             analyzer.analyze_show(detected_components, current_frame_rgb,
                                                     video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
-                                                    config, detection_frame, JSON_Processor)
+                                                    config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
 
     pbar.close()

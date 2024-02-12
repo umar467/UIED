@@ -67,7 +67,7 @@ class Analyzer:
                     y_img[i, j] = (img[i, j + 1] + 0.05) / (img[i, j] + 0.05)
 
         # parity with old code
-        cimg = (x_img + y_img) / 2
+        cimg = (x_img + y_img)# / 2
 
         return cimg
 
@@ -180,6 +180,8 @@ class Analyzer:
         black += 1
         score = white / black
         return score
+
+
     def save_contrast_examples(self, compos, frame_rgb, JSON_Processor, frame_count):
         import os
         bad = self.config.output_folder + '/contrast_worst/'
@@ -262,27 +264,34 @@ class Analyzer:
         #cv2.imwrite(self.config.output_folder + '/contrast_raw_'+str(frame_count)+'.png', final_contrast)
         return final_contrast
 
-    def analyze_show(self, compos, frame_rgb, frame_count, DB_Compos, config, detection_frame, JSON_Processor):
+    def analyze_show(self, compos, frame_rgb, frame_count, DB_Compos, config, detection_frame, JSON_Processor, current_frame_number, video_reader_object):
         frame_count = int(frame_count)
         self.config = config
 
 
         #contrast_frame = self.compare_contrast(frame_rgb)
         contrast_frame = self.convert_to_contrast_fast(frame_rgb)
-        cb_frame = convert_color_blind_fast(frame_rgb, 2)
+        cb_frame = convert_color_blind_fast(frame_rgb, 0)
         # cb_frame = convert_color_blind(frame_rgb, 2)
         contrast_cb_frame = self.convert_to_contrast_fast(cb_frame)
         #contrast_cb_frame_show = self.get_visual_raw_contrast(contrast_cb_frame_raw)
 
+        high_res_rgb_frame = video_reader_object.get_specific_frame(current_frame_number, downsampling=False)
+        contrast_frame = self.convert_to_contrast_fast(high_res_rgb_frame)
+        contrast_frame = self.get_visual_raw_contrast(contrast_frame)
+        cb_frame = convert_color_blind_fast(high_res_rgb_frame, 0)
+        running_id = 0
         for compo in compos:
             score = self.get_component_contrast(compo, contrast_frame)
             compo.contrast_scores.append(score)
             cb_score = self.get_component_contrast(compo, contrast_cb_frame)
             compo.contrast_cb_scores.append(cb_score)
+            self.get_component_contrast_color_based(compo, frame_rgb, current_frame_number, video_reader_object, compos, cb_frame, contrast_frame, high_res_rgb_frame, running_id)
+            running_id += 1
 
         contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count, cb_frame)
         self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
-        visual_raw_contrast = self.get_visual_raw_contrast(contrast_frame)
+        #visual_raw_contrast = self.get_visual_raw_contrast(contrast_frame)
         #visual_raw_contrast = self.show_contrast_raw(visual_raw_contrast, frame_count)
         #visual_raw_contrast = self.process_raw_visual_contrast(compos, visual_raw_contrast, JSON_Processor, frame_count, cb_frame)
 
@@ -308,6 +317,141 @@ class Analyzer:
 
         # the im show command is not working in headless mode
 
+    def get_component_contrast_color_based(self, compo, rgb_frame, current_frame_number, video_reader_object, compos, cb_frame, contrast_frame, high_res_rgb_frame, running_id):
+
+
+        orig_bbox = compo.bbox.put_bbox()
+
+        bbox = orig_bbox
+        # increase bbox boundary by 20% to get a better crop
+        x = bbox[0]
+        y = bbox[1]
+        xmax = bbox[2]
+        ymax = bbox[3]
+        w = bbox[2]-bbox[0]
+        h = bbox[3]-bbox[1]
+
+        x_delta = w*0.2
+        y_delta = h*0.2
+        delta = min(x_delta, y_delta)
+
+        x = x - delta
+        y = y - delta
+        xmax = xmax + delta
+        ymax = ymax + delta
+
+        x = int(x)
+        y = int(y)
+        xmax = int(xmax)
+        ymax = int(ymax)
+
+        bbox = [x, y, xmax, ymax]
+
+        # bbox = [int(bbox[0] - bbox[2] * 0.2), int(bbox[1] - bbox[3] * 0.2), int(bbox[2] * 1.4), int(bbox[3] * 1.4)]
+        #
+        # bbox = [int(bbox[0] - bbox[2] * 0.2), int(bbox[1] - bbox[3] * 0.2), int(bbox[2] + bbox[2] * 0.2),
+        #         int(bbox[3] + bbox[3] * 0.2)]
+
+        element_crop = rgb_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+
+
+
+
+
+        low_res_image_shape = rgb_frame.shape
+        high_res_image_shape = high_res_rgb_frame.shape
+        low_res_bbox = bbox
+        # convert low_res_bbox to high_res_bbox
+        high_res_bbox = [int(low_res_bbox[0] * high_res_image_shape[1] / low_res_image_shape[1]),
+                            int(low_res_bbox[1] * high_res_image_shape[0] / low_res_image_shape[0]),
+                            int(low_res_bbox[2] * high_res_image_shape[1] / low_res_image_shape[1]),
+                            int(low_res_bbox[3] * high_res_image_shape[0] / low_res_image_shape[0])]
+
+
+        full_res_element_crop = high_res_rgb_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
+        contrast_crop = contrast_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
+        cb_crop = cb_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
+        # cv2.imshow('contrast_frame', contrast_frame)
+        # cv2.waitKey(10)
+        #cv2.imwrite(self.config.output_folder + '/contrast_frame_'+str(current_frame_number)+'.png', contrast_frame)
+        cv2.imshow('contrast_crop', contrast_crop)
+        cv2.waitKey(10)
+        cv2.imwrite(self.config.output_folder + '/contrast_crop_'+str(current_frame_number)+'_'+str(running_id)+'.png', contrast_crop)
+        cv2.imshow('cb_crop', cb_crop)
+        cv2.waitKey(10)
+        cv2.imwrite(self.config.output_folder + '/cb_crop_'+str(current_frame_number)+'_'+str(running_id)+'.png', cb_crop)
+        # cv2.imshow('cblind_frame', cb_frame)
+        # cv2.waitKey(10)
+        neighbour_frames = video_reader_object.get_neighbours_of_specific_frame(current_frame_number, 10, downsampling=False)
+        neighbour_frames = np.array(neighbour_frames)
+        # neighbour_frames = neighbour_frames >>2
+        # neighbour_frames = neighbour_frames <<2
+        std = np.std(neighbour_frames, axis=0)
+        std = np.mean(std, axis=2)
+        std = std*(std<(std.mean()))
+        std = std>0
+        std = np.stack([std, std, std], axis=2)
+        # min_std_rgb = ndimage.minimum_filter(std_rgb, size=20)
+        std_filtered_frame = std*high_res_rgb_frame
+        # cv2.imshow('std', std_filtered_frame)
+        # cv2.waitKey(10)
+        #cv2.imwrite(self.config.output_folder + '/std_filtered_frame_'+str(current_frame_number)+'.png', std_filtered_frame)
+        std_fileterd_element_crop = std_filtered_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
+        std_filtered_element_crop_mean = std_fileterd_element_crop.mean()
+        # print(std_filtered_element_crop_mean)
+        std_filtered_element_crop = cv2.putText(std_fileterd_element_crop, str(std_filtered_element_crop_mean), (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        # cv2.imshow('std_crop', std_fileterd_element_crop)
+        # cv2.waitKey(10)
+        #cv2.imwrite(self.config.output_folder + '/std_filtered_element_crop_'+str(current_frame_number)+'_'+str(running_id)+'.png', std_fileterd_element_crop)
+
+        orig_crop = rgb_frame[orig_bbox[1]:orig_bbox[3], orig_bbox[0]:orig_bbox[2]]
+        # cv2.imshow('orig_crop', orig_crop)
+        # cv2.waitKey(10)
+
+        cv2.imshow('full_res_compo_crop', full_res_element_crop)
+        cv2.waitKey(10)
+        cv2.imwrite(self.config.output_folder + '/full_res_element_crop_'+str(current_frame_number)+'_'+str(running_id)+'.png', full_res_element_crop)
+
+        import detect_compo.lib_ip.ip_detection as det
+        import detect_compo.lib_ip.ip_preprocessing as pre
+
+        _, board = det.component_detection_simplified_bfs(pre.convert_rgb_frame_to_binary(full_res_element_crop), window_name='full_res_element_crop')
+        cv2.imwrite(self.config.output_folder + '/board_'+str(current_frame_number)+'_'+str(running_id)+'.png', board)
+        # det.component_detection_simplified_bfs(pre.convert_rgb_frame_to_binary(std_fileterd_element_crop), window_name='std_filtered_element_crop')
+        # det.component_detection_simplified_bfs(pre.convert_rgb_frame_to_binary(orig_crop), window_name='orig_crop')
+
+        # cv2.imshow('compo_crop', element_crop)
+        # cv2.waitKey(10)
+
+        # get_compos_pallete = self.get_compos_pallete(compos, rgb_frame)
+        # get_rgb_color_pallete_frame = self.get_rgb_color_pallete_frame(compos, rgb_frame)
+
+
+        # convert to LAB
+        lab = cv2.cvtColor(full_res_element_crop, cv2.COLOR_BGR2LAB)
+        # split the LAB image to L, A, and B channels
+        l, a, b = cv2.split(lab)
+        # apply CLAHE to L channel
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        cl = clahe.apply(l)
+        # merge the CLAHE enhanced L channel with the A and B channel
+        limg = cv2.merge((cl, a, b))
+        # convert back to BGR
+        final = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+
+        # cv2.imshow('l', l)
+        # cv2.waitKey(10)
+        # cv2.imshow('cl', cl)
+        # cv2.waitKey(10)
+        # cv2.imshow('a', a)
+        # cv2.waitKey(10)
+        # cv2.imshow('b', b)
+        # cv2.waitKey(10)
+        # cv2.imshow('limg', limg)
+        # cv2.waitKey(10)
+        #
+        # cv2.imshow('contrast_processing', final)
+        # cv2.waitKey(10)
 
     def check_small_text(self, compos, frame_rgb, JSON_Processor, frame_number):
         frame_rgb = frame_rgb.copy()
@@ -342,7 +486,9 @@ class Analyzer:
         palplot_img = np.zeros((100, 100 * len(compos_by_color), 3), dtype=np.uint8)
         for i, color in enumerate(compos_by_color):
             palplot_img[:, i * 100:(i + 1) * 100] = np.array(color, dtype=np.uint8)
-        cv2.imwrite(self.config.output_folder + 'compo_color_pallete.png', palplot_img)
+        cv2.imshow('compo_color_pallete', palplot_img)
+        cv2.waitKey(10)
+        #cv2.imwrite(self.config.output_folder + 'compo_color_pallete.png', palplot_img)
         return palplot_img
 
     def get_rgb_color_pallete_frame(self, compos, frame_rgb):
@@ -362,5 +508,7 @@ class Analyzer:
         palplot_img = np.zeros((100, 100*len(unique_colors), 3), dtype=np.uint8)
         for i, color in enumerate(unique_colors):
             palplot_img[:, i*100:(i+1)*100] = np.array(color, dtype=np.uint8)
-        cv2.imwrite(self.config.output_folder + 'frame_color_pallete_'+str(frame_count)+'.png', palplot_img)
+        cv2.imshow('frame_color_pallete', palplot_img)
+        cv2.waitKey(10)
+        # cv2.imwrite(self.config.output_folder + 'frame_color_pallete_'+str(frame_count)+'.png', palplot_img)
         return palplot_img

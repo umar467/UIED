@@ -66,6 +66,8 @@ class Compo_Database:
 
         return [total_matched, total_new, ids_in_current_frame]
     def compare_with_previously_detected_components(self, components, frame_number, frame, JSON_Processor, config,  force_check_previous_componenets=True):
+        force_check_added = 0
+        duplicate_removed = 0
         if self.loaded_compos == 0:
             self.initialize_database(components, frame_number, frame, config)
             JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(components))
@@ -99,6 +101,7 @@ class Compo_Database:
                             previous_component.bbox_historical.append(previous_component.bbox.put_bbox())
                             updated_compos.append(previous_component)
                             #print('Addded extra 111')
+                            force_check_added+=1
 
         # check duplicate components
         for component in updated_compos:
@@ -112,6 +115,7 @@ class Compo_Database:
                             component.bbox_historical.append(bbox_historical)
                         updated_compos.remove(previous_component)
                         #print('Removed duplicate')
+                        duplicate_removed+=1
 
         # Remove invalid components
         for component in updated_compos:
@@ -120,8 +124,10 @@ class Compo_Database:
                 updated_compos.remove(component)
 
         self.last_frame = frame
-        JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(updated_compos))
+        db_stats_current = self.compute_frame_statistics(updated_compos)
+        JSON_Processor.add_database_statistics_to_current_frame(db_stats_current)
         self.processed_frames += 1
+        print(f'Frame {frame_number} - {len(updated_compos)} components detected, {force_check_added} force check added, {duplicate_removed} duplicates removed')
         return updated_compos
 
     def component_present_in_frame_historic(self, component, frame):

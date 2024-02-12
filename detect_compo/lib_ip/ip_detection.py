@@ -646,7 +646,7 @@ def component_detection_simplified_bfs(binary, min_obj_area =C.min_object_area,
                         min_rec_evenness=C.THRESHOLD_REC_MIN_EVENNESS,
                         max_dent_ratio=C.THRESHOLD_REC_MAX_DENT_RATIO,
                         step_h = 5, step_v = 2,
-                        rec_detect=False, show=False, test=False):
+                        rec_detect=False, show=False, test=False, window_name = 'bfs'):
 
     mask = np.zeros((binary.shape[0] + 2, binary.shape[1] + 2), dtype=np.uint8)
     compos_all = []
@@ -691,8 +691,8 @@ def component_detection_simplified_bfs(binary, min_obj_area =C.min_object_area,
         print('Area:%d' % (len(region)))
         draw.draw_boundary(compos_all, binary.shape, show=True)
 
-    draw.draw_boundary(compos_all, binary.shape, show=True, name='bfs')
+    board = draw.draw_boundary(compos_all, binary.shape, show=True, name=window_name)
     if rec_detect:
         return compos_rec, compos_nonrec
     else:
-        return compos_all
+        return compos_all, board

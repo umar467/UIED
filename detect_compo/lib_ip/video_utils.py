@@ -36,12 +36,14 @@ class video_reader:
     def get_Frames(self):
         no_of_frames = self.config.frame_buffer_size
         frames = []
+        frame_numbers = []
         for _ in range(no_of_frames):
             frame = self.get_processed_frame()
             if frame is not None:
                 frames.append(frame)
+                frame_numbers.append(self.current_rgb_frame_number)
         frames = np.array(frames)
-        return frames
+        return frames, frame_numbers
 
     def get_all_Frames(self):
         no_of_frames = self.total_number_of_rgb_frames
@@ -56,7 +58,7 @@ class video_reader:
         return frames
 
 
-    def get_processed_frame(self, rgb_frame = None):
+    def get_processed_frame(self, rgb_frame = None, downsampling = True):
         '''
         Input: Objects internal frame read head
         Output: Returns the proper sized rgb_frame and its greyscale image
@@ -68,7 +70,10 @@ class video_reader:
         if self.config.input_frame_blur_kernel_size is not None:
             rgb_frame = cv2.medianBlur(rgb_frame, self.config.input_frame_blur_kernel_size)
         if self.config.resize_input_image_height is  not None:
-            rgb_frame = image_processing.resize_by_height(rgb_frame, self.config.resize_input_image_height)
+            if downsampling:
+                rgb_frame = image_processing.resize_by_height(rgb_frame, self.config.resize_input_image_height)
+            else:
+                rgb_frame = image_processing.resize_by_height(rgb_frame, rgb_frame.shape[0])
         #binary_rgb_frame, grey_frame = image_processing.binarization(rgb_frame, self.config.grad_min, self.config.morphology_size)
 
         # blur = cv2.bilateralFilter(rgb_t, 9, 75, 75)
@@ -110,14 +115,33 @@ class video_reader:
         else:
             print(f'rgb_frame Number Exceeds Video Length of {self.total_number_of_rgb_frames} rgb_frames !!')
             return None
-    def get_specific_frame(self, requested_rgb_frame_number):
+
+    def get_neighbours_of_specific_frame(self, requested_rgb_frame_number, no_of_neighbours, downsampling = True):
+        '''
+        Input: Takes a specific frame number as input
+        Output: Returns the N frames before and after the requested frame
+        '''
+        try:
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, requested_rgb_frame_number-no_of_neighbours)
+            frames = []
+            for _ in range(no_of_neighbours*2):
+                rgb_frame  = self.get_processed_frame(downsampling=downsampling)
+                frames.append(rgb_frame)
+            self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_rgb_frame_number-1)
+            return frames
+        except Exception as e:
+            print(f'rgb_frame Number Exceeds Video Length of {self.total_number_of_rgb_frames} rgb_frames !!')
+            return None
+
+
+    def get_specific_frame(self, requested_rgb_frame_number, downsampling = True):
         '''
         Input: Takes a specific frame number as input
         Output: Returns the proper sized RGB_frame and its greyscale image
         '''
         if requested_rgb_frame_number < self.total_number_of_rgb_frames:
             self.video.set(cv2.CAP_PROP_POS_FRAMES, requested_rgb_frame_number-1)
-            rgb_frame  = self.get_processed_frame()
+            rgb_frame  = self.get_processed_frame(downsampling=downsampling)
             self.video.set(cv2.CAP_PROP_POS_FRAMES, self.current_rgb_frame_number-1)
             return rgb_frame #self.get_processed_frame(rgb_frame)
         else:

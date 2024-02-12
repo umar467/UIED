@@ -229,7 +229,7 @@ def Save_plots_and_heatmpas(JSON_Processor, compos, frame, config):
     plt.close()
 
 
-    p = pd.DataFrame(fd[1], columns=['total_detected', 'filtered'])
+    p = pd.DataFrame(fd[1], columns=['prev_matched_detections', 'new_detections'])
     plot = p.plot(title='database filter stats');
     plot.set_xlabel("Frames x 10")
     plot.set_ylabel("Frequency")

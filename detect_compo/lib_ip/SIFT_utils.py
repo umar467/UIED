@@ -131,7 +131,8 @@ class SIFT_Processor:
         self.plot_SIFT_detection_plots()
         distance_average = self.global_distance/self.loaded_frames
         JSON_Processor.global_distance = distance_average
-        return static_pixels, new_ui
+        sift_point_mask = self.get_SIFT_point_mask(static_pixels)
+        return static_pixels, new_ui, sift_point_mask
     def get_static_objects(self, across_n_frames=10):
         """
         Input: greyscale Frame
