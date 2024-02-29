@@ -176,7 +176,10 @@ class SIFT_Processor:
             static_points = np.array(static_points)
             static_points = static_points[indices]
             static_points = static_points.squeeze()
-            static_points = static_points[:,[0,2]]
+            if static_points.shape[1]==3:
+                static_points = static_points[:,[0,2]]
+            else:
+                return []
             # static_points = points[indices]
             # static_points = static_points.squeeze()
         return static_points

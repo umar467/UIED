@@ -38,15 +38,15 @@ def process_video(config):
     '''
     video_reader_object = video_reader(config)
     start_head_location = video_reader_object.total_number_of_rgb_frames//2
-    start_head_location = 500
+    start_head_location = 100
     max_frames = 1100
     if video_reader_object.total_number_of_rgb_frames < start_head_location + 100:
         start_head_location = 0
         if video_reader_object.total_number_of_rgb_frames < 50:
             print("The video has less than 50 frames. Warning.")
     video_reader_object.skip_frames(start_head_location) # skipping the n-frames from the start
-    if video_reader_object.total_number_of_rgb_frames > max_frames:
-        video_reader_object.total_number_of_rgb_frames = max_frames
+    # if video_reader_object.total_number_of_rgb_frames > max_frames:
+    #     video_reader_object.total_number_of_rgb_frames = max_frames
     SIFT_processor = SIFT_bundle(config)
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
@@ -62,7 +62,7 @@ def process_video(config):
     pbar = TqdmCallback(total=video_reader_object.total_number_of_rgb_frames,
                         desc='Inspecting frames',
                         callback=config.progress_callback)
-
+    print_number =0
     while(video_reader_object.has_enough_frames()):
 
         current_frame_buffer_rgb, frame_numbers = video_reader_object.get_Frames()
@@ -224,25 +224,31 @@ def process_video(config):
 
         binary_image = pre.convert_frame_to_binary(current_frame_buffer_gradients[0])
         binary_image = pre.grad_to_binary(current_frame_buffer_gradients[0], config.minimum_gradient_difference)
-        visualizer.show_frame(binary_image, use_cv=True, name='binary_image')
+        #visualizer.show_frame(binary_image, use_cv=True, name='binary_image')
         current_frame_rgb = current_frame_buffer_rgb[-1]
         current_frame_grey = current_frame_buffer_grey[-1]
         current_frame_number = frame_numbers[-1]
         frame_number = video_reader_object.current_rgb_frame_number
         text_components = Text_Extractor.detect_text_from_frame(current_frame_rgb)
-        non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor, detected_text_components=text_components, rgb_frame = current_frame_rgb)
+        try:
+            non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor, detected_text_components=text_components, rgb_frame = current_frame_rgb)
+        except:
+            print('erreo')
         components = text_components + non_text_components
         detected_components = Compo_DB.compare_with_previously_detected_components(components, frame_number,
                                                                                    current_frame_grey, JSON_Processor, config,
                                                                                    force_check_previous_componenets=True)
         detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=True,
                                                           fill=False)
-        analyzer.analyze_show(detected_components, current_frame_rgb,
-                              video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
-                              config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
-
-        if new_ui:
-            visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
+        # save detection_frame
+        cv2.imwrite(config.output_folder + str(print_number) + '_.png', detection_frame)
+        print_number += 1
+        # analyzer.analyze_show(detected_components, current_frame_rgb,
+        #                       video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
+        #                       config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
+        #
+        # if new_ui:
+        #     visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
 
         pbar.update(10)
         JSON_Processor.next_frame()
@@ -251,13 +257,13 @@ def process_video(config):
 
 
 
-
-        if frame_number - last_frame > 100:
-            last_frame = frame_number
-            detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
-                                                              fill=False)
-            analyzer.analyze_show(detected_components, current_frame_rgb,
-                                                    video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
-                                                    config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
+        #
+        # if frame_number - last_frame > 100:
+        #     last_frame = frame_number
+        #     detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
+        #                                                       fill=False)
+        #     analyzer.analyze_show(detected_components, current_frame_rgb,
+        #                                             video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
+        #                                             config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
 
     pbar.close()

@@ -24,6 +24,17 @@ class Compo_Database:
 
 
     def compare_components(self, comp1, comp2, frame):
+        """
+                Compare two components based on their category and content.
+
+                Parameters:
+                comp1 (Component): First component to compare.
+                comp2 (Component): Second component to compare.
+                frame (np.array): Current frame.
+
+                Returns:
+                bool: True if components match, False otherwise.
+                """
         if comp1.category != comp2.category:
             return False
         if comp1.category == 'text':
@@ -39,6 +50,15 @@ class Compo_Database:
         return False
 
     def compute_frame_statistics(self, components):
+        """
+              Compute statistics for the current frame.
+
+              Parameters:
+              components (list): List of components in the current frame.
+
+              Returns:
+              list: Statistics for the current frame.
+              """
         if len(self.ids_in_last_frame)==0:
             for compo in components:
                 self.ids_in_last_frame.append(compo.id)
@@ -66,6 +86,22 @@ class Compo_Database:
 
         return [total_matched, total_new, ids_in_current_frame]
     def compare_with_previously_detected_components(self, components, frame_number, frame, JSON_Processor, config,  force_check_previous_componenets=True):
+
+        """
+                Compare current components with previously detected components.
+
+                Parameters:
+                components (list): List of components in the current frame.
+                frame_number (int): Current frame number.
+                frame (np.array): Current frame.
+                JSON_Processor (JSON_Processor): JSON processor instance.
+                config (CONFIG): Configuration instance.
+                force_check_previous_componenets (bool): Flag to force check previous components.
+
+                Returns:
+                list: Updated components.
+                """
+
         force_check_added = 0
         duplicate_removed = 0
         if self.loaded_compos == 0:
@@ -131,6 +167,16 @@ class Compo_Database:
         return updated_compos
 
     def component_present_in_frame_historic(self, component, frame):
+        """
+               Check if component is present in frame based on historical data.
+
+               Parameters:
+               component (Component): Component to check.
+               frame (np.array): Current frame.
+
+               Returns:
+               bool: True if component is present, False otherwise.
+               """
         return self.component_present_in_frame(component, frame, component.bbox.put_bbox())
         if len(component.detected_in_frames) > 5:
             look_up_bboxes = component.bbox_historical[-5:]
@@ -141,6 +187,17 @@ class Compo_Database:
                 return True
         return False
     def component_present_in_frame(self, component, frame, bbox):
+        """
+               Check if component is present in frame.
+
+               Parameters:
+               component (Component): Component to check.
+               frame (np.array): Current frame.
+               bbox (list): Bounding box of the component.
+
+               Returns:
+               bool: True if component is present, False otherwise.
+               """
         # check if component crop is present in frame and last frame
         image_size = (128,128)
         # bbox = component.bbox.put_bbox()
@@ -187,6 +244,15 @@ class Compo_Database:
             return True
         return False
     def initialize_database(self, components, frame_number, frame, config):
+        """
+                Initialize the database with the components of the first frame.
+
+                Parameters:
+                components (list): List of components in the first frame.
+                frame_number (int): First frame number.
+                frame (np.array): First frame.
+                config (CONFIG): Configuration instance.
+        """
         for component in components:
             component.detected_in_frames.append(frame_number)
             component.bbox_historical.append(component.bbox.put_bbox())
@@ -199,9 +265,23 @@ class Compo_Database:
         self.loaded_compos = len(self.compos)
         self.last_frame = frame
     def get_all_components(self):
+        """
+                Get all components in the database.
+
+                Returns:
+                list: List of all components in the database.
+        """
         return self.compos
 
     def save_component_as_png(self, component, frame, config):
+        """
+                Save component as a PNG image.
+                Parameters:
+                component (Component): Component to save.
+                frame (np.array): Current frame.
+                config (CONFIG): Configuration instance.
+        """
+
         bbox = component.bbox.put_bbox()
         crop = frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
         # reshape crop to 128x128 while preserving the aspect ratio

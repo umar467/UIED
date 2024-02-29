@@ -175,6 +175,9 @@ class Analyzer:
     def get_component_contrast(self, compo, contrast_frame):
         bbox = compo.bbox.put_bbox()
         element_crop = contrast_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+
+        cv2.imshow('oldcontrast', element_crop)
+        cv2.waitKey(0)
         white = np.count_nonzero(element_crop[element_crop > self.config.AA_contrast_ratio])
         black = np.count_nonzero(element_crop[element_crop < self.config.AA_contrast_ratio])
         black += 1
@@ -280,14 +283,25 @@ class Analyzer:
         contrast_frame = self.convert_to_contrast_fast(high_res_rgb_frame)
         contrast_frame = self.get_visual_raw_contrast(contrast_frame)
         cb_frame = convert_color_blind_fast(high_res_rgb_frame, 0)
+        cb_contrast_frame = self.convert_to_contrast_fast(cb_frame)
+        cb_contrast_frame = self.get_visual_raw_contrast(cb_contrast_frame)
         running_id = 0
         for compo in compos:
-            score = self.get_component_contrast(compo, contrast_frame)
+            # score, cb_score = self.get_component_contrast_color_based(compo, frame_rgb, current_frame_number,
+            #                                                           video_reader_object, compos, cb_frame,
+            #                                                           contrast_frame, cb_contrast_frame,
+            #                                                           high_res_rgb_frame, running_id)
+            score, cb_score = self.enhanced_get_component_contrast_color_based(compo, frame_rgb, current_frame_number,
+                                                                      video_reader_object, compos, cb_frame,
+                                                                      contrast_frame, cb_contrast_frame,
+                                                                      high_res_rgb_frame, running_id)
+            #score = self.get_component_contrast(compo, contrast_frame)
             compo.contrast_scores.append(score)
-            cb_score = self.get_component_contrast(compo, contrast_cb_frame)
+            #cb_score = self.get_component_contrast(compo, contrast_cb_frame)
             compo.contrast_cb_scores.append(cb_score)
-            self.get_component_contrast_color_based(compo, frame_rgb, current_frame_number, video_reader_object, compos, cb_frame, contrast_frame, high_res_rgb_frame, running_id)
             running_id += 1
+        # print the running_id right now
+
 
         contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count, cb_frame)
         self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
@@ -317,7 +331,132 @@ class Analyzer:
 
         # the im show command is not working in headless mode
 
-    def get_component_contrast_color_based(self, compo, rgb_frame, current_frame_number, video_reader_object, compos, cb_frame, contrast_frame, high_res_rgb_frame, running_id):
+    def _expand_bbox(self, bbox, expansion_ratio=0.2):
+        """Expand a bounding box by a certain ratio."""
+        x, y, xmax, ymax = bbox
+        w = xmax - x
+        h = ymax - y
+
+        delta = min(w, h) * expansion_ratio
+
+        return int(x - delta), int(y - delta), int(xmax + delta), int(ymax + delta)
+
+    def _get_high_res_bbox(self, low_res_shape, high_res_shape, low_res_bbox):
+        """Convert a low resolution bounding box to a high resolution one."""
+        x, y, xmax, ymax = low_res_bbox
+        return [
+            int(x * high_res_shape[1] / low_res_shape[1]),
+            int(y * high_res_shape[0] / low_res_shape[0]),
+            int(xmax * high_res_shape[1] / low_res_shape[1]),
+            int(ymax * high_res_shape[0] / low_res_shape[0]),
+        ]
+
+    def _crop_frames(self, bbox, *frames):
+        """Crop a series of frames using the same bounding box."""
+        return [frame[bbox[1]:bbox[3], bbox[0]:bbox[2]] for frame in frames]
+
+    def _calculate_scores(self, contrast_crop, cb_contrast_crop):
+        """Calculate the contrast score and cb contrast score."""
+        white = np.count_nonzero(contrast_crop > self.config.AA_contrast_ratio)
+        black = np.count_nonzero(contrast_crop < self.config.AA_contrast_ratio) + 1
+        score = white / black
+
+        white = np.count_nonzero(cb_contrast_crop > self.config.AA_contrast_ratio)
+        black = np.count_nonzero(cb_contrast_crop < self.config.AA_contrast_ratio) + 1
+        cb_score = white / black
+
+        return score, cb_score
+
+    def _save_images(self, contrast_crop, cb_crop, frame_number, running_id):
+        """Save the contrast crop and cb crop images."""
+        cv2.imwrite(f"{self.config.output_folder}/contrast_crop_{frame_number}_{running_id}.png", contrast_crop)
+        cv2.imwrite(f"{self.config.output_folder}/cb_crop_{frame_number}_{running_id}.png", cb_crop)
+
+    def _get_std_filtered_frame(self, video_reader, frame_number, high_res_frame):
+        """Get the standard deviation filtered frame."""
+        neighbour_frames = video_reader.get_neighbours_of_specific_frame(frame_number, 10, downsampling=False)
+        std = np.std(np.array(neighbour_frames), axis=0)
+        std = np.mean(std, axis=2)
+        std = std * (std < std.mean())
+        std = np.stack([std, std, std], axis=2)
+
+        return std * high_res_frame
+
+    def _save_std_filtered_element_crop(self, std_filtered_element_crop, frame_number, running_id):
+        """Save the standard deviation filtered element crop image."""
+        cv2.imwrite(f"{self.config.output_folder}/std_filtered_element_crop_{frame_number}_{running_id}.png",
+                    std_filtered_element_crop)
+
+    def _save_full_res_element_crop(self, full_res_element_crop, frame_number, running_id):
+        """Save the full resolution element crop image."""
+        cv2.imwrite(f"{self.config.output_folder}/full_res_element_crop_{frame_number}_{running_id}.png",
+                    full_res_element_crop)
+
+    def _detect_components_in_crop(self, full_res_element_crop, frame_number, running_id):
+        """Detect components in the full resolution element crop."""
+        import detect_compo.lib_ip.ip_detection as det
+        import detect_compo.lib_ip.ip_preprocessing as pre
+
+        _, board = det.component_detection_simplified_bfs(pre.convert_rgb_frame_to_binary(full_res_element_crop))
+        cv2.imwrite(f"{self.config.output_folder}/board_{frame_number}_{running_id}.png", board)
+
+    def _apply_clahe(self, img, clip_limit=3.0, tile_grid_size=(8, 8)):
+        """Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) to an image."""
+        lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
+        l, a, b = cv2.split(lab)
+        clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=tile_grid_size)
+        cl = clahe.apply(l)
+        limg = cv2.merge((cl, a, b))
+
+        return cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+    def enhanced_get_component_contrast_color_based(self, compo, rgb_frame, current_frame_number, video_reader_object, compos, cb_frame, contrast_frame, cb_contrast_frame, high_res_rgb_frame, running_id):
+
+
+        # Get the bounding box of the component
+        orig_bbox = compo.bbox.put_bbox()
+
+        # Increase the bounding box boundary by 20% to get a better crop
+        x, y, xmax, ymax = self._expand_bbox(orig_bbox, expansion_ratio=0.2)
+
+        # Crop the element from the RGB frame
+        element_crop = rgb_frame[y:ymax, x:xmax]
+
+        # Get the high resolution bounding box
+        high_res_bbox = self._get_high_res_bbox(rgb_frame.shape, high_res_rgb_frame.shape, [x, y, xmax, ymax])
+
+        # Crop the element from the high resolution RGB frame, contrast frame, cb frame, and cb contrast frame
+        full_res_element_crop, contrast_crop, cb_crop, cb_contrast_crop = self._crop_frames(high_res_bbox, high_res_rgb_frame, contrast_frame, cb_frame, cb_contrast_frame)
+
+        # Calculate the contrast score and cb contrast score
+        score, cb_score = self._calculate_scores(contrast_crop, cb_contrast_crop)
+
+        # Save the contrast crop and cb crop images
+        self._save_images(contrast_crop, cb_crop, current_frame_number, running_id)
+
+        # Get the standard deviation filtered frame
+        std_filtered_frame = self._get_std_filtered_frame(video_reader_object, current_frame_number, high_res_rgb_frame)
+
+        # Crop the standard deviation filtered frame
+        std_fileterd_element_crop = std_filtered_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
+
+        # Calculate the mean of the standard deviation filtered element crop
+        std_filtered_element_crop_mean = std_fileterd_element_crop.mean()
+
+        # Save the standard deviation filtered element crop image
+        self._save_std_filtered_element_crop(std_fileterd_element_crop, current_frame_number, running_id)
+
+        # Save the full resolution element crop image
+        self._save_full_res_element_crop(full_res_element_crop, current_frame_number, running_id)
+
+        # Detect components in the full resolution element crop
+        self._detect_components_in_crop(full_res_element_crop, current_frame_number, running_id)
+
+        # Apply CLAHE (Contrast Limited Adaptive Histogram Equalization) to the full resolution element crop
+        final = self._apply_clahe(full_res_element_crop)
+
+        return score, cb_score
+
+    def get_component_contrast_color_based(self, compo, rgb_frame, current_frame_number, video_reader_object, compos, cb_frame, contrast_frame, cb_contrast_frame, high_res_rgb_frame, running_id):
 
 
         orig_bbox = compo.bbox.put_bbox()
@@ -371,14 +510,32 @@ class Analyzer:
         full_res_element_crop = high_res_rgb_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
         contrast_crop = contrast_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
         cb_crop = cb_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
+        cb_contrast_crop = cb_contrast_frame[high_res_bbox[1]:high_res_bbox[3], high_res_bbox[0]:high_res_bbox[2]]
         # cv2.imshow('contrast_frame', contrast_frame)
         # cv2.waitKey(10)
-        #cv2.imwrite(self.config.output_folder + '/contrast_frame_'+str(current_frame_number)+'.png', contrast_frame)
-        cv2.imshow('contrast_crop', contrast_crop)
-        cv2.waitKey(10)
+        cv2.imwrite(self.config.output_folder + '/contrast_frame_'+str(current_frame_number)+'.png', contrast_frame)
+        # cv2.imshow('contrast_crop', contrast_crop)
+        # cv2.waitKey(10)
+        # cv2.imshow('cb_contrast_crop', cb_contrast_crop)
+        # cv2.waitKey(10)
+
+        white = 0
+        black = 0
+        white = np.count_nonzero(contrast_crop[contrast_crop > self.config.AA_contrast_ratio])
+        black = np.count_nonzero(contrast_crop[contrast_crop < self.config.AA_contrast_ratio])
+        black += 1
+        score = white / black
+
+        white= 0
+        black =0
+        white = np.count_nonzero(cb_contrast_crop[cb_contrast_crop > self.config.AA_contrast_ratio])
+        black = np.count_nonzero(cb_contrast_crop[cb_contrast_crop < self.config.AA_contrast_ratio])
+        black += 1
+        cb_score = white / black
+
         cv2.imwrite(self.config.output_folder + '/contrast_crop_'+str(current_frame_number)+'_'+str(running_id)+'.png', contrast_crop)
-        cv2.imshow('cb_crop', cb_crop)
-        cv2.waitKey(10)
+        # cv2.imshow('cb_crop', cb_crop)
+        # cv2.waitKey(10)
         cv2.imwrite(self.config.output_folder + '/cb_crop_'+str(current_frame_number)+'_'+str(running_id)+'.png', cb_crop)
         # cv2.imshow('cblind_frame', cb_frame)
         # cv2.waitKey(10)
@@ -408,8 +565,8 @@ class Analyzer:
         # cv2.imshow('orig_crop', orig_crop)
         # cv2.waitKey(10)
 
-        cv2.imshow('full_res_compo_crop', full_res_element_crop)
-        cv2.waitKey(10)
+        # cv2.imshow('full_res_compo_crop', full_res_element_crop)
+        # cv2.waitKey(10)
         cv2.imwrite(self.config.output_folder + '/full_res_element_crop_'+str(current_frame_number)+'_'+str(running_id)+'.png', full_res_element_crop)
 
         import detect_compo.lib_ip.ip_detection as det
@@ -452,6 +609,7 @@ class Analyzer:
         #
         # cv2.imshow('contrast_processing', final)
         # cv2.waitKey(10)
+        return score, cb_score
 
     def check_small_text(self, compos, frame_rgb, JSON_Processor, frame_number):
         frame_rgb = frame_rgb.copy()
@@ -486,8 +644,8 @@ class Analyzer:
         palplot_img = np.zeros((100, 100 * len(compos_by_color), 3), dtype=np.uint8)
         for i, color in enumerate(compos_by_color):
             palplot_img[:, i * 100:(i + 1) * 100] = np.array(color, dtype=np.uint8)
-        cv2.imshow('compo_color_pallete', palplot_img)
-        cv2.waitKey(10)
+        # cv2.imshow('compo_color_pallete', palplot_img)
+        # cv2.waitKey(10)
         #cv2.imwrite(self.config.output_folder + 'compo_color_pallete.png', palplot_img)
         return palplot_img
 
@@ -508,7 +666,7 @@ class Analyzer:
         palplot_img = np.zeros((100, 100*len(unique_colors), 3), dtype=np.uint8)
         for i, color in enumerate(unique_colors):
             palplot_img[:, i*100:(i+1)*100] = np.array(color, dtype=np.uint8)
-        cv2.imshow('frame_color_pallete', palplot_img)
-        cv2.waitKey(10)
+        # cv2.imshow('frame_color_pallete', palplot_img)
+        # cv2.waitKey(10)
         # cv2.imwrite(self.config.output_folder + 'frame_color_pallete_'+str(frame_count)+'.png', palplot_img)
         return palplot_img

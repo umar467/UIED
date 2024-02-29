@@ -186,7 +186,7 @@ def rm_line_v_h(binary, show=False, max_line_thickness=C.THRESHOLD_LINE_THICKNES
     if show:
         cv2.imshow('no-line', binary)
         cv2.imshow('lines', map_line)
-        cv2.waitKey()
+        cv2.waitKey(10)
 
 
 def rm_line(binary_orig,
@@ -569,19 +569,19 @@ def component_detection_simplified_floodfill_rgb(binary,rgb, min_obj_area =C.min
     row, column = binary.shape[0], binary.shape[1]
 
     rgb_t = copy.deepcopy(rgb)
-    cv2.imshow('rgb', rgb_t)
-    cv2.waitKey(10)
+    # cv2.imshow('rgb', rgb_t)
+    # cv2.waitKey(10)
     #
     blur = cv2.bilateralFilter(rgb_t, 9, 75, 75)
 
-    cv2.imshow('blurred_rgb', blur)
-    cv2.waitKey(10)
+    # cv2.imshow('blurred_rgb', blur)
+    # cv2.waitKey(10)
 
     contours, hierarchy = cv2.findContours(binary, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(rgb_t, contours, -1, (0, 255, 0), 3)
 
-    cv2.imshow('cont_rgb_bin', rgb_t)
-    cv2.waitKey(10)
+    # cv2.imshow('cont_rgb_bin', rgb_t)
+    # cv2.waitKey(10)
 
 
     grey_frame = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
@@ -591,8 +591,8 @@ def component_detection_simplified_floodfill_rgb(binary,rgb, min_obj_area =C.min
     contours, hierarchy = cv2.findContours(binn, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(blur, contours, -1, (0, 255, 0), thickness=3, hierarchy=hierarchy, maxLevel=1)
 
-    cv2.imshow('cont_blur_binn', blur)
-    cv2.waitKey(10)
+    # cv2.imshow('cont_blur_binn', blur)
+    # cv2.waitKey(10)
 
 
     rgb = blur
@@ -690,7 +690,6 @@ def component_detection_simplified_bfs(binary, min_obj_area =C.min_object_area,
     if show:
         print('Area:%d' % (len(region)))
         draw.draw_boundary(compos_all, binary.shape, show=True)
-
     board = draw.draw_boundary(compos_all, binary.shape, show=True, name=window_name)
     if rec_detect:
         return compos_rec, compos_nonrec

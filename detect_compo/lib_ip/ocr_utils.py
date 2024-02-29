@@ -62,7 +62,14 @@ class text_extractor:
         #     for line in res:
         #         print(line)
         #self.show_detected_text_from_frame(result, frame)
-        result = self.convert_detected_text_to_components(result, frame)
+        if result is None:
+            return []
+        if frame is None:
+            return []
+        try:
+            result = self.convert_detected_text_to_components(result, frame)
+        except:
+            print('error')
         return result
     def show_detected_text_from_frame(self, result, frame):
         # draw result
