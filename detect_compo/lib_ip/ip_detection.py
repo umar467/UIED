@@ -317,6 +317,16 @@ def compo_filter(compos, min_area):
         compos_new.append(compo)
     return compos_new
 
+def filter_components_using_mask(components, binary, mask):
+    filtered_components = []
+    #static_point_image = visualizer.visualize_points(binary, mask, rgb=False, show=False)
+    for component in components:
+        bbox = component.put_bbox()
+        col_min, row_min, col_max, row_max = bbox
+        crop = mask[row_min:row_max, col_min:col_max]
+        if crop.mean() > 20:
+            filtered_components.append(component)
+    return filtered_components
 def filter_components_using_static_points(components, binary, static_points):
     filtered_components = []
     static_point_image = visualizer.visualize_points(binary, static_points, rgb=False, show=False)
@@ -355,10 +365,13 @@ def plot_detection_statistics(statistics, config):
         os.mkdir(video_name)
     fig.savefig(video_name + "compo.png")
     plt.close()
-def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, detected_text_components = None, Text_Statistics = None, config = None, rgb_frame=None):
+def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, detected_text_components = None, Text_Statistics = None, config = None, rgb_frame=None, mask=None, compos_test =None):
     current_stats = []
     binary = remove_text_detections_from_binary_image(binary, detected_text_components)
-    components = component_detection(binary)
+    if compos_test:
+        components = compos_test
+    else:
+        components = component_detection(binary)
     current_stats.append(len(components))
     area_filtered_components = compo_filter(components, C.min_object_area)
     current_stats.append(len(area_filtered_components))
@@ -376,7 +389,11 @@ def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, d
         bbox = compo.bbox.put_bbox()
         compo.imcrop = rgb_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
 
-    return overlapping_filtered_components
+    if mask is not None:
+        components = filter_components_using_mask(area_filtered_components, binary, mask)
+        overlapping_filtered_components = merge_intersected_corner(components, binary, True)
+        return components
+    return area_filtered_components
 
 # take the binary image as input
 # calculate the connected regions -> get the bounding boundaries of them -> check if those regions are rectangles

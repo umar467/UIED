@@ -126,7 +126,11 @@ class SIFT_Processor:
     def get_static_pixels(self, frames, JSON_Processor):
         for frame in frames:
             self.get_SIFT_features(frame)
-        static_pixels, new_ui = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
+        try:
+            static_pixels, new_ui = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
+        except:
+            print('No SIFT Features Detected')
+            return [], False, np.zeros_like(self.current_frame)
         JSON_Processor.add_sift_statistics_to_current_frame(self.statistics)
         self.plot_SIFT_detection_plots()
         distance_average = self.global_distance/self.loaded_frames
@@ -138,7 +142,7 @@ class SIFT_Processor:
         Input: greyscale Frame
         Output: Appends the sift keypoints stationary across frames to the array static objects
         """
-        
+
         if self.loaded_frames == 1:
             self.static_objects.append([])
             return
