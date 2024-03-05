@@ -1,3 +1,5 @@
+import copy
+
 import mkl
 # mkl.set_num_threads(1)
 import cv2
@@ -12,6 +14,7 @@ import detect_compo.lib_ip.ip_preprocessing as pre
 
 class Compo_Database:
     def __init__(self):
+        self.contrast_frame_last_frame = None
         self.config = config
         self.compos = []
         self.loaded_compos = 0
@@ -21,6 +24,7 @@ class Compo_Database:
         self.ids_in_last_frame = []
         self.compo_change_cumulative = 0
         self.last_frame = None
+        self.last_frame_rgb = None
 
 
     def compare_components(self, comp1, comp2, frame):
@@ -85,7 +89,7 @@ class Compo_Database:
             self.compo_change_cumulative = 0
 
         return [total_matched, total_new, ids_in_current_frame]
-    def compare_with_previously_detected_components(self, components, frame_number, frame, JSON_Processor, config,  force_check_previous_componenets=True):
+    def compare_with_previously_detected_components(self, components, frame_number, frame, frame_rgb, JSON_Processor, config,  force_check_previous_componenets=True):
 
         """
                 Compare current components with previously detected components.
@@ -101,11 +105,15 @@ class Compo_Database:
                 Returns:
                 list: Updated components.
                 """
-
+        self.current_frame_rgb = copy.deepcopy(frame_rgb)
+        from analyzer import Analyzer as analyzer_class
+        analyzer = analyzer_class(config)
+        self.contrast_frame = analyzer.convert_to_contrast_fast(self.current_frame_rgb)
+        self.contrast_frame = analyzer.get_visual_raw_contrast(self.contrast_frame)
         force_check_added = 0
         duplicate_removed = 0
         if self.loaded_compos == 0:
-            self.initialize_database(components, frame_number, frame, config)
+            self.initialize_database(components, frame_number, frame, frame_rgb, config)
             JSON_Processor.add_database_statistics_to_current_frame(self.compute_frame_statistics(components))
             return components
         updated_compos = []
@@ -160,6 +168,8 @@ class Compo_Database:
                 updated_compos.remove(component)
 
         self.last_frame = frame
+        self.last_frame_rgb = copy.deepcopy(frame_rgb)
+        self.contrast_frame_last_frame = self.contrast_frame
         db_stats_current = self.compute_frame_statistics(updated_compos)
         JSON_Processor.add_database_statistics_to_current_frame(db_stats_current)
         self.processed_frames += 1
@@ -216,9 +226,13 @@ class Compo_Database:
         ssim = ssimer(crop, crop_last_frame)
         # write a string to an image array of the same shape as crop
 
-        value = np.zeros_like(crop).astype(np.uint8)
-        value = cv2.putText(value, str(ssim), (10,10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-        image_to_show = np.hstack([crop, crop_last_frame, value])
+        rgb_crop = self.current_frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        rgb_crop_last_frame = self.last_frame_rgb[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+        rgb_crop_last_frame = cv2.resize(rgb_crop_last_frame, image_size)
+        rgb_crop = cv2.resize(rgb_crop, image_size)
+        value = np.zeros_like(rgb_crop).astype(np.uint8)
+        value = cv2.putText(value, f'Naive={ssim:.2f}', (10,25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+        image_to_show = np.hstack([rgb_crop, rgb_crop_last_frame, value])
 
         def contrast_stretch(image):
             # Calculate the minimum and maximum pixel values
@@ -233,17 +247,35 @@ class Compo_Database:
         crop_last_frame = contrast_stretch(crop_last_frame)
         ssim_n = ssimer(crop, crop_last_frame)
 
-        value = np.zeros_like(crop).astype(np.uint8)
-        value = cv2.putText(value, str(ssim_n), (10, 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-        image_to_show = np.hstack([ image_to_show, crop, crop_last_frame, value])
-        # cv2.imshow('crop', image_to_show)
-        # cv2.waitKey(1000)
+        visualize_component_matching = False
+        if visualize_component_matching:
+            value = np.zeros_like(crop).astype(np.uint8)
+            value = cv2.putText(value, f'Full={ssim_n:.2f}', (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+            # add two extra channels to the crop
+            crop = np.dstack([crop, crop, crop])
+            crop_last_frame = np.dstack([crop_last_frame, crop_last_frame, crop_last_frame])
+            value = np.dstack([value, value, value])
+            #image_to_show = np.hstack([ image_to_show, crop, crop_last_frame, value])
+            image2_to_show = np.hstack([crop, crop_last_frame, value])
+
+            contrast_crop = self.contrast_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+            contrast_crop_last_frame = self.contrast_frame_last_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
+            contrast_crop_last_frame = cv2.resize(contrast_crop_last_frame, image_size)
+            contrast_crop = cv2.resize(contrast_crop, image_size)
+            image3_to_show = np.hstack([contrast_crop, contrast_crop_last_frame])
+            cv2.imshow('Enlarged SSIM Matching Crop Contrast', image3_to_show)
+
+            cv2.imshow('Enlarged SSIM Matching Crop RGB', image_to_show)
+            cv2.imshow('Enlarged SSIM Matching Crop Greyscale', image2_to_show)
+            import detect_compo.lib_ip.visualize_util as visualizer
+            visualizer.visualize_components(self.current_frame_rgb, [component], rgb=True, show=True, fill=False, offset=-10, name=f'Component SSIM Matching')
+            cv2.waitKey(1000)
 
         ssim = ssim_n
         if ssim > config.ssim_threshold:
             return True
         return False
-    def initialize_database(self, components, frame_number, frame, config):
+    def initialize_database(self, components, frame_number, frame, frame_rgb, config):
         """
                 Initialize the database with the components of the first frame.
 
@@ -264,6 +296,8 @@ class Compo_Database:
         self.compos = components
         self.loaded_compos = len(self.compos)
         self.last_frame = frame
+        self.last_frame_rgb = frame_rgb
+        self.contrast_frame_last_frame = self.last_frame_rgb
     def get_all_components(self):
         """
                 Get all components in the database.

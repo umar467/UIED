@@ -131,7 +131,7 @@ def process_video(config):
 
             contours, hierarchy = cv2.findContours(binn, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             cv2.drawContours(blur, contours, -1, (0, 255, 0), thickness=1, hierarchy=hierarchy, maxLevel=1)
-            cv2.drawContours(contour_mask, contours, -1, (0, 255, 0), thickness=1, hierarchy=hierarchy, maxLevel=1)
+            cv2.drawContours(contour_mask, contours, -1, (255, 255, 255), thickness=1, hierarchy=hierarchy, maxLevel=1)
 
             cv2.imshow('cont_blur_binn', blur)
             cv2.waitKey(10)
@@ -252,7 +252,7 @@ def process_video(config):
         opening = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
         visualizer.show_frame(opening, use_cv=True, name='mask_contour_binn')
-        binary_image = opening
+        # binary_image = opening
 
 
 
@@ -267,7 +267,7 @@ def process_video(config):
                                                                       compos_test=None)
         components = text_components + non_text_components
         detected_components = Compo_DB.compare_with_previously_detected_components(components, frame_number,
-                                                                                   current_frame_grey,
+                                                                                   current_frame_grey, current_frame_rgb,
                                                                                    JSON_Processor, config,
                                                                                    force_check_previous_componenets=True)
         detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True,
@@ -286,18 +286,18 @@ def process_video(config):
             import traceback
             print(''.join(traceback.TracebackException.from_exception(ex).format()))
             print('erreo')
-        if max_frames - current_frame_number < 20:
-            video_reader_object.set_reader_head_to_frame_number(0)
+        # if max_frames - current_frame_number < 20:
+        #     video_reader_object.set_reader_head_to_frame_number(0)
         # analyzer.analyze_show(detected_components, current_frame_rgb,
         #                       video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
         #                       config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
         #
         # if new_ui:
         #     visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
-
-
-
-
+        #
+        #
+        #
+        #
         #
         # if frame_number - last_frame > 100:
         #     last_frame = frame_number
