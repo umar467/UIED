@@ -32,6 +32,7 @@ class Component:
         self.boundary = self.compo_get_boundary()
         self.bbox = self.compo_get_bbox()
         self.bbox_area = self.bbox.box_area
+        self.bbox_color = (0, 0, 0)
 
         self.region_area = len(region)
         self.width = len(self.boundary[0])

@@ -373,26 +373,42 @@ def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, d
     else:
         components = component_detection(binary)
     current_stats.append(len(components))
+    for compo in components:
+        compo.bbox_color = (0, 0, 0 ) # Black
     area_filtered_components = compo_filter(components, C.min_object_area)
+    for compo in area_filtered_components:
+        compo.bbox_color = (255, 255, 255 ) # white
     current_stats.append(len(area_filtered_components))
-    overlapping_filtered_components = merge_intersected_corner(area_filtered_components, binary, True)
-    overlapping_filtered_components = compo_filter(overlapping_filtered_components, C.min_object_area)
-    current_stats.append(len(overlapping_filtered_components))
+    intersection_merged_filtered_components = merge_intersected_corner(area_filtered_components, binary, True)
+    for compo in intersection_merged_filtered_components:
+        compo.bbox_color = (255,0,0 ) # Blue
+    ratio_filtered_components = compo_filter(intersection_merged_filtered_components, C.min_object_area)
+    for compo in ratio_filtered_components:
+        compo.bbox_color = (0,0, 255 ) # Red
+    current_stats.append(len(ratio_filtered_components))
+
+    if mask is not None:
+        ssim_components = filter_components_using_mask(ratio_filtered_components, binary, mask)
+        for compo in ssim_components:
+            compo.bbox_color = (0, 255, 255 ) # Yellow
+        #overlapping_filtered_components = merge_intersected_corner(components, binary, True)
+
     if static_pixels is not None:
-        static_point_fileterd_components = filter_components_using_static_points(overlapping_filtered_components, binary, static_pixels)
-        overlapping_filtered_components = static_point_fileterd_components
-    current_stats.append(len(overlapping_filtered_components))
+        static_point_fileterd_components = filter_components_using_static_points(components, binary, static_pixels)
+        sift_filtered_components = static_point_fileterd_components
+    for compo in sift_filtered_components:
+        compo.bbox_color =  (128, 255, 0)  # Green
+    current_stats.append(len(sift_filtered_components))
     JSON_Processor.add_component_filtration_statistics_to_current_frame(current_stats)
     #Text_Statistics.append(current_stats)
     #plot_detection_statistics(Text_Statistics, config)
-    for compo in overlapping_filtered_components:
+    for compo in intersection_merged_filtered_components:
         bbox = compo.bbox.put_bbox()
         compo.imcrop = rgb_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
 
+
     if mask is not None:
-        components = filter_components_using_mask(area_filtered_components, binary, mask)
-        overlapping_filtered_components = merge_intersected_corner(components, binary, True)
-        return components
+        return area_filtered_components
     return area_filtered_components
 
 # take the binary image as input

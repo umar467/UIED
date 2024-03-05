@@ -100,6 +100,9 @@ def process_video(config):
         def get_contour_highlights_for_detection_input(frame_buffer, binary_image):
             import copy
             rgb_t = copy.deepcopy(frame_buffer[0])
+            # make greyscale image in rgb_t size as zeros
+            contour_mask = np.zeros_like(rgb_t)
+
             # cv2.imshow('rgb', rgb_t)
             # cv2.waitKey(10)
             #
@@ -115,8 +118,8 @@ def process_video(config):
             # cv2.imshow('grad', current_frame_buffer_gradients[0])
             # cv2.waitKey(10)
 
-            contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            cv2.drawContours(rgb_t, contours, -1, (0, 255, 0), 3)
+            # contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+            # cv2.drawContours(rgb_t, contours, -1, (0, 255, 0), 3)
 
             # cv2.imshow('cont_rgb_bin', rgb_t)
             # cv2.waitKey(10)
@@ -128,16 +131,17 @@ def process_video(config):
 
             contours, hierarchy = cv2.findContours(binn, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             cv2.drawContours(blur, contours, -1, (0, 255, 0), thickness=1, hierarchy=hierarchy, maxLevel=1)
+            cv2.drawContours(contour_mask, contours, -1, (0, 255, 0), thickness=1, hierarchy=hierarchy, maxLevel=1)
 
             cv2.imshow('cont_blur_binn', blur)
             cv2.waitKey(10)
 
-            return rgb_t, blur
+            return rgb_t, blur, contour_mask
 
 
         def process_contours_for_detection_input(frames, binary_image):
 
-            rgb_t, blur = get_contour_highlights_for_detection_input(frames, binary_image)
+            rgb_t, blur, contour_mask = get_contour_highlights_for_detection_input(frames, binary_image)
 
             grey_frame = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
             visualizer.show_frame(grey_frame, use_cv=True, name='grey_binn')
@@ -164,7 +168,7 @@ def process_video(config):
             #det.component_detection_simplified_bfs(binary_image) # binn
             compos_test = det.component_detection_simplified_floodfill(binary_image)
             #det.component_detection_simplified_floodfill_rgb(binary_image, current_frame_buffer_rgb[0])
-            return compos_test, binn
+            return compos_test, binn, contour_mask
 
 
         def get_std_mask(frames, percentile_filtering=None):
@@ -234,9 +238,21 @@ def process_video(config):
 
         mask = get_ssim_mask(current_frame_buffer_rgb)
         get_std_mask(current_frame_buffer_rgb)
-        compos_test, binary_image = process_contours_for_detection_input(current_frame_buffer_rgb, binary_image)
+        compos_test, binary_image, contour_mask = process_contours_for_detection_input(current_frame_buffer_rgb, binary_image)
 
-        #visualizer.show_frame(binary_image, use_cv=True, name='binary_image')
+        visualizer.show_frame(mask, use_cv=True, name='mask_ssim_used')
+        visualizer.show_frame(contour_mask, use_cv=True, name='mask_contour_used')
+
+        cm_grey_frame = cv2.cvtColor(contour_mask, cv2.COLOR_BGR2GRAY)
+        #cm_gradn = pre.gray_to_gradient(cm_grey_frame)
+        cm_binn = pre.grad_to_binary(cm_grey_frame, 50)
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
+        opening = cv2.morphologyEx(cm_binn, cv2.MORPH_CLOSE, kernel)
+        opening = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+        opening = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+
+        visualizer.show_frame(opening, use_cv=True, name='mask_contour_binn')
+        # binary_image = opening
 
 
 
@@ -246,7 +262,7 @@ def process_video(config):
         frame_number = video_reader_object.current_rgb_frame_number
         text_components = Text_Extractor.detect_text_from_frame(current_frame_rgb)
         try:
-            non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor, detected_text_components=text_components, rgb_frame = current_frame_rgb, mask=None, compos_test=None)
+            non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor, detected_text_components=text_components, rgb_frame = current_frame_rgb, mask=mask, compos_test=None)
             components = text_components + non_text_components
             detected_components = Compo_DB.compare_with_previously_detected_components(components, frame_number,
                                                                                        current_frame_grey,
@@ -263,7 +279,9 @@ def process_video(config):
             visualizer.Save_plots_and_heatmpas(JSON_Processor, Compo_DB.compos.copy(), current_frame_grey, config)
             JSON_Processor.write_json_to_file(Compo_DB)
 
-        except:
+        except Exception as ex:
+            import traceback
+            print(''.join(traceback.TracebackException.from_exception(ex).format()))
             print('erreo')
         if max_frames - current_frame_number < 20:
             video_reader_object.set_reader_head_to_frame_number(0)

@@ -76,6 +76,10 @@ def visualize_components(frame, components, rgb=True, name='component_visualizat
             color = color_map[compo.category]
         else:
             color = (255,0,0)
+        if compo.category is not 'Text':
+            #print(compo.bbox_color)
+            color = compo.bbox_color
+
         if not rgb:
             color = (255,255,255)
         drawing_frame = cv2.rectangle(drawing_frame, (bbox[0]+offset, bbox[1]+offset), (bbox[2], bbox[3]), color, fill_param)
