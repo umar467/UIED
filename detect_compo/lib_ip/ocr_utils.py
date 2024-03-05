@@ -64,6 +64,8 @@ class text_extractor:
         #self.show_detected_text_from_frame(result, frame)
         if result is None:
             return []
+        if None in result and len(result) ==1:
+            return []
         if frame is None:
             return []
         try:

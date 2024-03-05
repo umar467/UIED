@@ -130,6 +130,11 @@ class SIFT_Processor:
             static_pixels, new_ui = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
         except:
             print('No SIFT Features Detected')
+            JSON_Processor.add_sift_statistics_to_current_frame(self.statistics)
+            # self.plot_SIFT_detection_plots()
+            distance_average = self.global_distance / self.loaded_frames
+            JSON_Processor.global_distance = distance_average
+            # sift_point_mask = self.get_SIFT_point_mask(static_pixels)
             return [], False, np.zeros_like(self.current_frame)
         JSON_Processor.add_sift_statistics_to_current_frame(self.statistics)
         self.plot_SIFT_detection_plots()

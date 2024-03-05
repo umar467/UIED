@@ -367,7 +367,8 @@ def plot_detection_statistics(statistics, config):
     plt.close()
 def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, detected_text_components = None, Text_Statistics = None, config = None, rgb_frame=None, mask=None, compos_test =None):
     current_stats = []
-    binary = remove_text_detections_from_binary_image(binary, detected_text_components)
+    if detected_text_components is not None:
+        binary = remove_text_detections_from_binary_image(binary, detected_text_components)
     if compos_test:
         components = compos_test
     else:

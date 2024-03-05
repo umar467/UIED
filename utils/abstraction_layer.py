@@ -252,7 +252,7 @@ def process_video(config):
         opening = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
         visualizer.show_frame(opening, use_cv=True, name='mask_contour_binn')
-        # binary_image = opening
+        binary_image = opening
 
 
 
@@ -261,24 +261,27 @@ def process_video(config):
         current_frame_number = frame_numbers[-1]
         frame_number = video_reader_object.current_rgb_frame_number
         text_components = Text_Extractor.detect_text_from_frame(current_frame_rgb)
+        non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor,
+                                                                      detected_text_components=text_components,
+                                                                      rgb_frame=current_frame_rgb, mask=mask,
+                                                                      compos_test=None)
+        components = text_components + non_text_components
+        detected_components = Compo_DB.compare_with_previously_detected_components(components, frame_number,
+                                                                                   current_frame_grey,
+                                                                                   JSON_Processor, config,
+                                                                                   force_check_previous_componenets=True)
+        detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True,
+                                                          show=True,
+                                                          fill=False)
+        # save detection_frame
+        cv2.imwrite(config.output_folder + str(print_number) + '_.png', detection_frame)
+        print_number += 1
+        pbar.update(10)
+        JSON_Processor.next_frame()
+        visualizer.Save_plots_and_heatmpas(JSON_Processor, Compo_DB.compos.copy(), current_frame_grey, config)
+        JSON_Processor.write_json_to_file(Compo_DB)
         try:
-            non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor, detected_text_components=text_components, rgb_frame = current_frame_rgb, mask=mask, compos_test=None)
-            components = text_components + non_text_components
-            detected_components = Compo_DB.compare_with_previously_detected_components(components, frame_number,
-                                                                                       current_frame_grey,
-                                                                                       JSON_Processor, config,
-                                                                                       force_check_previous_componenets=True)
-            detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True,
-                                                              show=True,
-                                                              fill=False)
-            # save detection_frame
-            cv2.imwrite(config.output_folder + str(print_number) + '_.png', detection_frame)
-            print_number += 1
-            pbar.update(10)
-            JSON_Processor.next_frame()
-            visualizer.Save_plots_and_heatmpas(JSON_Processor, Compo_DB.compos.copy(), current_frame_grey, config)
-            JSON_Processor.write_json_to_file(Compo_DB)
-
+            error = None
         except Exception as ex:
             import traceback
             print(''.join(traceback.TracebackException.from_exception(ex).format()))
