@@ -407,10 +407,19 @@ def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, d
         bbox = compo.bbox.put_bbox()
         compo.imcrop = rgb_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
 
-
+    rolling_visualization = True
+    if rolling_visualization:
+        visualizer.visualize_components(rgb_frame, components, rgb=True,show=True,fill=False, name = 'All Components')
+        visualizer.visualize_components(rgb_frame, area_filtered_components, rgb=True, show=True, fill=False, name='Area Filtered Components')
+        visualizer.visualize_components(rgb_frame, ratio_filtered_components, rgb=True, show=True, fill=False,
+                                        name='Shape Filtered Components')
+        visualizer.visualize_components(rgb_frame, ssim_components, rgb=True, show=True, fill=False,
+                                        name='Structure Filtered Components')
+        visualizer.visualize_components(rgb_frame, sift_filtered_components, rgb=True, show=True, fill=False,
+                                        name='Motion Filtered Components')
     if mask is not None:
-        return area_filtered_components
-    return area_filtered_components
+        return sift_filtered_components
+    return sift_filtered_components
 
 # take the binary image as input
 # calculate the connected regions -> get the bounding boundaries of them -> check if those regions are rectangles
@@ -481,7 +490,7 @@ def component_detection(binary, min_obj_area =C.min_object_area,
         print('Area:%d' % (len(region)))
         draw.draw_boundary(compos_all, binary.shape, show=True)
 
-    draw.draw_boundary(compos_all, binary.shape, show=True)
+    #draw.draw_boundary(compos_all, binary.shape, show=True)
     if rec_detect:
         return compos_rec, compos_nonrec
     else:
@@ -571,7 +580,7 @@ def component_detection_simplified_floodfill(binary, min_obj_area =C.min_object_
         print('Area:%d' % (len(region)))
         draw.draw_boundary(compos_all, binary.shape, show=True)
 
-    draw.draw_boundary(compos_all, binary.shape, show=True, name='ffill')
+    draw.draw_boundary(compos_all, binary.shape, show=False, name='ffill')
     if rec_detect:
         return compos_rec, compos_nonrec
     else:
@@ -724,7 +733,7 @@ def component_detection_simplified_bfs(binary, min_obj_area =C.min_object_area,
     if show:
         print('Area:%d' % (len(region)))
         draw.draw_boundary(compos_all, binary.shape, show=True)
-    board = draw.draw_boundary(compos_all, binary.shape, show=True, name=window_name)
+    board = draw.draw_boundary(compos_all, binary.shape, show=False, name=window_name)
     if rec_detect:
         return compos_rec, compos_nonrec
     else:

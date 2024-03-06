@@ -268,68 +268,77 @@ class Analyzer:
         return final_contrast
 
     def analyze_show(self, compos, frame_rgb, frame_count, DB_Compos, config, detection_frame, JSON_Processor, current_frame_number, video_reader_object):
-        frame_count = int(frame_count)
-        self.config = config
+        just_text_check = True
+        if just_text_check:
+            cv2.imshow('Errors', self.check_small_text(compos, frame_rgb, JSON_Processor, frame_count))
+            cv2.waitKey(100)
+        else:
+            frame_count = int(frame_count)
+            self.config = config
 
 
-        #contrast_frame = self.compare_contrast(frame_rgb)
-        contrast_frame = self.convert_to_contrast_fast(frame_rgb)
-        cb_frame = convert_color_blind_fast(frame_rgb, 0)
-        # cb_frame = convert_color_blind(frame_rgb, 2)
-        contrast_cb_frame = self.convert_to_contrast_fast(cb_frame)
-        #contrast_cb_frame_show = self.get_visual_raw_contrast(contrast_cb_frame_raw)
+            #contrast_frame = self.compare_contrast(frame_rgb)
+            contrast_frame = self.convert_to_contrast_fast(frame_rgb)
+            cb_frame = convert_color_blind_fast(frame_rgb, 0)
+            # cb_frame = convert_color_blind(frame_rgb, 2)
+            contrast_cb_frame = self.convert_to_contrast_fast(cb_frame)
+            #contrast_cb_frame_show = self.get_visual_raw_contrast(contrast_cb_frame_raw)
 
-        high_res_rgb_frame = video_reader_object.get_specific_frame(current_frame_number, downsampling=False)
-        contrast_frame = self.convert_to_contrast_fast(high_res_rgb_frame)
-        contrast_frame = self.get_visual_raw_contrast(contrast_frame)
-        cb_frame = convert_color_blind_fast(high_res_rgb_frame, 0)
-        cb_contrast_frame = self.convert_to_contrast_fast(cb_frame)
-        cb_contrast_frame = self.get_visual_raw_contrast(cb_contrast_frame)
-        running_id = 0
-        for compo in compos:
-            # score, cb_score = self.get_component_contrast_color_based(compo, frame_rgb, current_frame_number,
-            #                                                           video_reader_object, compos, cb_frame,
-            #                                                           contrast_frame, cb_contrast_frame,
-            #                                                           high_res_rgb_frame, running_id)
-            score, cb_score = self.enhanced_get_component_contrast_color_based(compo, frame_rgb, current_frame_number,
-                                                                      video_reader_object, compos, cb_frame,
-                                                                      contrast_frame, cb_contrast_frame,
-                                                                      high_res_rgb_frame, running_id)
-            #score = self.get_component_contrast(compo, contrast_frame)
-            compo.contrast_scores.append(score)
-            #cb_score = self.get_component_contrast(compo, contrast_cb_frame)
-            compo.contrast_cb_scores.append(cb_score)
-            running_id += 1
-        # print the running_id right now
+            high_res_rgb_frame = video_reader_object.get_specific_frame(current_frame_number, downsampling=False)
+            contrast_frame = self.convert_to_contrast_fast(high_res_rgb_frame)
+            cb_frame = convert_color_blind_fast(high_res_rgb_frame, 0)
+            cb_contrast_frame = self.convert_to_contrast_fast(cb_frame)
+
+            cdelta = abs(contrast_frame - cb_contrast_frame) * 10
+            cdelta = self.get_visual_raw_contrast(cdelta)
+
+            contrast_frame = self.get_visual_raw_contrast(contrast_frame)
+
+            cb_contrast_frame = self.get_visual_raw_contrast(cb_contrast_frame)
+            running_id = 0
+            for compo in compos:
+                # score, cb_score = self.get_component_contrast_color_based(compo, frame_rgb, current_frame_number,
+                #                                                           video_reader_object, compos, cb_frame,
+                #                                                           contrast_frame, cb_contrast_frame,
+                #                                                           high_res_rgb_frame, running_id)
+                score, cb_score = self.enhanced_get_component_contrast_color_based(compo, frame_rgb, current_frame_number,
+                                                                          video_reader_object, compos, cb_frame,
+                                                                          contrast_frame, cb_contrast_frame,
+                                                                          high_res_rgb_frame, running_id)
+                #score = self.get_component_contrast(compo, contrast_frame)
+                compo.contrast_scores.append(score)
+                #cb_score = self.get_component_contrast(compo, contrast_cb_frame)
+                compo.contrast_cb_scores.append(cb_score)
+                running_id += 1
+            # print the running_id right now
 
 
-        contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count, cb_frame)
-        self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
-        #visual_raw_contrast = self.get_visual_raw_contrast(contrast_frame)
-        #visual_raw_contrast = self.show_contrast_raw(visual_raw_contrast, frame_count)
-        #visual_raw_contrast = self.process_raw_visual_contrast(compos, visual_raw_contrast, JSON_Processor, frame_count, cb_frame)
+            contrast_frame_from_component_contrast = self.get_contrast_frame_from_component_contrast(compos, frame_rgb, JSON_Processor, frame_count, cb_frame)
+            self.save_contrast_examples(compos, frame_rgb, JSON_Processor, frame_count)
+            #visual_raw_contrast = self.get_visual_raw_contrast(contrast_frame)
+            #visual_raw_contrast = self.show_contrast_raw(visual_raw_contrast, frame_count)
+            #visual_raw_contrast = self.process_raw_visual_contrast(compos, visual_raw_contrast, JSON_Processor, frame_count, cb_frame)
 
-        # cv2.imwrite(self.config.output_folder + '/raw_contrast_bboxed_' + str(frame_count) + '.png',
-        #             visaul_raw_contrast)
-        # cv2.imwrite(self.config.output_folder + '/contrast_'+str(frame_count)+'.png', contrast_frame_from_component_contrast)
-        #self.check_small_text(compos, frame_rgb, JSON_Processor, frame_count)
+            # cv2.imwrite(self.config.output_folder + '/raw_contrast_bboxed_' + str(frame_count) + '.png',
+            #             visaul_raw_contrast)
+            # cv2.imwrite(self.config.output_folder + '/contrast_'+str(frame_count)+'.png', contrast_frame_from_component_contrast)
 
-        #cv2.imwrite(self.config.output_folder + '/frame_'+str(frame_count)+'.png', frame_rgb)
-        #cv2.imwrite(self.config.output_folder + '/cb_frame_'+str(frame_count)+'.png', cb_frame)
-        # converted_frame = np.hstack([cb_frame ,contrast_frame_from_component_contrast, visual_raw_contrast])
-        # cv2.imwrite(self.config.output_folder + '/cblind_check_'+str(frame_count)+'.png', converted_frame)
 
-        # cv2.imshow('frame', frame_rgb)
-        # cv2.imshow('cb_frame', cb_frame)
-        # cv2.imshow('contrast_frame', visual_raw_contrast)
-        # cv2.imshow('cbl_cont', contrast_cb_frame)
-        # cdelta = abs(contrast_frame - contrast_cb_frame_raw) * 10
-        # cdelta = self.get_visual_raw_contrast(cdelta)
-        # cv2.imshow('dc', cdelta)
-        # cv2.imshow('cfra_com_con', contrast_frame_from_component_contrast)
-        # cv2.waitKey(10)
+            #cv2.imwrite(self.config.output_folder + '/frame_'+str(frame_count)+'.png', frame_rgb)
+            #cv2.imwrite(self.config.output_folder + '/cb_frame_'+str(frame_count)+'.png', cb_frame)
+            # converted_frame = np.hstack([cb_frame ,contrast_frame_from_component_contrast, visual_raw_contrast])
+            # cv2.imwrite(self.config.output_folder + '/cblind_check_'+str(frame_count)+'.png', converted_frame)
 
-        # the im show command is not working in headless mode
+            # cv2.imshow('frame', frame_rgb)
+            # cv2.imshow('cb_frame', cb_frame)
+            # cv2.imshow('contrast_frame', contrast_frame)
+            # cv2.imshow('cbl_cont', contrast_cb_frame)
+            #
+            # cv2.imshow('dc', cdelta)
+            # cv2.imshow('cfra_com_con', contrast_frame_from_component_contrast)
+            # cv2.waitKey(0)
+
+            # the im show command is not working in headless mode
 
     def _expand_bbox(self, bbox, expansion_ratio=0.2):
         """Expand a bounding box by a certain ratio."""
@@ -344,12 +353,19 @@ class Analyzer:
     def _get_high_res_bbox(self, low_res_shape, high_res_shape, low_res_bbox):
         """Convert a low resolution bounding box to a high resolution one."""
         x, y, xmax, ymax = low_res_bbox
-        return [
-            int(x * high_res_shape[1] / low_res_shape[1]),
-            int(y * high_res_shape[0] / low_res_shape[0]),
-            int(xmax * high_res_shape[1] / low_res_shape[1]),
-            int(ymax * high_res_shape[0] / low_res_shape[0]),
-        ]
+        xn, yn, xmaxn, ymaxn = (int(x * high_res_shape[1] / low_res_shape[1]),
+        int(y * high_res_shape[0] / low_res_shape[0]),
+        int(xmax * high_res_shape[1] / low_res_shape[1]),
+        int(ymax * high_res_shape[0] / low_res_shape[0]))
+
+        if xn ==0 or xn <0:
+            xn = 0
+        if yn ==0 or yn <0:
+            yn = 0
+
+        new =  [xn, yn, xmaxn, ymaxn]
+
+        return new
 
     def _crop_frames(self, bbox, *frames):
         """Crop a series of frames using the same bounding box."""
@@ -619,8 +635,9 @@ class Analyzer:
                 if compo.height < self.config.min_text_height or compo.word_width < self.config.min_text_width:
                     text_small.append(compo)
                     bbox = compo.bbox.put_bbox()
-                    frame_rgb = cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 2)
+                    frame_rgb = cv2.rectangle(frame_rgb, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 0, 255), 5)
                     cv2.imwrite(self.config.output_folder + 'text_small.png', frame_rgb)
+                    print(f'Small Text Detected! Frame: {frame_number}, Component: {compo.id}')
                     warning = {'warning_type': 'Small Text', 'bbox': bbox,
                                'frames_occurs_in': frame_number, 'component_id': compo.id,
                                'text_character_height': compo.height, 'text_character_width': compo.word_width}

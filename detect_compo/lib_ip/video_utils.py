@@ -94,6 +94,50 @@ class video_reader:
         ret, rgb_frame = self.video.read()
         if ret:
             self.current_rgb_frame_number+=1
+
+            # rgb_frame = cv2.flip(rgb_frame,-1)
+
+            # rgb_frame = cv2.putText(rgb_frame, f'Im Readable!', (100, 450), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 5)
+            # rgb_frame = cv2.putText(rgb_frame, f'Im Not!', (100, 650), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 5)
+            # rgb_frame = cv2.putText(rgb_frame, f'How about this!', (100, 1150), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (128, 255, 0), 5)
+            # rgb_frame = cv2.putText(rgb_frame, f'Definitely not me!', (500, 1150), cv2.FONT_HERSHEY_SIMPLEX, 1.2,
+            #                         (255, 0, 255), 5)
+            # rgb_frame = cv2.putText(rgb_frame, f'Me NOT me!', (200, 1550), cv2.FONT_HERSHEY_SIMPLEX, 0.6,
+            #                         (255, 0, 0), 5)
+            # rgb_frame = cv2.putText(rgb_frame, f'YES me!', (450, 1850), cv2.FONT_HERSHEY_SIMPLEX, 0.9,
+            #                         (0, 0, 255), 5)
+            # # read image logo.png from the desktop
+            # logo = cv2.imread('logo.png' ,cv2.IMREAD_UNCHANGED)
+            # logo2 = cv2.imread('logo2.png',cv2.IMREAD_UNCHANGED)
+            # logo3 = cv2.imread('logo4.png',cv2.IMREAD_UNCHANGED)
+            # #resize the image to 200x200
+            # logo = cv2.resize(logo, (200, 200))
+            # logo2 = cv2.resize(logo2, (200, 200))
+            # logo3 = cv2.resize(logo3, (200, 200))
+            # overlay = logo3
+            # background = rgb_frame
+            #
+            # height, width = overlay.shape[:2]
+            # for y in range(height):
+            #     for x in range(width):
+            #         for offset in [(400, 600), (800, 300), (580, 600)]:
+            #
+            #             overlay_color = overlay[y, x, :3]  # first three elements are color (RGB)
+            #             overlay_alpha = overlay[
+            #                                 y, x, 3] / 255  # 4th element is the alpha channel, convert from 0-255 to 0.0-1.0
+            #
+            #             yb = y + offset[0]
+            #             xb = x + offset[1]
+            #
+            #             # get the color from the background image
+            #             background_color = background[yb, xb]
+            #
+            #             # combine the background color and the overlay color weighted by alpha
+            #             composite_color = background_color * (1 - overlay_alpha) + overlay_color * overlay_alpha
+            #
+            #             # update the background image in place
+            #             background[yb, xb] = composite_color
+
             return rgb_frame
         else:
             print("Couldn't read rgb_frame !!")
