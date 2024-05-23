@@ -8,4 +8,5 @@ mkl-service
 matplotlib
 plotly
 pandas
-
+paddleocr
+paddlepaddle
