@@ -407,7 +407,7 @@ def detect_components_from_binary_image(binary, static_pixels, JSON_Processor, d
         bbox = compo.bbox.put_bbox()
         compo.imcrop = rgb_frame[bbox[1]:bbox[3], bbox[0]:bbox[2]]
 
-    rolling_visualization = True
+    rolling_visualization = config.show_debug
     if rolling_visualization:
         visualizer.visualize_components(rgb_frame, components, rgb=True,show=True,fill=False, name = 'All Components')
         visualizer.visualize_components(rgb_frame, area_filtered_components, rgb=True, show=True, fill=False, name='Area Filtered Components')

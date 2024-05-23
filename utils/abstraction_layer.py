@@ -26,7 +26,6 @@ plt.ion()
 def process_video(config):
     if not os.path.exists(config.output_folder):
         os.makedirs(config.output_folder)
-    config.output_folder = config.output_folder + os.sep + config.input_video.split(os.sep)[-1].split('.')[0] + os.sep
     if not os.path.exists(config.output_folder):
         os.makedirs(config.output_folder)
     else:
@@ -39,13 +38,7 @@ def process_video(config):
     video_reader_object = video_reader(config)
     max_frames = video_reader_object.total_number_of_rgb_frames
     start_head_location = 500
-    # if video_reader_object.total_number_of_rgb_frames < start_head_location + 100:
-    #     start_head_location = 0
-    #     if video_reader_object.total_number_of_rgb_frames < 50:
-    #         print("The video has less than 50 frames. Warning.")
     video_reader_object.skip_frames(start_head_location) # skipping the n-frames from the start
-    # if video_reader_object.total_number_of_rgb_frames > max_frames:
-    #     video_reader_object.total_number_of_rgb_frames = max_frames
     SIFT_processor = SIFT_bundle(config)
     Compo_DB = Component_Database()
     JSON_Processor = json_processor(config)
@@ -103,26 +96,7 @@ def process_video(config):
             # make greyscale image in rgb_t size as zeros
             contour_mask = np.zeros_like(rgb_t)
 
-            # cv2.imshow('rgb', rgb_t)
-            # cv2.waitKey(10)
-            #
             blur = cv2.bilateralFilter(rgb_t, 9, 75, 75)
-
-            # cv2.imshow('blurred_rgb', blur)
-            # cv2.waitKey(10)
-
-
-            # cv2.imshow('grey', current_frame_buffer_grey[0])
-            # cv2.waitKey(10)
-
-            # cv2.imshow('grad', current_frame_buffer_gradients[0])
-            # cv2.waitKey(10)
-
-            # contours, hierarchy = cv2.findContours(binary_image, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            # cv2.drawContours(rgb_t, contours, -1, (0, 255, 0), 3)
-
-            # cv2.imshow('cont_rgb_bin', rgb_t)
-            # cv2.waitKey(10)
 
             grey_frame = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)
             gradn = pre.gray_to_gradient(grey_frame)
@@ -132,9 +106,6 @@ def process_video(config):
             contours, hierarchy = cv2.findContours(binn, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
             cv2.drawContours(blur, contours, -1, (0, 255, 0), thickness=1, hierarchy=hierarchy, maxLevel=1)
             cv2.drawContours(contour_mask, contours, -1, (255, 255, 255), thickness=1, hierarchy=hierarchy, maxLevel=1)
-
-            # cv2.imshow('cont_blur_binn', blur)
-            # cv2.waitKey(10)
 
             return rgb_t, blur, contour_mask
 
@@ -153,18 +124,6 @@ def process_video(config):
             #cv2.morphologyEx(gradn, cv2.MORPH_GRADIENT, kernel)
             # visualizer.show_frame(test_gradn, use_cv=True, name='test_gradn')
             binn = pre.grad_to_binary(gradn, config.minimum_gradient_difference)
-
-            # visualizer.show_frame(binary_image, use_cv=True, name='blur_inary_image')
-            # visualizer.show_frame(binn, use_cv=True, name='binn')
-
-            # contours, hierarchy = cv2.findContours(binn, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-            #
-            # for i in range(len(contours)):
-            #     cv2.drawContours(blur, contours, -1, (0, 255, 0), thickness = 3, hierarchy = hierarchy, maxLevel = i)
-            #     print(i)
-            #     cv2.imshow('cont_blur_binn2', blur)
-            #     cv2.waitKey(10)
-
             #det.component_detection_simplified_bfs(binary_image) # binn
             compos_test = det.component_detection_simplified_floodfill(binary_image)
             #det.component_detection_simplified_floodfill_rgb(binary_image, current_frame_buffer_rgb[0])
@@ -202,30 +161,19 @@ def process_video(config):
             diff_mask = diff < 0.8
 
             for i in range(2,len(frames),2):
-                #print(i)
                 before = frames[i].copy()
                 after = frames[i+1].copy()
                 before_gray = cv2.cvtColor(before, cv2.COLOR_BGR2GRAY)
                 after_gray = cv2.cvtColor(after, cv2.COLOR_BGR2GRAY)
                 (score, diff) = ssim(before_gray, after_gray, full=True)
-                #print(diff.mean())
                 diff[diff_mask] = False
                 diff_mask = diff < 0.8
-                #print(diff.mean())
-
-
-                #print("Image similarity", score)
                 diff = (diff * 255).astype("uint8")
                 smask = diff <250
                 diff[smask] = 0
                 fmask = diff >250
-                #cv2.imshow('diff', diff)
-                #cv2.waitKey(100)
 
             fmask = np.stack([fmask, fmask, fmask], axis=2)
-            # visualizer.show_frame(current_frame_buffer_rgb[0] * fmask, use_cv=True, name='ssim_filtered')
-            #print(fmask[0].shape)
-            # visualizer.show_frame(fmask[:,:,0].astype(np.uint8)*255, use_cv=True, name='ssim_mask')
             return fmask[:,:,0].astype(np.uint8)*255
 
 
@@ -233,31 +181,14 @@ def process_video(config):
         static_pixels, new_ui, sift_point_mask = SIFT_processor.get_static_pixels(current_frame_buffer_grey, JSON_Processor)
 
 
-        binary_image = pre.convert_frame_to_binary(current_frame_buffer_gradients[0])
+        #binary_image = pre.convert_frame_to_binary(current_frame_buffer_gradients[0])
         binary_image = pre.grad_to_binary(current_frame_buffer_gradients[0], config.minimum_gradient_difference)
 
-        mask = get_ssim_mask(current_frame_buffer_rgb)
+        #mask = get_ssim_mask(current_frame_buffer_rgb)
         get_std_mask(current_frame_buffer_rgb)
         compos_test, binary_image, contour_mask = process_contours_for_detection_input(current_frame_buffer_rgb, binary_image)
 
-        # visualizer.show_frame(mask, use_cv=True, name='mask_ssim_used')
-        # visualizer.show_frame(contour_mask, use_cv=True, name='mask_contour_used')
-
-        # cm_grey_frame = cv2.cvtColor(contour_mask, cv2.COLOR_BGR2GRAY)
-        # #cm_gradn = pre.gray_to_gradient(cm_grey_frame)
-        # cm_binn = pre.grad_to_binary(cm_grey_frame, 50)
-        # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
-        # opening = cv2.morphologyEx(cm_binn, cv2.MORPH_CLOSE, kernel)
-        # opening = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
-        # opening = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
-
-        # visualizer.show_frame(opening, use_cv=True, name='mask_contour_binn')
-        # binary_image = opening
-
-
-
         current_frame_rgb = current_frame_buffer_rgb[-1]
-        visualizer.show_frame(current_frame_rgb, use_cv=True, name='current_frame_rgb')
         current_frame_grey = current_frame_buffer_grey[-1]
         current_frame_number = frame_numbers[-1]
         frame_number = video_reader_object.current_rgb_frame_number
@@ -265,17 +196,20 @@ def process_video(config):
         non_text_components = det.detect_components_from_binary_image(binary_image, static_pixels, JSON_Processor,
                                                                       detected_text_components=text_components,
                                                                       rgb_frame=current_frame_rgb, mask=contour_mask,
-                                                                      compos_test=None)
+                                                                      compos_test=None, config=config)
         components = text_components + non_text_components
         detected_components = Compo_DB.compare_with_previously_detected_components(components, frame_number,
                                                                                    current_frame_grey, current_frame_rgb,
                                                                                    JSON_Processor, config,
                                                                                    force_check_previous_componenets=True)
         detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True,
-                                                          show=True,
+                                                          show=False,
                                                           fill=False)
         # save detection_frame
-        cv2.imwrite(config.output_folder + str(print_number) + '_.png', detection_frame)
+        output_frame_save_folder = config.output_folder + '/processed_frames/'
+        if not os.path.exists(output_frame_save_folder):
+            os.makedirs(output_frame_save_folder)
+        cv2.imwrite(output_frame_save_folder + str(print_number) + '_.png', detection_frame)
         print_number += 1
         pbar.update(10)
         JSON_Processor.next_frame()
@@ -287,10 +221,8 @@ def process_video(config):
             import traceback
             print(''.join(traceback.TracebackException.from_exception(ex).format()))
             print('erreo')
-        # if max_frames - current_frame_number < 20:
-        #     video_reader_object.set_reader_head_to_frame_number(0)
 
-        analyzer_demo = False
+        analyzer_demo = config.show_debug
         if analyzer_demo:
 
             analyzer.analyze_show(detected_components, current_frame_rgb,
@@ -298,21 +230,5 @@ def process_video(config):
                                   config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
 
             video_reader_object.set_reader_head_to_frame_number(current_frame_number)
-
-
-        # if new_ui:
-        #     visualizer.new_ui_save(current_frame_buffer_rgb[0], video_reader_object.get_Frames()[-1], config)
-
-
-
-
-
-        # if frame_number - last_frame > 100:
-        #     last_frame = frame_number
-        #     detection_frame = visualizer.visualize_components(current_frame_rgb, detected_components, rgb=True, show=False,
-        #                                                       fill=False)
-        #     analyzer.analyze_show(detected_components, current_frame_rgb,
-        #                                             video_reader_object.current_rgb_frame_number, Compo_DB.compos.copy(),
-        #                                             config, detection_frame, JSON_Processor, current_frame_number, video_reader_object)
 
     pbar.close()

@@ -127,6 +127,7 @@ class SIFT_Processor:
         for frame in frames:
             self.get_SIFT_features(frame)
         try:
+            # insatll numpy=1.21.2 to fix bug in the following line!
             static_pixels, new_ui = self.get_static_objects(across_n_frames=self.config.frame_buffer_size)
         except:
             print('No SIFT Features Detected')
@@ -182,6 +183,7 @@ class SIFT_Processor:
             counts = np.array(counts)
             points = np.array(points)
             indices = np.argwhere(counts == counts.max())
+            # insatll numpy=1.21.2 to fix bug in the following line!
             static_points = np.array(static_points)
             static_points = static_points[indices]
             static_points = static_points.squeeze()

@@ -3,3 +3,9 @@ Pandas==2.0.1
 keras==2.12.0
 tensorflow==2.12.0
 tqdm==4.65.0
+#numpy==1.21.1
+mkl-service
+matplotlib
+plotly
+pandas
+

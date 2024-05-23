@@ -1,39 +1,25 @@
 # Code Structured for Web Server
 
-The file main.python abstracts away the functionality of the code. An exmaple use where a video file called 4.mp4 is copied into this folder would be 
-'''
-python main.py --input_video 4.mp4 --output_json_folder output.json
-'''
+## Running the Code
 
-Alternatively, both the parameters can be set directly in the config file as well.
+The code can be run via the command line as follows:
 
-The output structre is as follows:
+```
+python main.py --input_video /scartch/videos/4.mp4 --output_json_folder /scratch/results/
+```
 
-json/video_name/
-  - detections.json
-  - sift.png
-  - more graphs and plots
+It's best to use absolute path for the input and output folders. 
+
+If the output folder structure adds subfolders for the video input path just change the linux or windows output path option in main.py line 21-24. 
 
 ## Installing Software Dependencies
 
-The conda_env.yml file in teh root should work out of the box, but if there is a problem the packages listed in the dependencies below can be manually installed as well.
+Note, this will run regardless of GPU/CUDA availablity.
 
-Note, tensorflow wihtout gpu/cuda support falls back to the cpu and this is abstracted away from the code. So the code will still run regardless of GPU/CUDA availablity.
+The dependencies in the requirements.txt file should be installed via pip and python 3.9. 
 
-### Dependency
-* **Python 3.9
-* **NumPy
-* **OpenCV**
-* **PaddleOCR** (license check to be 100% confirmed)
-* **Pandas**
-* **Keras**
-* **TensorFlow**
+If for some reason they do not work for you then there are three .yml files in the reproduce_software_environment folder which list explicit package numbers to reproduce our software environment on linux or windows machines.
 
-Note that mkl needs to be set up in conda via
-'''
-conda install mkl-service
-'''
+## NOTE
 
-### Pre-trained CNN Weight Files
-
-No longer required as using paddleocr now.
+This code was last tested on windows 11 build 22631.3593 on 23/05/2024 should that be useful for debugging purposes.
