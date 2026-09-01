@@ -1,4 +1,24 @@
-# Code Structured for Web Server
+# UIED (server-structured fork)
+
+## Origin and licence
+
+This repository is a derivative of [UIED](https://github.com/MulongXie/UIED) by
+Mulong Xie and contributors, which is licensed under the Apache License, Version 2.0.
+
+It has been restructured to run as a server-side pipeline over video input rather than
+over single screenshots. The component detection (`detect_compo`), CNN classification
+(`cnn`), configuration (`config`) and result processing (`result_processing`) are derived
+from UIED, with modifications. `main.py`, `analyzer.py`, `color_utils.py` and `utils/`
+are additions.
+
+This repository is licensed under the Apache License, Version 2.0; see `LICENSE` for the
+full text and `NOTICE` for attribution. As set out in that licence, the software is
+provided on an "AS IS" basis, without warranties or conditions of any kind, and the
+contributors accept no liability arising from its use.
+
+---
+
+## Code structured for web server
 
 ## Running the Code
 

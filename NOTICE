@@ -1,0 +1,17 @@
+UIED (server-structured fork)
+Copyright 2023 Umar Farooq
+
+This product includes software developed by third parties, as set out below.
+All components are licensed under the Apache License, Version 2.0; a copy of
+that licence is in the LICENSE file at the root of this repository.
+
+--------------------------------------------------------------------------------
+
+UIED: UI Element Detection
+https://github.com/MulongXie/UIED
+Licensed under the Apache License, Version 2.0.
+
+This repository is a derivative of UIED, restructured to run as a server-side
+pipeline over video input. The component detection (detect_compo), CNN
+classification (cnn), configuration (config) and result processing
+(result_processing) are derived from that project, with modifications.
